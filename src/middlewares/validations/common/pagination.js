@@ -11,9 +11,9 @@ export default () => [
     query('page')
         .trim()
         .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
+        .customSanitizer((value) => (value === '' || value === 0 ? undefined : Number(value))),
     query('page_items')
         .trim()
         .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
+        .customSanitizer((value) => (value === '' || value === 0 ? undefined : Number(value))),
 ];
