@@ -103,7 +103,7 @@ export default class UserService {
                 options.order = [['id', ...filter.sort]];
             } else {
                 filter.sort = filter.sort.map((sort) => {
-                    if (sort[0] === 'name' || sort[0] === 'user_id') {
+                    if (sort[0] === 'name') {
                         sort[0] = this.database.col(`user_profile.${sort[0]}`);
                     }
                     sort[1] = sort[1].toUpperCase();
