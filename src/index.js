@@ -13,7 +13,7 @@ const app = express();
 
 app.use(
     cors({
-        origin: ['http://localhost'],
+        origin: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         optionsSuccessStatus: 200,
     }),
