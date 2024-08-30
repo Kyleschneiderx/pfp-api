@@ -1,7 +1,4 @@
 import express from 'express';
-import cors from 'cors';
-import compression from 'compression';
-import helmet from 'helmet';
 import fileUpload from 'express-fileupload';
 import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
@@ -9,12 +6,6 @@ import * as middlewares from '../middlewares/index.js';
 
 export default ({ logger, apiLogger, jwt, authController, userController, userService }) => {
     const router = express.Router();
-
-    router.use(helmet());
-
-    router.use(cors());
-
-    router.use(compression());
 
     router.use(fileUpload());
 
