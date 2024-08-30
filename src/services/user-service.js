@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { USER_ACCOUNT_TYPE_ID, FREE_USER_TYPE_ID, ACTIVE_STATUS_ID, REPORT_DEFAULT_ITEMS, REPORT_DEFAULT_PAGE } from '../constants/index.js';
+import { USER_ACCOUNT_TYPE_ID, FREE_USER_TYPE_ID, ACTIVE_STATUS_ID } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
@@ -44,7 +44,7 @@ export default class UserService {
      * @param {number=} filter.userId User account id
      * @param {string=} filter.name User account name
      * @param {Array=} filter.sort Field and order to be use for sorting
-     * @example [{field}:{order}]
+     * @example [ [ {field}:{order} ] ]
      * @param {number=} filter.page Page for list to navigate
      * @param {number=} filter.page_items Number of items return per page
      * @returns {Promise<{
@@ -60,7 +60,8 @@ export default class UserService {
         const options = {
             nest: true,
             subQuery: false,
-            limit: REPORT_DEFAULT_ITEMS,
+            limit: filter.page_items,
+            offset: filter.page * filter.page_items - filter.page_items,
             attributes: ['id', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
             include: [
                 {
@@ -88,17 +89,14 @@ export default class UserService {
                     where: {},
                 },
             ],
+            order: [['id', 'DESC']],
             where: {
                 account_type_id: USER_ACCOUNT_TYPE_ID,
+                ...(filter.userId && { id: filter.userId }),
+                ...(filter.email && { email: { [Sequelize.Op.like]: `%${filter.email}%` } }),
+                ...(filter.name && { '$user_profile.name$': { [Sequelize.Op.like]: `%${filter.name}%` } }),
             },
-            order: [['id', 'DESC']],
         };
-
-        if (filter.userId !== undefined) options.where.id = filter.userId;
-
-        if (filter.email !== undefined) options.where.email = { [Sequelize.Op.like]: `%${filter.email}%` };
-
-        if (filter.name !== undefined) options.include[0].where.name = { [Sequelize.Op.like]: `%${filter.name}%` };
 
         if (filter.sort !== undefined) {
             if (filter.sort.length === 1 && !Array.isArray(filter.sort[0])) {
@@ -115,10 +113,6 @@ export default class UserService {
             }
         }
 
-        if (filter.page_items !== undefined) options.limit = Math.min(filter.page_items, REPORT_DEFAULT_ITEMS);
-
-        if (filter.page !== undefined) options.offset = Math.max(filter.page, REPORT_DEFAULT_PAGE) * filter.page_items - filter.page_items;
-
         let count;
         let rows;
         try {
@@ -133,9 +127,9 @@ export default class UserService {
 
         return {
             data: rows,
-            page: filter.page ?? REPORT_DEFAULT_PAGE,
-            page_items: filter.page_items ?? REPORT_DEFAULT_ITEMS,
-            max_page: Math.ceil(count / (filter.page_items ?? REPORT_DEFAULT_ITEMS)),
+            page: filter.page,
+            page_items: filter.page_items,
+            max_page: Math.ceil(count / filter.page_items),
         };
     }
 
