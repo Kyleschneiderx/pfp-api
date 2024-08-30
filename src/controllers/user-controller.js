@@ -21,7 +21,7 @@ export default class UserController {
     async handleGetUsersRoute(req, res) {
         const users = await this.userService.getUsers({
             email: req.query.email,
-            userId: req.query.user_id,
+            userId: req.query.id,
             name: req.query.name,
             sort: req.query.sort,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
