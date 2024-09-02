@@ -10,9 +10,20 @@ const serviceContainer = {
     apiLogger: createLogger({ type: 'api', console: false }),
     jwt: utils.Jwt,
     password: utils.Password,
+    file: utils.File,
 };
 
 Object.assign(serviceContainer, {
+    smtp: new utils.Smtp(
+        {
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: process.env.SMTP_SECURE === 'true',
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+        { logger: serviceContainer.logger },
+    ),
     userService: new services.UserService({ database: serviceContainer.database, logger: serviceContainer.logger }),
 });
 

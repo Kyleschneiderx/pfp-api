@@ -2,12 +2,16 @@ import express from 'express';
 import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/users/index.js';
 
-export default ({ verifyAdmin, userController, userService }) => {
+export default ({ verifyAdmin, userController, userService, file }) => {
     const router = express.Router();
 
     router.use(verifyAdmin);
 
-    router.post('/', validateInput(validations.createUserValidation({ userService })), userController.handleCreateUserRoute.bind(userController));
+    router.post(
+        '/',
+        validateInput(validations.createUserValidation({ userService, file })),
+        userController.handleCreateUserRoute.bind(userController),
+    );
 
     router.delete(
         '/:user_id',

@@ -4,7 +4,7 @@ import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
 import * as middlewares from '../middlewares/index.js';
 
-export default ({ logger, apiLogger, jwt, authController, userController, userService }) => {
+export default ({ logger, apiLogger, jwt, file, authController, userController, userService }) => {
     const router = express.Router();
 
     router.use(fileUpload());
@@ -44,6 +44,7 @@ export default ({ logger, apiLogger, jwt, authController, userController, userSe
             verifyAdmin: middlewares.verifyAdmin,
             userController: userController,
             userService: userService,
+            file: file,
         }),
     );
 
