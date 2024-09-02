@@ -30,7 +30,7 @@ export default ({ logger, apiLogger, jwt, file, authController, userController, 
     );
 
     router.use(
-        '/v1/auth',
+        '/v1/auths',
         routeV1Auth({
             authController: authController,
         }),
