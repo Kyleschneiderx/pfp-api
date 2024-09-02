@@ -1,14 +1,3 @@
-import { param } from 'express-validator';
+import * as commonValidation from '../common/index.js';
 
-export default ({ userService }) => [
-    param('user_id')
-        .trim()
-        .exists({ values: 'falsy' })
-        .withMessage('User id is required.')
-        .isInt()
-        .custom(async (value) => {
-            if (!(await userService.isUserExistByUserId(value))) {
-                throw new Error('Account does not exist.');
-            }
-        }),
-];
+export default ({ userService }) => [...commonValidation.userIdValidation({ userService })];
