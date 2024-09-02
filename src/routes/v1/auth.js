@@ -5,7 +5,9 @@ import * as validations from '../../middlewares/validations/auth/index.js';
 export default ({ authController }) => {
     const router = express.Router();
 
-    router.post('/login', validateInput(validations.loginValidation()), authController.handleLoginRoute.bind(authController));
+    router.post('/login/admin', validateInput(validations.loginValidation()), authController.handleLoginAdminRoute.bind(authController));
+
+    router.post('/login/user', validateInput(validations.loginValidation()), authController.handleLoginUserRoute.bind(authController));
 
     return router;
 };
