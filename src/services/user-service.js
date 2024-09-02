@@ -135,25 +135,24 @@ export default class UserService {
 
     /**
      * Update user last login time
-     * @param {Users} user Users model instance
-     * @returns {Promise<Users>}
+     * @param {number} userId User account id
+     * @returns {Promise<void>}
      * @throws {InternalServerError} If failed to update user last login time
      */
-    async updateUserLastLogin(user) {
-        if (!(user instanceof Sequelize.Model)) throw new exceptions.InternalServerError('Invalid user instance');
-
-        user.last_login_at = new Date();
-        user.updated_at = new Date();
-
+    async updateUserLastLogin(userId) {
         try {
-            await user.save();
+            return await this.database.models.Users.update(
+                {
+                    last_login_at: new Date(),
+                    updated_at: new Date(),
+                },
+                { where: { id: userId } },
+            );
         } catch (error) {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to update user last login', error);
         }
-
-        return user;
     }
 
     /**
