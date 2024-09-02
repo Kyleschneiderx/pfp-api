@@ -9,6 +9,14 @@ export default class UserController {
         const user = await this.userService.createUserAccount({
             ...req.body,
         });
+        return res.status(201).json(user);
+    }
+
+    async handleUpdateUserRoute(req, res) {
+        const user = await this.userService.updateUserAccount({
+            userId: req.params.user_id,
+            ...req.body,
+        });
         return res.json(user);
     }
 
@@ -25,9 +33,15 @@ export default class UserController {
             name: req.query.name,
             sort: req.query.sort,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
-            page_items: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
+            pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });
 
         return res.json(users);
+    }
+
+    async handleRemoveUserPhotoRoute(req, res) {
+        await this.userService.removeUserPhoto(req.params.user_id);
+
+        return res.status(204).send();
     }
 }
