@@ -29,6 +29,8 @@ app.use(
         logger: serviceContainer.logger,
         apiLogger: serviceContainer.apiLogger,
         jwt: serviceContainer.jwt,
+        file: serviceContainer.file,
+        smtp: serviceContainer.smtp,
         authController: serviceContainer.authController,
         userController: serviceContainer.userController,
         userService: serviceContainer.userService,
