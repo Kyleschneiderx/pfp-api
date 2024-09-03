@@ -31,9 +31,11 @@ app.use(
         jwt: serviceContainer.jwt,
         file: serviceContainer.file,
         smtp: serviceContainer.smtp,
+        password: serviceContainer.password,
         authController: serviceContainer.authController,
         userController: serviceContainer.userController,
         userService: serviceContainer.userService,
+        selectionController: serviceContainer.selectionController,
     }),
 );
 
