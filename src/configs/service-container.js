@@ -3,6 +3,7 @@ import sequelize from '../common/database/sequelize.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
 import * as utils from '../utils/index.js';
+import configSmtp from './smtp.js';
 
 const serviceContainer = {
     database: sequelize,
@@ -16,11 +17,11 @@ const serviceContainer = {
 Object.assign(serviceContainer, {
     smtp: new utils.Smtp(
         {
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: process.env.SMTP_SECURE === 'true',
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            host: configSmtp.host,
+            port: configSmtp.port,
+            secure: configSmtp.secure,
+            user: configSmtp.user,
+            pass: configSmtp.pass,
         },
         { logger: serviceContainer.logger },
     ),
