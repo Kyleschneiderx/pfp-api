@@ -2,9 +2,10 @@ import express from 'express';
 import fileUpload from 'express-fileupload';
 import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
+import routeV1Selections from './v1/selections.js';
 import * as middlewares from '../middlewares/index.js';
 
-export default ({ logger, apiLogger, jwt, file, authController, userController, userService }) => {
+export default ({ logger, apiLogger, jwt, file, password, authController, userController, userService, selectionController }) => {
     const router = express.Router();
 
     router.use(fileUpload());
@@ -30,9 +31,18 @@ export default ({ logger, apiLogger, jwt, file, authController, userController, 
     );
 
     router.use(
+        '/v1/selections',
+        routeV1Selections({
+            selectionController: selectionController,
+        }),
+    );
+
+    router.use(
         '/v1/auths',
         routeV1Auth({
             authController: authController,
+            userService: userService,
+            password: password,
         }),
     );
 
