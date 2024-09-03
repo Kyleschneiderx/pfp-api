@@ -13,6 +13,8 @@ export default class UserService {
      * @param {object} filter
      * @param {string=} filter.email User account email address
      * @param {number=} filter.userId User account id
+     * @param {string=} filter.googleId User account google id
+     * @param {string=} filter.appleId User account apple id
      * @param {number=} filter.accountTypeId User account's account type id
      * @returns {Promise<Users>} Users model
      * @throws {InternalServerError} If failed to get user
@@ -26,6 +28,8 @@ export default class UserService {
                 where: {
                     ...(filter.email && { email: filter.email }),
                     ...(filter.userId && { id: filter.userId }),
+                    ...(filter.googleId && { google_id: filter.googleId }),
+                    ...(filter.appleId && { apple_id: filter.appleId }),
                     ...(filter.accountTypeId && { account_type_id: filter.accountTypeId }),
                 },
             });
