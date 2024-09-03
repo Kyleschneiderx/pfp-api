@@ -15,5 +15,5 @@ export default (validations) => async (req, res, next) => {
         }
     }
 
-    next();
+    return next();
 };

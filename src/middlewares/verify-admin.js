@@ -6,5 +6,5 @@ export default (req, res, next) => {
         throw new Forbidden('You are not authorized to perform this action.');
     }
 
-    next();
+    return next();
 };

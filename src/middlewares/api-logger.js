@@ -43,5 +43,5 @@ export default ({ logger, loggerService }) =>
             }
         });
 
-        next();
+        return next();
     };
