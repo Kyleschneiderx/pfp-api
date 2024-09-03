@@ -25,6 +25,7 @@ Object.assign(serviceContainer, {
         { logger: serviceContainer.logger },
     ),
     userService: new services.UserService({ database: serviceContainer.database, logger: serviceContainer.logger }),
+    selectionService: new services.SelectionService({ database: serviceContainer.database, logger: serviceContainer.logger }),
 });
 
 Object.assign(serviceContainer, {
@@ -44,6 +45,10 @@ Object.assign(serviceContainer, {
         authService: serviceContainer.authService,
     }),
     userController: new controllers.UserController({ logger: serviceContainer.logger, userService: serviceContainer.userService }),
+    selectionController: new controllers.SelectionController({
+        logger: serviceContainer.logger,
+        selectionService: serviceContainer.selectionService,
+    }),
 });
 
 export default serviceContainer;
