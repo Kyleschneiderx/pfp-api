@@ -3,7 +3,7 @@ import * as constants from '../../../constants/index.js';
 
 export default ({ field, file }) => [
     check(field).custom((value, { req }) => {
-        if (req.files === undefined) return false;
+        if (req.files === undefined || req.files === null) return true;
 
         const photo = req.files?.[field];
 
