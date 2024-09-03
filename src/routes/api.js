@@ -5,7 +5,19 @@ import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
 import * as middlewares from '../middlewares/index.js';
 
-export default ({ logger, apiLogger, jwt, file, password, authController, userController, userService, selectionController, selectionService }) => {
+export default ({
+    logger,
+    apiLogger,
+    jwt,
+    file,
+    password,
+    authController,
+    userController,
+    userService,
+    selectionController,
+    selectionService,
+    loggerService,
+}) => {
     const router = express.Router();
 
     router.use(fileUpload());
@@ -25,15 +37,8 @@ export default ({ logger, apiLogger, jwt, file, password, authController, userCo
 
     router.use(
         middlewares.apiLogger({
-            logger: logger,
-            apiLogger: apiLogger,
-        }),
-    );
-
-    router.use(
-        '/v1/selections',
-        routeV1Selections({
-            selectionController: selectionController,
+            logger: apiLogger,
+            loggerService: loggerService,
         }),
     );
 
@@ -47,6 +52,13 @@ export default ({ logger, apiLogger, jwt, file, password, authController, userCo
     );
 
     router.use(middlewares.verifyAuth({ jwt: jwt }));
+
+    router.use(
+        '/v1/selections',
+        routeV1Selections({
+            selectionController: selectionController,
+        }),
+    );
 
     router.use(
         '/v1/users',

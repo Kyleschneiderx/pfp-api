@@ -1,14 +1,17 @@
-export default ({ logger, apiLogger, models }) =>
+import requestIp from 'request-ip';
+
+export default ({ logger, loggerService }) =>
     async (req, res, next) => {
         const log = {
             endpoint: req.originalUrl,
             method: req.method,
-            request_header: req.header,
-            request: {
+            ip: requestIp.getClientIp(req),
+            request_header: JSON.stringify(req.headers),
+            request: JSON.stringify({
                 query: req.query,
                 body: req.body,
                 params: req.params,
-            },
+            }),
             response_header: null,
             response: null,
             status_code: null,
@@ -18,15 +21,6 @@ export default ({ logger, apiLogger, models }) =>
             deleted_at: null,
         };
 
-        let logInfo;
-        if (models !== undefined && models.ApiLogs !== undefined) {
-            try {
-                logInfo = await models.ApiLogs.create(log);
-            } catch (error) {
-                logger.error('Unable to log api request.', { stack: error.stack });
-            }
-        }
-
         const oldSend = res.send;
         res.send = (content) => {
             res.contentBody = content;
@@ -35,20 +29,17 @@ export default ({ logger, apiLogger, models }) =>
         };
 
         res.on('finish', async () => {
-            try {
-                if (logInfo !== undefined) {
-                    logInfo.response_header = JSON.stringify(res.getHeaders());
-                    logInfo.response = res.contentBody;
-                    logInfo.status_code = res.statusCode;
-                    logInfo.response_at = new Date();
-                    await logInfo.save();
-                }
+            log.response_header = JSON.stringify(res.getHeaders());
+            log.response = res.contentBody;
+            log.status_code = res.statusCode;
+            log.response_at = new Date();
 
-                if (apiLogger !== undefined) {
-                    apiLogger.info(log);
-                }
-            } catch (error) {
-                logger.error('Unable to update api request for response details.', { stack: error.stack });
+            if (loggerService !== undefined) {
+                loggerService.logApiRequest(log);
+            }
+
+            if (logger !== undefined) {
+                logger.info(log);
             }
         });
 

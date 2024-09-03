@@ -37,6 +37,7 @@ app.use(
         userService: serviceContainer.userService,
         selectionController: serviceContainer.selectionController,
         selectionService: serviceContainer.selectionService,
+        loggerService: serviceContainer.loggerService,
     }),
 );
 

@@ -26,6 +26,7 @@ Object.assign(serviceContainer, {
     ),
     userService: new services.UserService({ database: serviceContainer.database, logger: serviceContainer.logger }),
     selectionService: new services.SelectionService({ database: serviceContainer.database, logger: serviceContainer.logger }),
+    loggerService: new services.LoggerService({ logger: serviceContainer.logger, database: serviceContainer.database }),
 });
 
 Object.assign(serviceContainer, {
