@@ -6,7 +6,6 @@ import routeV1Selections from './v1/selections.js';
 import * as middlewares from '../middlewares/index.js';
 
 export default ({
-    logger,
     apiLogger,
     jwt,
     file,
@@ -51,7 +50,7 @@ export default ({
         }),
     );
 
-    router.use(middlewares.verifyAuth({ jwt: jwt }));
+    router.use(middlewares.verifyAuth({ jwt: jwt, exceptions: ['/api/v1/users/signup'] }));
 
     router.use(
         '/v1/selections',

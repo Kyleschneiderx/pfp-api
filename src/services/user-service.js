@@ -1,11 +1,12 @@
 import { Sequelize } from 'sequelize';
-import { USER_ACCOUNT_TYPE_ID, ACTIVE_STATUS_ID } from '../constants/index.js';
+import { USER_ACCOUNT_TYPE_ID, ACTIVE_STATUS_ID, ADMIN_ACCOUNT_TYPE_ID } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
-    constructor({ logger, database }) {
+    constructor({ logger, database, password }) {
         this.database = database;
         this.logger = logger;
+        this.password = password;
     }
 
     /**
@@ -162,6 +163,7 @@ export default class UserService {
      * Create user account
      * @param {object} data
      * @param {string} data.email User account email address
+     * @param {string} data.password User account password
      * @param {string} data.name User account full name
      * @param {string} data.birthdate User account birthdate
      * @param {string=} data.description User account description
@@ -177,7 +179,8 @@ export default class UserService {
                 const user = await this.database.models.Users.create(
                     {
                         email: data.email,
-                        type_id: data.type_id,
+                        password: data.password ? this.password.generate(data.password) : null,
+                        type_id: data.type_id ?? ADMIN_ACCOUNT_TYPE_ID,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
                         status_id: ACTIVE_STATUS_ID,
                     },
@@ -198,6 +201,7 @@ export default class UserService {
                     { transaction: transaction },
                 );
 
+                delete user.dataValues.password;
                 delete profile.dataValues.id;
                 delete profile.dataValues.user_id;
                 delete profile.dataValues.created_at;

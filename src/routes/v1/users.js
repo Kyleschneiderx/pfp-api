@@ -6,6 +6,8 @@ import * as commonValidations from '../../middlewares/validations/common/index.j
 export default ({ verifyAdmin, userController, userService, file, selectionService }) => {
     const router = express.Router();
 
+    router.post('/signup', validateInput(validations.signupValidation({ userService })), userController.handleUserSignupRoute.bind(userController));
+
     router.use(verifyAdmin);
 
     router.post(
