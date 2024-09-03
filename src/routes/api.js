@@ -5,7 +5,7 @@ import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
 import * as middlewares from '../middlewares/index.js';
 
-export default ({ logger, apiLogger, jwt, file, password, authController, userController, userService, selectionController }) => {
+export default ({ logger, apiLogger, jwt, file, password, authController, userController, userService, selectionController, selectionService }) => {
     const router = express.Router();
 
     router.use(fileUpload());
@@ -54,6 +54,7 @@ export default ({ logger, apiLogger, jwt, file, password, authController, userCo
             verifyAdmin: middlewares.verifyAdmin,
             userController: userController,
             userService: userService,
+            selectionService: selectionService,
             file: file,
         }),
     );

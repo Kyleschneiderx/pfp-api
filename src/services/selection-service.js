@@ -138,4 +138,20 @@ export default class SelectionService {
             }),
         };
     }
+
+    /**
+     * Check if user type exist
+     * @param {number} typeId User type id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to verify user type
+     */
+    async isUserTypeExist(typeId) {
+        try {
+            return Boolean(await this.database.models.UserTypes.count({ where: { id: typeId } }));
+        } catch (error) {
+            this.logger.error('Failed to verify user type', error);
+
+            throw new exceptions.InternalServerError('Failed to verify user type', error);
+        }
+    }
 }

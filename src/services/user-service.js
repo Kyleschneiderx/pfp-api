@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { USER_ACCOUNT_TYPE_ID, FREE_USER_TYPE_ID, ACTIVE_STATUS_ID } from '../constants/index.js';
+import { USER_ACCOUNT_TYPE_ID, ACTIVE_STATUS_ID } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
@@ -165,6 +165,7 @@ export default class UserService {
      * @param {string} data.name User account full name
      * @param {string} data.birthdate User account birthdate
      * @param {string=} data.description User account description
+     * @param {number} data.type_id User account user type id
      * @param {object=} data.photo User account photo
      * @returns {Promise<Users>} Users model instance
      * @throws {InternalServerError} If failed to create user account
@@ -176,7 +177,7 @@ export default class UserService {
                 const user = await this.database.models.Users.create(
                     {
                         email: data.email,
-                        type_id: FREE_USER_TYPE_ID,
+                        type_id: data.type_id,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
                         status_id: ACTIVE_STATUS_ID,
                     },
@@ -270,6 +271,7 @@ export default class UserService {
      * @param {string=} data.name User account full name
      * @param {string=} data.birthdate User account birthdate
      * @param {string=} data.description User account description
+     * @param {number=} data.type_id User account user type id
      * @param {object=} data.photo User account photo
      * @returns {Promise<Users>} Users model instance
      * @throws {InternalServerError} If failed to update user
@@ -286,6 +288,8 @@ export default class UserService {
             });
 
             user.email = data.email ?? user.email;
+
+            user.type_id = data.type_id ?? user.type_id;
 
             if (user.changed()) {
                 await user.save();

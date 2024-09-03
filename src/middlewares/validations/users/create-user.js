@@ -1,7 +1,7 @@
 import { body } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 
-export default ({ userService, file }) => [
+export default ({ userService, file, selectionService }) => [
     body('email')
         .trim()
         .exists({ values: 'falsy' })
@@ -17,5 +17,6 @@ export default ({ userService, file }) => [
     body('birthdate').trim().exists({ values: 'falsy' }).withMessage('Birthdate is required.').isDate().isISO8601(),
     body('contact_number').trim().exists({ values: 'falsy' }).withMessage('Contact number is required.').isString().isNumeric(),
     body('description').trim().optional().isString(),
+    ...commonValidation.userTypeIdValidation({ selectionService: selectionService, isOptional: false }),
     ...commonValidation.photoValidation({ field: 'photo', file: file }),
 ];
