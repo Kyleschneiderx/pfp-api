@@ -83,6 +83,7 @@ export default ({
             selectionService: selectionService,
             file: file,
             verificationService: verificationService,
+            autService: authService,
         }),
     );
 

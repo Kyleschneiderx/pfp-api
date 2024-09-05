@@ -188,6 +188,7 @@ export default class UserService {
      * @param {string} data.password User account password
      * @param {string} data.name User account full name
      * @param {string} data.birthdate User account birthdate
+     * @param {string} data.contactNumber User account contact number
      * @param {string=} data.description User account description
      * @param {number} data.type_id User account user type id
      * @param {object=} data.photo User account photo
@@ -215,7 +216,7 @@ export default class UserService {
                     {
                         user_id: user.id,
                         name: data.name,
-                        contact_number: data.contact_number,
+                        contact_number: data.contactNumber,
                         birthdate: data.birthdate,
                         description: data.description,
                         photo: uploadedPhoto,

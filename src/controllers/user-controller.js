@@ -11,11 +11,11 @@ export default class UserController {
             email: req.body.email,
             password: req.body.password,
             name: req.body.name,
-            contact_number: req.body.contact_number,
+            contactNumber: req.body.contact_number,
             birthdate: req.body.birthdate,
+            googleId: req.body.google_id,
+            appleId: req.body.apple_id,
         });
-
-        this.verificationService.sendConfirmationEmail(req.body.email, req.body.name);
 
         return res.status(201).json(user);
     }
@@ -24,14 +24,12 @@ export default class UserController {
         const user = await this.userService.createUserAccount({
             email: req.body.email,
             name: req.body.name,
-            contact_number: req.body.contact_number,
+            contactNumber: req.body.contact_number,
             birthdate: req.body.birthdate,
             description: req.body.description,
             type_id: req.body.type_id,
             photo: req.files.photo,
         });
-
-        this.verificationService.sendConfirmationEmail(req.body.email, req.body.name);
 
         return res.status(201).json(user);
     }
