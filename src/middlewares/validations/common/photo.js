@@ -6,7 +6,6 @@ export default ({ field, file }) => [
         if (req.files === undefined || req.files === null) return true;
 
         const photo = req.files?.[field];
-
         if (photo !== undefined) {
             if (photo.mimetype.includes('image') === false) throw new Error('You can only upload image file.');
 

@@ -1,6 +1,8 @@
 /* eslint-disable no-use-before-define */
 import 'dotenv/config';
 import 'express-async-errors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import helmet from 'helmet';
 import express from 'express';
@@ -8,6 +10,8 @@ import compression from 'compression';
 import errorHandler from './middlewares/error-handler.js';
 import apiRoute from './routes/api.js';
 import serviceContainer from './configs/service-container.js';
+
+global.__dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -38,6 +42,9 @@ app.use(
         selectionController: serviceContainer.selectionController,
         selectionService: serviceContainer.selectionService,
         loggerService: serviceContainer.loggerService,
+        authService: serviceContainer.authService,
+        verificationController: serviceContainer.verificationController,
+        verificationService: serviceContainer.verificationService,
     }),
 );
 

@@ -1,10 +1,13 @@
 export default class AuthController {
-    constructor({ authService }) {
+    constructor({ authService, userService }) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     async handleLoginRoute(req, res) {
         const authenticate = await this.authService.generateSession(req.user);
+
+        await this.userService.updateUserLastLogin(authenticate.user.id);
 
         return res.json(authenticate);
     }

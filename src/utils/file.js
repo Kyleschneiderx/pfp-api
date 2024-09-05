@@ -1,7 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 export default class File {
+    static dir = path.dirname(fileURLToPath(import.meta.url));
+
     static bytePerKb = 1024;
 
     static mimeTypes = {
@@ -1295,4 +1298,8 @@ export default class File {
 
         return this.mimeTypes[extension];
     };
+
+    static readFile(filePath, options = {}) {
+        return fs.readFileSync(filePath, options);
+    }
 }

@@ -1,11 +1,11 @@
 import { body } from 'express-validator';
 import * as constants from '../../../constants/index.js';
 
-export default ({ userService, password, isAdmin }) => [
+export default ({ userService, password, isAdmin, authService }) => [
     body('email')
         .trim()
-        .if(body('google_id').not().exists({ values: 'falsy' }))
-        .if(body('apple_id').not().exists({ values: 'falsy' }))
+        .if(body('google_token').not().exists({ values: 'falsy' }))
+        .if(body('apple_token').not().exists({ values: 'falsy' }))
         .exists({ values: 'falsy' })
         .withMessage('Email is required.')
         .isString()
@@ -27,32 +27,34 @@ export default ({ userService, password, isAdmin }) => [
         }),
     body('password')
         .trim()
-        .if(body('google_id').not().exists({ values: 'falsy' }))
-        .if(body('apple_id').not().exists({ values: 'falsy' }))
+        .if(body('google_token').not().exists({ values: 'falsy' }))
+        .if(body('apple_token').not().exists({ values: 'falsy' }))
         .exists({ values: 'falsy' })
         .withMessage('Password is required.')
         .isString()
         .custom(async (value, { req }) => {
-            req.user = await userService.getUser({
-                email: req.body.email,
-                accountTypeId: isAdmin ? constants.ADMIN_ACCOUNT_TYPE_ID : constants.USER_ACCOUNT_TYPE_ID,
-            });
             if (!password.verify(value, req.user.password)) {
                 throw new Error('Incorrect password.');
             }
 
             return true;
         }),
-    body('google_id')
+    body('google_token')
         .trim()
-        .if(body('google_id').exists({ values: 'falsy' }))
+        .if(body('google_token').exists({ values: 'falsy' }))
         .exists({ values: 'falsy' })
-        .withMessage('Google id is required.')
+        .withMessage('Google token is required.')
         .isString()
         .custom(async (value, { req }) => {
-            console.log(value);
+            const decodedToken = await authService.verifySocialMediaIdToken(value);
+            if (decodedToken?.firebase?.identities?.google.com === undefined) {
+                throw new Error('Invalid google token.');
+            }
+
+            const googleId = decodedToken.firebase.identities.google.com[0];
+
             req.user = await userService.getUser({
-                googleId: value,
+                googleId: googleId,
                 accountTypeId: constants.USER_ACCOUNT_TYPE_ID,
             });
             if (!req.user) {
@@ -61,15 +63,22 @@ export default ({ userService, password, isAdmin }) => [
 
             return true;
         }),
-    body('apple_id')
+    body('apple_token')
         .trim()
-        .if(body('apple_id').exists({ values: 'falsy' }))
+        .if(body('apple_token').exists({ values: 'falsy' }))
         .exists({ values: 'falsy' })
-        .withMessage('Apple id is required.')
+        .withMessage('Apple token is required.')
         .isString()
         .custom(async (value, { req }) => {
+            const decodedToken = await authService.verifySocialMediaIdToken(value);
+            if (decodedToken?.firebase?.identities?.apple.com === undefined) {
+                throw new Error('Invalid apple token.');
+            }
+
+            const appleId = decodedToken.firebase.identities.apple.com[0];
+
             req.user = await userService.getUser({
-                appleId: value,
+                appleId: appleId,
                 accountTypeId: constants.USER_ACCOUNT_TYPE_ID,
             });
             if (!req.user) {

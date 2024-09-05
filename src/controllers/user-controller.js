@@ -1,8 +1,9 @@
 import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS } from '../constants/index.js';
 
 export default class UserController {
-    constructor({ userService }) {
+    constructor({ userService, verificationService }) {
         this.userService = userService;
+        this.verificationService = verificationService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -13,6 +14,8 @@ export default class UserController {
             contact_number: req.body.contact_number,
             birthdate: req.body.birthdate,
         });
+
+        this.verificationService.sendConfirmationEmail(req.body.email, req.body.name);
 
         return res.status(201).json(user);
     }
@@ -27,6 +30,9 @@ export default class UserController {
             type_id: req.body.type_id,
             photo: req.files.photo,
         });
+
+        this.verificationService.sendConfirmationEmail(req.body.email, req.body.name);
+
         return res.status(201).json(user);
     }
 
@@ -55,6 +61,16 @@ export default class UserController {
         });
 
         return res.json(users);
+    }
+
+    async handleGetUserRoute(req, res) {
+        const user = await this.userService.getUsers({
+            userId: req.params.user_id,
+            page: REPORT_DEFAULT_PAGE,
+            pageItems: REPORT_DEFAULT_ITEMS,
+        });
+
+        return res.json(user.data[0]);
     }
 
     async handleRemoveUserPhotoRoute(req, res) {

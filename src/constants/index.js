@@ -19,3 +19,9 @@ export const ALLOWED_VIDEO_TYPE = ['mp4', 'avi', 'mov'];
 export const MAX_PHOTO_SIZE_IN_MB = 5;
 
 export const MAX_VIDEO_SIZE_IN_MB = 20;
+
+export const OTP_RESEND_IN_SECONDS = 120;
+
+export const OTP_EXPIRATION_IN_SECONDS = 300;
+
+export const EMAIL_CONFIRMATION_URL = `${process.env.APP_URL}/verification/email`;

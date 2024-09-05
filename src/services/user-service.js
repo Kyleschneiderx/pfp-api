@@ -160,6 +160,28 @@ export default class UserService {
     }
 
     /**
+     * Update user verified time
+     * @param {number} userId User account id
+     * @returns {Promise<void>}
+     * @throws {InternalServerError} If failed to update user confirmation time
+     */
+    async updateUserVerifiedTime(email) {
+        try {
+            return await this.database.models.Users.update(
+                {
+                    verified_at: new Date(),
+                    updated_at: new Date(),
+                },
+                { where: { email: email } },
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to update user confirmation time', error);
+        }
+    }
+
+    /**
      * Create user account
      * @param {object} data
      * @param {string} data.email User account email address
@@ -175,7 +197,7 @@ export default class UserService {
     async createUserAccount(data) {
         const uploadedPhoto = null;
         try {
-            return await this.database.transaction(async (transaction) => {
+            const userInfo = await this.database.transaction(async (transaction) => {
                 const user = await this.database.models.Users.create(
                     {
                         email: data.email,
@@ -211,6 +233,8 @@ export default class UserService {
 
                 return user;
             });
+
+            return userInfo;
         } catch (error) {
             this.logger.error(error.message, error);
 

@@ -3,7 +3,6 @@ import Unauthorized from '../exceptions/unauthorized.js';
 export default ({ jwt, exceptions = [] }) =>
     (req, res, next) => {
         if (exceptions.includes(req.originalUrl)) return next();
-
         const { authorization } = req.headers;
         if (authorization === undefined) {
             throw new Unauthorized('No authorization provided.');
