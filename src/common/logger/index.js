@@ -20,7 +20,7 @@ const consoleLog = new transports.Console({
 
 const fileErrorLog = new transports.File({
     level: 'error',
-    filename: `./logs/error/error_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}.log`,
+    filename: `./logs/error/error_${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}.log`,
     format: format.combine(
         format.errors({ stack: true }),
         format.timestamp({
@@ -31,7 +31,7 @@ const fileErrorLog = new transports.File({
 });
 
 const fileLog = new transports.File({
-    filename: `./logs/combined/combined_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}.log`,
+    filename: `./logs/combined/combined_${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}.log`,
     format: format.combine(
         format.timestamp({
             format: 'YYYY-MM-DD HH:mm:ss',
@@ -41,7 +41,7 @@ const fileLog = new transports.File({
 });
 
 const fileApiLog = new transports.File({
-    filename: `./logs/api/api_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}.log`,
+    filename: `./logs/api/api_${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}.log`,
     format: format.combine(
         format.timestamp({
             format: 'YYYY-MM-DD HH:mm:ss',

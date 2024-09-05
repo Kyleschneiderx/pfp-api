@@ -1,11 +1,12 @@
 import { Sequelize } from 'sequelize';
-import { USER_ACCOUNT_TYPE_ID, FREE_USER_TYPE_ID, ACTIVE_STATUS_ID, REPORT_DEFAULT_ITEMS, REPORT_DEFAULT_PAGE } from '../constants/index.js';
+import { USER_ACCOUNT_TYPE_ID, ACTIVE_STATUS_ID, ADMIN_ACCOUNT_TYPE_ID } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
-    constructor({ logger, database }) {
+    constructor({ logger, database, password }) {
         this.database = database;
         this.logger = logger;
+        this.password = password;
     }
 
     /**
@@ -13,22 +14,25 @@ export default class UserService {
      * @param {object} filter
      * @param {string=} filter.email User account email address
      * @param {number=} filter.userId User account id
+     * @param {string=} filter.googleId User account google id
+     * @param {string=} filter.appleId User account apple id
+     * @param {number=} filter.accountTypeId User account's account type id
      * @returns {Promise<Users>} Users model
      * @throws {InternalServerError} If failed to get user
      */
     async getUser(filter) {
         try {
-            const where = {};
-
-            if (filter.email !== undefined) where.email = filter.email;
-
-            if (filter.userId !== undefined) where.id = filter.userId;
-
             return await this.database.models.Users.findOne({
                 attributes: {
                     exclude: ['deleted_at'],
                 },
-                where: where,
+                where: {
+                    ...(filter.email && { email: filter.email }),
+                    ...(filter.userId && { id: filter.userId }),
+                    ...(filter.googleId && { google_id: filter.googleId }),
+                    ...(filter.appleId && { apple_id: filter.appleId }),
+                    ...(filter.accountTypeId && { account_type_id: filter.accountTypeId }),
+                },
             });
         } catch (error) {
             this.logger.error(error.message, error);
@@ -44,9 +48,9 @@ export default class UserService {
      * @param {number=} filter.userId User account id
      * @param {string=} filter.name User account name
      * @param {Array=} filter.sort Field and order to be use for sorting
-     * @example [{field}:{order}]
+     * @example [ [ {field}:{order} ] ]
      * @param {number=} filter.page Page for list to navigate
-     * @param {number=} filter.page_items Number of items return per page
+     * @param {number=} filter.pageItems Number of items return per page
      * @returns {Promise<{
      * data: Users[],
      * page: number,
@@ -60,7 +64,8 @@ export default class UserService {
         const options = {
             nest: true,
             subQuery: false,
-            limit: REPORT_DEFAULT_ITEMS,
+            limit: filter.pageItems,
+            offset: filter.page * filter.pageItems - filter.pageItems,
             attributes: ['id', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
             include: [
                 {
@@ -88,24 +93,21 @@ export default class UserService {
                     where: {},
                 },
             ],
+            order: [['id', 'DESC']],
             where: {
                 account_type_id: USER_ACCOUNT_TYPE_ID,
+                ...(filter.userId && { id: filter.userId }),
+                ...(filter.email && { email: { [Sequelize.Op.like]: `%${filter.email}%` } }),
+                ...(filter.name && { '$user_profile.name$': { [Sequelize.Op.like]: `%${filter.name}%` } }),
             },
-            order: [['id', 'DESC']],
         };
-
-        if (filter.userId !== undefined) options.where.id = filter.userId;
-
-        if (filter.email !== undefined) options.where.email = { [Sequelize.Op.like]: `%${filter.email}%` };
-
-        if (filter.name !== undefined) options.include[0].where.name = { [Sequelize.Op.like]: `%${filter.name}%` };
 
         if (filter.sort !== undefined) {
             if (filter.sort.length === 1 && !Array.isArray(filter.sort[0])) {
                 options.order = [['id', ...filter.sort]];
             } else {
                 filter.sort = filter.sort.map((sort) => {
-                    if (sort[0] === 'name' || sort[0] === 'user_id') {
+                    if (sort[0] === 'name') {
                         sort[0] = this.database.col(`user_profile.${sort[0]}`);
                     }
                     sort[1] = sort[1].toUpperCase();
@@ -114,10 +116,6 @@ export default class UserService {
                 options.order = filter.sort;
             }
         }
-
-        if (filter.page_items !== undefined) options.limit = Math.min(filter.page_items, REPORT_DEFAULT_ITEMS);
-
-        if (filter.page !== undefined) options.offset = Math.max(filter.page, REPORT_DEFAULT_PAGE) * filter.page_items - filter.page_items;
 
         let count;
         let rows;
@@ -133,54 +131,78 @@ export default class UserService {
 
         return {
             data: rows,
-            page: filter.page ?? REPORT_DEFAULT_PAGE,
-            page_items: filter.page_items ?? REPORT_DEFAULT_ITEMS,
-            max_page: Math.ceil(count / (filter.page_items ?? REPORT_DEFAULT_ITEMS)),
+            page: filter.page,
+            page_items: filter.page_items,
+            max_page: Math.ceil(count / filter.page_items),
         };
     }
 
     /**
      * Update user last login time
-     * @param {Users} user Users model instance
-     * @returns {Promise<Users>}
+     * @param {number} userId User account id
+     * @returns {Promise<void>}
      * @throws {InternalServerError} If failed to update user last login time
      */
-    async updateUserLastLogin(user) {
-        if (!(user instanceof Sequelize.Model)) throw new exceptions.InternalServerError('Invalid user instance');
-
-        user.last_login_at = new Date();
-        user.updated_at = new Date();
-
+    async updateUserLastLogin(userId) {
         try {
-            await user.save();
+            return await this.database.models.Users.update(
+                {
+                    last_login_at: new Date(),
+                    updated_at: new Date(),
+                },
+                { where: { id: userId } },
+            );
         } catch (error) {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to update user last login', error);
         }
+    }
 
-        return user;
+    /**
+     * Update user verified time
+     * @param {number} userId User account id
+     * @returns {Promise<void>}
+     * @throws {InternalServerError} If failed to update user confirmation time
+     */
+    async updateUserVerifiedTime(email) {
+        try {
+            return await this.database.models.Users.update(
+                {
+                    verified_at: new Date(),
+                    updated_at: new Date(),
+                },
+                { where: { email: email } },
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to update user confirmation time', error);
+        }
     }
 
     /**
      * Create user account
      * @param {object} data
      * @param {string} data.email User account email address
+     * @param {string} data.password User account password
      * @param {string} data.name User account full name
      * @param {string} data.birthdate User account birthdate
      * @param {string=} data.description User account description
+     * @param {number} data.type_id User account user type id
      * @param {object=} data.photo User account photo
      * @returns {Promise<Users>} Users model instance
      * @throws {InternalServerError} If failed to create user account
      */
     async createUserAccount(data) {
-        const uploadedPhoto = '';
+        const uploadedPhoto = null;
         try {
             const userInfo = await this.database.transaction(async (transaction) => {
-                const users = await this.database.models.Users.create(
+                const user = await this.database.models.Users.create(
                     {
                         email: data.email,
-                        type_id: FREE_USER_TYPE_ID,
+                        password: data.password ? this.password.generate(data.password) : null,
+                        type_id: data.type_id ?? ADMIN_ACCOUNT_TYPE_ID,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
                         status_id: ACTIVE_STATUS_ID,
                     },
@@ -189,9 +211,9 @@ export default class UserService {
                     },
                 );
 
-                const userProfiles = await this.database.models.UserProfiles.create(
+                const profile = await this.database.models.UserProfiles.create(
                     {
-                        user_id: users.id,
+                        user_id: user.id,
                         name: data.name,
                         contact_number: data.contact_number,
                         birthdate: data.birthdate,
@@ -201,14 +223,15 @@ export default class UserService {
                     { transaction: transaction },
                 );
 
-                delete userProfiles.dataValues.id;
-                delete userProfiles.dataValues.user_id;
-                delete userProfiles.dataValues.created_at;
-                delete userProfiles.dataValues.updated_at;
+                delete user.dataValues.password;
+                delete profile.dataValues.id;
+                delete profile.dataValues.user_id;
+                delete profile.dataValues.created_at;
+                delete profile.dataValues.updated_at;
 
-                users.dataValues.user_profile = userProfiles;
+                user.dataValues.user_profile = profile;
 
-                return users;
+                return user;
             });
 
             return userInfo;
@@ -236,6 +259,23 @@ export default class UserService {
     }
 
     /**
+     * Check if email already exist using user id
+     * @param {string} email User account email address
+     * @param {number} userId User account user id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check email
+     */
+    async isEmailExistByUserId(email, userId) {
+        try {
+            return Boolean(await this.database.models.Users.count({ where: { email: email, id: { [Sequelize.Op.ne]: userId } } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check email', error);
+        }
+    }
+
+    /**
      * Check if user exist using user id
      * @param {number} userId User account user id
      * @returns {boolean}
@@ -249,6 +289,74 @@ export default class UserService {
 
             throw new exceptions.InternalServerError('Failed to check user', error);
         }
+    }
+
+    /**
+     * Update user account
+     * @param {object} data
+     * @param {number} data.userId User account id
+     * @param {string=} data.email User account email address
+     * @param {string=} data.name User account full name
+     * @param {string=} data.birthdate User account birthdate
+     * @param {string=} data.description User account description
+     * @param {number=} data.type_id User account user type id
+     * @param {object=} data.photo User account photo
+     * @returns {Promise<Users>} Users model instance
+     * @throws {InternalServerError} If failed to update user
+     * @throws {InternalServerError} If failed to update profile
+     */
+    async updateUserAccount(data) {
+        const uploadedPhoto = null;
+
+        let user;
+        try {
+            user = await this.database.models.Users.findOne({
+                attributes: { exclude: ['deleted_at', 'password', 'google_id', 'apple_id'] },
+                where: { id: data.userId },
+            });
+
+            user.email = data.email ?? user.email;
+
+            user.type_id = data.type_id ?? user.type_id;
+
+            if (user.changed()) {
+                await user.save();
+            }
+        } catch (error) {
+            this.logger.error('Failed to update user', error);
+
+            throw new exceptions.InternalServerError('Failed to update user', error);
+        }
+
+        let profile;
+        try {
+            profile = await this.database.models.UserProfiles.findOne({
+                attributes: { exclude: ['deleted_at', 'user_id', 'created_at', 'updated_at'] },
+                where: { user_id: data.userId },
+            });
+
+            profile.name = data.name ?? profile.name;
+
+            profile.contact_number = data.contact_number ?? profile.contact_number;
+
+            profile.description = data.description ?? profile.description;
+
+            profile.birthdate = data.birthdate ?? profile.birthdate;
+
+            profile.photo = uploadedPhoto ?? profile.photo;
+
+            if (profile.changed()) {
+                await profile.save();
+            }
+
+            delete profile.dataValues.id;
+        } catch (error) {
+            this.logger.error('Failed to update user', error);
+        }
+
+        user.dataValues.user_profile = profile;
+
+        return user;
     }
 
     /**
@@ -268,6 +376,29 @@ export default class UserService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to remove user account', error);
+        }
+    }
+
+    /**
+     * Remove user account photo
+     * @param {number} userId User account user id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to remove user account photo
+     */
+    async removeUserPhoto(userId) {
+        try {
+            return await this.database.models.UserProfiles.update(
+                { photo: null },
+                {
+                    where: {
+                        user_id: userId,
+                    },
+                },
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to remove user account photo', error);
         }
     }
 }

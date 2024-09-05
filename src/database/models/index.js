@@ -13,3 +13,4 @@ export { default as UserTypes } from './user-types.js';
 export { default as Users } from './users.js';
 export { default as WorkoutDays } from './workout-days.js';
 export { default as Workouts } from './workouts.js';
+export { default as VerificationCodes } from './verification-codes.js';

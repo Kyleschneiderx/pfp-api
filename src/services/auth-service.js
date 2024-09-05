@@ -1,54 +1,61 @@
 import * as exceptions from '../exceptions/index.js';
 
 export default class AuthService {
-    constructor({ logger, database, jwt, password, userService }) {
+    constructor({ logger, database, jwt, firebase }) {
         this.database = database;
         this.logger = logger;
         this.jwt = jwt;
-        this.password = password;
-        this.userService = userService;
+        this.firebase = firebase;
     }
 
     /**
-     * Authenticate user credential
+     * Generate session for authenticated user
      *
-     * @param {object} data
-     * @param {string} data.email User account email address
-     * @param {string} data.password User account password
+     * @param {Users} user User instance
      * @returns {{ user: object, token: { token: string, expires: number }}} Authenticated user object
-     * @throws {UnprocessableContent} If user credential is invalid
      * @throws {InternalServerError} If failed to update user last login time
      * @throws {InternalServerError} If failed to generate JWT token
      */
-    async authenticateUser(data) {
-        let userInfo = await this.userService.getUser({ email: data.email });
+    async generateSession(user) {
+        delete user.dataValues.password;
+        delete user.dataValues.google_id;
+        delete user.dataValues.apple_id;
 
-        if (!userInfo) {
-            throw new exceptions.UnprocessableContent('Incorrect email or password');
+        let token;
+        try {
+            token = this.jwt.generate(
+                process.env.JWT_SECRET,
+                { user: { user_id: user.id, account_type_id: user.account_type_id } },
+                { algorithm: process.env.JWT_ALGORITHM },
+            );
+        } catch (error) {
+            this.logger.error('Failed to generate JWT token.', error);
+
+            throw new exceptions.InternalServerError('Failed to generate JWT token.', error);
         }
-
-        if (!this.password.verify(data.password, userInfo.password)) {
-            throw new exceptions.UnprocessableContent('Incorrect email or password');
-        }
-
-        delete userInfo.dataValues.password;
-        delete userInfo.dataValues.google_id;
-        delete userInfo.dataValues.apple_id;
-
-        const token = this.jwt.generate(
-            process.env.JWT_SECRET,
-            { user: { user_id: userInfo.id, account_type_id: userInfo.account_type_id } },
-            { algorithm: process.env.JWT_ALGORITHM },
-        );
-
-        userInfo = await this.userService.updateUserLastLogin(userInfo);
 
         return {
-            user: userInfo,
+            user: user,
             token: {
                 access: token.token,
                 expires: token.expires,
             },
         };
+    }
+
+    /**
+     * Verify social media id token
+     * @param {string} idToken Social media authenticated id token
+     * @returns {DecodedIdToken} Decoded social media id token
+     * @throws {InternalServerError} If failed to verify social media id token
+     */
+    async verifySocialMediaIdToken(idToken) {
+        try {
+            return await this.firebase.verifyIdToken(idToken);
+        } catch (error) {
+            this.logger.error('Failed to verify id token.', error);
+
+            throw new exceptions.InternalServerError('Failed to verify id token.', error);
+        }
     }
 }

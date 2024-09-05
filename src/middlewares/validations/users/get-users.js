@@ -2,7 +2,7 @@ import { query } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 
 export default () => [
-    query('user_id')
+    query('id')
         .trim()
         .optional()
         .customSanitizer((value) => (value === '' ? undefined : Number(value))),
