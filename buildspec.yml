@@ -24,8 +24,6 @@ phases:
   build:
     commands:
       - echo "Building the Docker image..."
-      - echo "PROJECT_NAME: ${PROJECT_NAME}"
-      - echo "ENVIRONMENT: ${ENVIRONMENT}"
       - docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/$PROJECT_NAME-$ENVIRONMENT:$IMAGE_TAG .
 
   post_build:
