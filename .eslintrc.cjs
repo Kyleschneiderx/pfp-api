@@ -7,6 +7,9 @@ module.exports = {
     parserOptions: {
         ecmaVersion: 2022,
     },
+    globals: {
+        __dirname: 'writable',
+    },
     rules: {
         'prettier/prettier': 'error',
         'no-console': 'off',
