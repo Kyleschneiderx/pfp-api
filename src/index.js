@@ -50,6 +50,10 @@ app.use(
 
 app.use(errorHandler);
 
+app.get('/', (req, res) => {
+    res.send('Hello');
+});
+
 app.listen(process.env.APP_PORT, () => {
     serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}`);
 });
