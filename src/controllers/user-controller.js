@@ -27,7 +27,7 @@ export default class UserController {
             contactNumber: req.body.contact_number,
             birthdate: req.body.birthdate,
             description: req.body.description,
-            type_id: req.body.type_id,
+            typeId: req.body.type_id,
             photo: req.files.photo,
         });
 

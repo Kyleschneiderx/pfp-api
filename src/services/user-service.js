@@ -190,7 +190,7 @@ export default class UserService {
      * @param {string} data.birthdate User account birthdate
      * @param {string} data.contactNumber User account contact number
      * @param {string=} data.description User account description
-     * @param {number} data.type_id User account user type id
+     * @param {number} data.typeId User account user type id
      * @param {object=} data.photo User account photo
      * @param {string=} data.googleId User account google id
      * @param {string=} data.appleId User account apple id
@@ -205,7 +205,7 @@ export default class UserService {
                     {
                         email: data.email,
                         password: data.password ? this.password.generate(data.password) : null,
-                        type_id: data.type_id ?? ADMIN_ACCOUNT_TYPE_ID,
+                        type_id: data.typeId ?? ADMIN_ACCOUNT_TYPE_ID,
                         google_id: data.googleId ?? null,
                         apple_id: data.appleId ?? null,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
