@@ -51,5 +51,5 @@ app.use(
 app.use(errorHandler);
 
 app.listen(process.env.APP_PORT, () => {
-    serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}:${process.env.APP_PORT}`);
+    serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}`);
 });
