@@ -2,15 +2,16 @@ import crypto from 'crypto';
 import * as dateFns from 'date-fns';
 import { Sequelize } from 'sequelize';
 import * as exceptions from '../exceptions/index.js';
-import { OTP_RESEND_IN_SECONDS, OTP_EXPIRATION_IN_SECONDS, EMAIL_CONFIRMATION_URL } from '../constants/index.js';
+import { OTP_RESEND_IN_SECONDS, OTP_EXPIRATION_IN_SECONDS } from '../constants/index.js';
 
 export default class VerificationService {
-    constructor({ logger, database, smtp, jwt, file }) {
+    constructor({ logger, database, smtp, jwt, file, emailService }) {
         this.database = database;
         this.logger = logger;
         this.smtp = smtp;
         this.jwt = jwt;
         this.file = file;
+        this.emailService = emailService;
     }
 
     /**
@@ -22,15 +23,15 @@ export default class VerificationService {
     }
 
     /**
-     * Send verification email to user
+     * Send OTP email to user
      * @param {string} email User email address
      * @returns {Promise<object>} Nodemailer send object
      * @throws {InternalServerError} If failed to get pending otp
      * @throws {UnprocessableEntity} If user already have pending otp
-     * @throws {InternalServerError} If failed to generate verification code
-     * @throws {InternalServerError} If failed to send verification email
+     * @throws {InternalServerError} If failed to generate OTP code
+     * @throws {InternalServerError} If failed to send OTP email
      */
-    async sendOtpEmail(email, name = undefined) {
+    async sendOtp(email, name = undefined) {
         const code = this.generateVerificationCode();
 
         let pendingOtp;
@@ -63,28 +64,13 @@ export default class VerificationService {
             throw new exceptions.InternalServerError('Failed to generate OTP code.', error);
         }
 
-        let template = this.file.readFile(`${__dirname}/templates/verification-code.html`, {
-            encoding: 'utf8',
+        await this.emailService.sendOtpEmail({
+            receiver: {
+                ...(name && { name: name }),
+                address: email,
+            },
+            code: code,
         });
-        if (template) {
-            template = template.replace(/{code}/g, code);
-        }
-
-        try {
-            await this.smtp.send({
-                from: `${process.env.SMTP_SENDER_NAME} <${process.env.SMTP_SENDER_EMAIL}>`,
-                to: {
-                    ...(name && { name: name }),
-                    address: email,
-                },
-                subject: `[${process.env.APP_NAME}] One-Time PIN`,
-                html: template,
-            });
-        } catch (error) {
-            this.logger.error('Failed to send OTP email.', error);
-
-            throw new exceptions.InternalServerError('Failed to send OTP email.', error);
-        }
     }
 
     /**
