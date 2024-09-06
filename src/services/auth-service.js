@@ -16,7 +16,7 @@ export default class AuthService {
      * @throws {InternalServerError} If failed to update user last login time
      * @throws {InternalServerError} If failed to generate JWT token
      */
-    async generateSession(user) {
+    generateSession(user) {
         delete user.dataValues.password;
         delete user.dataValues.google_id;
         delete user.dataValues.apple_id;
