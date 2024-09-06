@@ -3,20 +3,7 @@ import * as commonValidation from '../common/index.js';
 
 export default ({ userService, file, verificationService, authService }) => [
     ...commonValidation.createUserValidation({ userService: userService, file: file }),
-    body('password')
-        .trim()
-        .if(body('google_token').not().exists({ values: 'falsy' }))
-        .if(body('apple_token').not().exists({ values: 'falsy' }))
-        .exists({ values: 'falsy' })
-        .withMessage('Password is required.')
-        .isString()
-        .isStrongPassword({
-            minLength: 8,
-            minNumbers: 1,
-            minSymbols: 1,
-            minUppercase: 1,
-            minLowercase: 1,
-        }),
+    ...commonValidation.passwordValidation({ isSignup: true }),
     body('otp')
         .trim()
         .if(body('google_token').not().exists({ values: 'falsy' }))
