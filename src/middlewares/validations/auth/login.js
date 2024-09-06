@@ -10,6 +10,7 @@ export default ({ userService, password, isAdmin, authService }) => [
         .withMessage('Email is required.')
         .isString()
         .isEmail()
+        .isLength({ max: 150 })
         .customSanitizer(async (value, { req }) => {
             req.user = await userService.getUser({
                 email: value,
