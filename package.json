@@ -1,15 +1,14 @@
 {
   "name": "pelvicfloor",
   "version": "1.0.0",
-  "engines":{
+  "engines": {
     "node": ">=10.6.0"
   },
   "description": "",
   "main": "index.js",
   "type": "module",
-  
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint src",
     "start:dev": "nodemon -L --watch ./src src/index.js",
     "start": "npm run db:migrate && npm run db:seed && node src/index.js",
