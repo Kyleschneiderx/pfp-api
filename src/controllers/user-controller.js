@@ -28,7 +28,7 @@ export default class UserController {
             birthdate: req.body.birthdate,
             description: req.body.description,
             typeId: req.body.type_id,
-            photo: req.files.photo,
+            photo: req.files?.photo,
         });
 
         return res.status(201).json(user);
