@@ -12,7 +12,7 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "lint": "eslint src",
     "start:dev": "nodemon -L --watch ./src src/index.js",
-    "start": "node src/index.js",
+    "start": "npm run db:migrate && npm run db:seed && node src/index.js",
     "db:migrate": "npx sequelize-cli db:migrate",
     "db:seed": "npx sequelize-cli db:seed:all",
     "db:reset": "npx sequelize-cli db:seed:undo:all && npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
