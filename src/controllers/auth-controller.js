@@ -5,7 +5,7 @@ export default class AuthController {
     }
 
     async handleLoginRoute(req, res) {
-        const authenticate = await this.authService.generateSession(req.user);
+        const authenticate = this.authService.generateSession(req.user);
 
         await this.userService.updateUserLastLogin(authenticate.user.id);
 
