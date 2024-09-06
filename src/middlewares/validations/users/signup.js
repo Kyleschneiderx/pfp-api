@@ -17,21 +17,6 @@ export default ({ userService, file, verificationService, authService }) => [
             minUppercase: 1,
             minLowercase: 1,
         }),
-    body('otp')
-        .trim()
-        .if(body('google_token').not().exists({ values: 'falsy' }))
-        .if(body('apple_token').not().exists({ values: 'falsy' }))
-        .exists({ values: 'falsy' })
-        .withMessage('OTP is required.')
-        .isString()
-        .isLength({ min: 6, max: 6 })
-        .custom(async (value, { req }) => {
-            try {
-                await verificationService.verifyOtp(req.body.email, value);
-            } catch (error) {
-                throw new Error(JSON.parse(error.message));
-            }
-        }),
     body('google_token')
         .trim()
         .if(body('google_token').exists({ values: 'falsy' }))
