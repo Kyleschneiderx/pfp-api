@@ -48,7 +48,7 @@ app.use(
     }),
 );
 
-app.use(errorHandler);
+app.use(errorHandler({ logger: serviceContainer.logger }));
 
 app.get('/', (req, res) => {
     res.send('Hello');
