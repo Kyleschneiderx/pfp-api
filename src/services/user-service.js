@@ -17,6 +17,7 @@ export default class UserService {
      * @param {string=} filter.googleId User account google id
      * @param {string=} filter.appleId User account apple id
      * @param {number=} filter.accountTypeId User account's account type id
+     * @param {boolean=} filter.withProfile To include user profile
      * @returns {Promise<Users>} Users model
      * @throws {InternalServerError} If failed to get user
      */
@@ -33,6 +34,17 @@ export default class UserService {
                     ...(filter.appleId && { apple_id: filter.appleId }),
                     ...(filter.accountTypeId && { account_type_id: filter.accountTypeId }),
                 },
+                include: [
+                    ...((filter.withProfile && [
+                        {
+                            model: this.database.models.UserProfiles,
+                            as: 'user_profile',
+                            attributes: ['name', 'birthdate', 'contact_number', 'description', 'photo'],
+                            where: {},
+                        },
+                    ]) ??
+                        []),
+                ],
             });
         } catch (error) {
             this.logger.error(error.message, error);
@@ -404,6 +416,30 @@ export default class UserService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to remove user account photo', error);
+        }
+    }
+
+    /**
+     * Reset user password
+     * @param {*} userId User account user id
+     * @param {*} password User account new password
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to reset user password
+     */
+    async resetUserPassword(userId, password) {
+        try {
+            return await this.database.models.Users.update(
+                { password: this.password.generate(password) },
+                {
+                    where: {
+                        id: userId,
+                    },
+                },
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to reset user password', error);
         }
     }
 }
