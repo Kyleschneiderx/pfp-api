@@ -31,13 +31,7 @@ const serviceContainer = {
 Object.assign(serviceContainer, {
     selectionService: new services.SelectionService({ database: serviceContainer.database, logger: serviceContainer.logger }),
     loggerService: new services.LoggerService({ logger: serviceContainer.logger, database: serviceContainer.database }),
-    verificationService: new services.VerificationService({
-        logger: serviceContainer.logger,
-        database: serviceContainer.database,
-        smtp: serviceContainer.smtp,
-        jwt: serviceContainer.jwt,
-        file: serviceContainer.file,
-    }),
+    emailService: new services.EmailService({ logger: serviceContainer.logger, smtp: serviceContainer.smtp, file: serviceContainer.file }),
 });
 
 Object.assign(serviceContainer, {
@@ -53,6 +47,14 @@ Object.assign(serviceContainer, {
         password: serviceContainer.password,
         userService: serviceContainer.userService,
         firebase: serviceContainer.firebase,
+    }),
+    verificationService: new services.VerificationService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        smtp: serviceContainer.smtp,
+        jwt: serviceContainer.jwt,
+        file: serviceContainer.file,
+        emailService: serviceContainer.emailService,
     }),
 });
 
@@ -75,6 +77,12 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         verificationService: serviceContainer.verificationService,
         userService: serviceContainer.userService,
+    }),
+    forgotPasswordController: new controllers.ForgotPasswordController({
+        logger: serviceContainer.logger,
+        authService: serviceContainer.authService,
+        userService: serviceContainer.userService,
+        emailService: serviceContainer.emailService,
     }),
 });
 
