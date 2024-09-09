@@ -62,6 +62,7 @@ export default ({
         routeV1ForgotPassword({
             forgotPasswordController: forgotPasswordController,
             userService: userService,
+            verificationService: verificationService,
         }),
     );
 
