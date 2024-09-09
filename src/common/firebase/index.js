@@ -1,9 +1,7 @@
-// import admin from 'firebase-admin';
-// import config from '../../configs/firebase.js';
+const admin = {
+    verifyIdToken: async function () {
+        return false;
+    },
+};
 
-// admin.initializeApp({
-//     credential: admin.credential.cert(config),
-// });
-const a = undefined;
-
-export default a;
+export default admin;
