@@ -1,6 +1,6 @@
 import { body } from 'express-validator';
 
-export default ({ field = 'password', isSignup = false }) => {
+export default ({ field = 'password', isSignup = false } = {}) => {
     const rule = body(field).trim();
 
     if (isSignup) {

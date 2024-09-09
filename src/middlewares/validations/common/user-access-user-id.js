@@ -10,7 +10,6 @@ export default ({ userService }) => [
                 throw new Error('User does not exist.');
             }
 
-            console.log(req.auth);
             if (req.auth.user_id !== value) {
                 throw new Error('Invalid user.');
             }

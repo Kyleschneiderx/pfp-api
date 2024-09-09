@@ -3,11 +3,15 @@ import * as commonValidation from '../common/index.js';
 
 export default ({ userService, file, selectionService }) => [
     ...commonValidation.userIdValidation({ userService }),
-    commonValidation.emailValidation({ extend: true }).custom(async (value, { req }) => {
-        if (await userService.isEmailExistByUserId(value, req.params.user_id)) {
-            throw new Error('Email already exist.');
-        }
-    }),
+    commonValidation
+        .emailValidation()
+        .optional()
+        .notEmpty()
+        .custom(async (value, { req }) => {
+            if (await userService.isEmailExistByUserId(value, req.params.user_id)) {
+                throw new Error('Email already exist.');
+            }
+        }),
     body('name').trim().optional().notEmpty().isString().isLength({ max: 300 }),
     body('birthdate').trim().optional().notEmpty().isDate().isISO8601(),
     body('contact_number').trim().optional().notEmpty().isString().isLength({ max: 20 }).isNumeric(),
