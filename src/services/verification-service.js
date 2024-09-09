@@ -118,4 +118,25 @@ export default class VerificationService {
             throw new exceptions.InternalServerError('Failed to verify OTP code', error);
         }
     }
+
+    /**
+     * Check if OTP exist by email
+     * @param {string} email User email address
+     * @param {string} otp OTP code
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check OTP code
+     */
+    async isOtpExistByEmail(email, otp) {
+        try {
+            const otpCode = await this.database.models.VerificationCodes.count({
+                where: { email: email, code: otp, verified_at: { [Sequelize.Op.ne]: null } },
+            });
+
+            return Boolean(otpCode);
+        } catch (error) {
+            this.logger.error('Failed to check OTP code', error);
+
+            throw new exceptions.InternalServerError('Failed to check OTP code', error);
+        }
+    }
 }

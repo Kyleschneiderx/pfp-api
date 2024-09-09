@@ -25,3 +25,11 @@ export const OTP_RESEND_IN_SECONDS = 120;
 export const OTP_EXPIRATION_IN_SECONDS = 300;
 
 export const EMAIL_CONFIRMATION_URL = `${process.env.APP_URL}/verification/email`;
+
+export const WEB_RESET_PASSWORD_URL = `${process.env.WEB_URL}/forgot-password/reset`;
+
+export const APP_RESET_PASSWORD_URL = `${process.env.MOBILE_URL}/forgot-password/reset`;
+
+export const DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID = 1;
+
+export const USED_RESET_PASSWORD_REQUEST_STATUS_ID = 3;
