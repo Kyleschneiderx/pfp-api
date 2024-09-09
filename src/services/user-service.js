@@ -206,6 +206,7 @@ export default class UserService {
      * @param {object=} data.photo User account photo
      * @param {string=} data.googleId User account google id
      * @param {string=} data.appleId User account apple id
+     * @param {Date=} data.verified_at User account verified date
      * @returns {Promise<Users>} Users model instance
      * @throws {InternalServerError} If failed to create user account
      */
@@ -222,6 +223,7 @@ export default class UserService {
                         apple_id: data.appleId ?? null,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
                         status_id: ACTIVE_STATUS_ID,
+                        verified_at: data.verified_at ?? null,
                     },
                     {
                         transaction: transaction,
@@ -367,6 +369,7 @@ export default class UserService {
             }
 
             delete profile.dataValues.id;
+            delete profile.dataValues.updated_at;
         } catch (error) {
             this.logger.error('Failed to update user', error);
         }

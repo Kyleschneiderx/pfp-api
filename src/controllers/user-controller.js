@@ -15,6 +15,8 @@ export default class UserController {
             birthdate: req.body.birthdate,
             googleId: req.body.google_id,
             appleId: req.body.apple_id,
+            photo: req.files?.photo,
+            verified_at: new Date(),
         });
 
         return res.status(201).json(user);
@@ -37,7 +39,13 @@ export default class UserController {
     async handleUpdateUserRoute(req, res) {
         const user = await this.userService.updateUserAccount({
             userId: req.params.user_id,
-            ...req.body,
+            email: req.body.email,
+            name: req.body.name,
+            contactNumber: req.body.contact_number,
+            birthdate: req.body.birthdate,
+            description: req.body.description,
+            typeId: req.body.type_id,
+            photo: req.files?.photo,
         });
         return res.json(user);
     }
