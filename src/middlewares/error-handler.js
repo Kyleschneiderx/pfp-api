@@ -1,14 +1,13 @@
 export default ({ logger }) =>
     (err, req, res, next) => {
-        let { message } = err;
-        const messageType = typeof message;
+        let message;
         try {
-            message = JSON.parse(message);
+            message = JSON.parse(err.message);
         } catch (error) {
             /* empty */
         }
 
-        if (messageType === 'string') {
+        if (message === null || message === undefined) {
             message = 'An error occured. Please try again later.';
             logger.error(err.message, err);
         }
