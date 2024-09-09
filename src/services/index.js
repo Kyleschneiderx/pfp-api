@@ -3,3 +3,4 @@ export { default as UserService } from './user-service.js';
 export { default as SelectionService } from './selection-service.js';
 export { default as LoggerService } from './logger-service.js';
 export { default as VerificationService } from './verification-service.js';
+export { default as EmailService } from './email-service.js';
