@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import * as aws from '@aws-sdk/client-ses';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
 
 export default class Smtp {
     /**
@@ -46,23 +48,32 @@ export default class Smtp {
      */
     init(config) {
         this.config = config;
-        try {
-            this.client = nodemailer.createTransport({
+        const transportOptions = {
+            ...(config.standard && {
                 pool: true,
                 maxConnections: 20,
-                host: this.config?.host ?? 'localhost',
-                port: Number(this.config?.port ?? 465),
-                secure: this.config?.secure ?? false, // use TLS
-                tls: this.config?.tls ?? {
+                host: this.config?.standard?.host ?? 'localhost',
+                port: Number(this.config?.standard?.port ?? 465),
+                secure: this.config?.standard?.secure ?? false, // use TLS
+                tls: this.config?.standard?.tls ?? {
                     maxVersion: 'TLSv1.3',
                     minVersion: 'TLSv1.2',
                     ciphers: 'SSLv3',
                 },
                 auth: {
-                    user: this.config?.user,
-                    pass: this.config?.password,
+                    user: this.config?.standard?.user,
+                    pass: this.config?.standard?.password,
                 },
-            });
+            }),
+            ...(config.ses && {
+                SES: {
+                    ses: new aws.SES({ ...this.config.ses, defaultProvider }),
+                    aws,
+                },
+            }),
+        };
+        try {
+            this.client = nodemailer.createTransport(transportOptions);
             return this;
         } catch (error) {
             this.logger.error('Failed to initialize SMTP connection.', error);

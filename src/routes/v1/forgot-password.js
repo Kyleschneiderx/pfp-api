@@ -12,6 +12,12 @@ export default ({ forgotPasswordController, userService, verificationService }) 
     );
 
     router.post(
+        '/app',
+        validateInput(validations.sendOtpForgotPasswordValidation({ userService })),
+        forgotPasswordController.handleForgotPasswordAppRoute.bind(forgotPasswordController),
+    );
+
+    router.post(
         '/reset',
         validateInput(validations.resetPasswordValidation({ verificationService, userService })),
         forgotPasswordController.handleResetPasswordRoute.bind(forgotPasswordController),
