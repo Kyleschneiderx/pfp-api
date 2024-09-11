@@ -5,6 +5,7 @@ import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
 import routeV1Verifications from './v1/verifications.js';
 import routeV1ForgotPassword from './v1/forgot-password.js';
+import routeAsset from './assets.js';
 import * as middlewares from '../middlewares/index.js';
 
 export default ({
@@ -69,6 +70,8 @@ export default ({
     router.use(
         middlewares.verifyAuth({ jwt: jwt, exceptions: ['/api/v1/users/signup', '/api/v1/verifications/otp', '/api/v1/verifications/otp/verify'] }),
     );
+
+    router.use('/assets', routeAsset());
 
     router.use(
         '/v1/verifications',

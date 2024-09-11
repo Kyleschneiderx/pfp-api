@@ -1,7 +1,7 @@
 import createLogger from '../common/logger/index.js';
 import sequelize from '../common/database/sequelize.js';
 import firebase from '../common/firebase/index.js';
-import s3 from '../common/aws-s3/index.js';
+import s3Client, { s3 } from '../common/aws-s3/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
 import * as utils from '../utils/index.js';
@@ -10,7 +10,6 @@ import configSmtp from './smtp.js';
 const logger = createLogger();
 
 const serviceContainer = {
-    s3: s3,
     database: sequelize,
     logger: logger,
     apiLogger: createLogger({ type: 'api', console: false }),
@@ -19,7 +18,7 @@ const serviceContainer = {
     file: utils.File,
     firebase: firebase,
     smtp: new utils.Smtp(configSmtp, { logger: logger }),
-    storage: new utils.Storage({ driver: s3, logger: logger }),
+    storage: new utils.Storage({ driver: s3Client, logger: logger, file: utils.File, s3: s3 }),
 };
 
 Object.assign(serviceContainer, {
@@ -33,6 +32,8 @@ Object.assign(serviceContainer, {
         database: serviceContainer.database,
         logger: serviceContainer.logger,
         password: serviceContainer.password,
+        storage: serviceContainer.storage,
+        file: serviceContainer.file,
     }),
     authService: new services.AuthService({
         database: serviceContainer.database,

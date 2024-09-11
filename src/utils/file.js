@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import sharp from 'sharp';
 
 export default class File {
     static dir = path.dirname(fileURLToPath(import.meta.url));
@@ -1301,5 +1302,29 @@ export default class File {
 
     static readFile(filePath, options = {}) {
         return fs.readFileSync(filePath, options);
+    }
+
+    static async resizeImage(buffer, width, height, options = {}) {
+        try {
+            const metadata = await sharp(buffer).metadata();
+
+            let resizeWidth;
+            let resizeHeight;
+
+            if (options?.force) {
+                resizeWidth = width;
+                resizeHeight = height;
+            } else if (metadata.width > metadata.height) {
+                resizeWidth = metadata.width > width ? width : metadata.width;
+                resizeHeight = null;
+            } else {
+                resizeWidth = null;
+                resizeHeight = metadata.height > height ? height : metadata.height;
+            }
+
+            return sharp(buffer).resize(resizeWidth, resizeHeight).toBuffer();
+        } catch (error) {
+            throw new Error('Error on resizing image.', { cause: error });
+        }
     }
 }

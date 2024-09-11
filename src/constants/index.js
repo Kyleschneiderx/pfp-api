@@ -33,3 +33,13 @@ export const APP_RESET_PASSWORD_URL = `${process.env.MOBILE_URL}/forgot-password
 export const DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID = 1;
 
 export const USED_RESET_PASSWORD_REQUEST_STATUS_ID = 3;
+
+export const USER_PHOTO_PATH = 'user-photo';
+
+export const USER_PHOTO_HEIGHT = 200;
+
+export const USER_PHOTO_WIDTH = 200;
+
+export const ASSET_URL = `${process.env.APP_URL}/api/assets`;
+
+export const S3_OBJECT_URL = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_REGION}.amazonaws.com`;

@@ -1,12 +1,23 @@
 import { Sequelize } from 'sequelize';
-import { USER_ACCOUNT_TYPE_ID, ACTIVE_STATUS_ID, ADMIN_ACCOUNT_TYPE_ID } from '../constants/index.js';
+import {
+    USER_ACCOUNT_TYPE_ID,
+    ACTIVE_STATUS_ID,
+    ADMIN_ACCOUNT_TYPE_ID,
+    USER_PHOTO_PATH,
+    USER_PHOTO_HEIGHT,
+    USER_PHOTO_WIDTH,
+    ASSET_URL,
+    S3_OBJECT_URL,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
-    constructor({ logger, database, password }) {
+    constructor({ logger, database, password, storage, file }) {
         this.database = database;
         this.logger = logger;
         this.password = password;
+        this.storage = storage;
+        this.file = file;
     }
 
     /**
@@ -208,10 +219,27 @@ export default class UserService {
      * @param {string=} data.appleId User account apple id
      * @param {Date=} data.verified_at User account verified date
      * @returns {Promise<Users>} Users model instance
+     * @throws {InternalServerError} If failed to process photo
      * @throws {InternalServerError} If failed to create user account
      */
     async createUserAccount(data) {
-        const uploadedPhoto = null;
+        let storeResponse;
+
+        if (data.photo !== undefined) {
+            try {
+                const resizeData = await this.file.resizeImage(data.photo.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+
+                storeResponse = await this.storage.store(data.photo.name, resizeData, USER_PHOTO_PATH, {
+                    contentType: data.photo.mimetype,
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            } catch (error) {
+                this.logger.error(error.message, error);
+
+                throw new exceptions.InternalServerError('Failed to process photo', error);
+            }
+        }
+
         try {
             const userInfo = await this.database.transaction(async (transaction) => {
                 const user = await this.database.models.Users.create(
@@ -237,7 +265,7 @@ export default class UserService {
                         contact_number: data.contactNumber,
                         birthdate: data.birthdate,
                         description: data.description,
-                        photo: uploadedPhoto,
+                        photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
                     },
                     { transaction: transaction },
                 );
@@ -255,6 +283,10 @@ export default class UserService {
 
             return userInfo;
         } catch (error) {
+            if (storeResponse !== undefined) {
+                await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to create user account', error);
@@ -317,66 +349,92 @@ export default class UserService {
      * @param {string=} data.email User account email address
      * @param {string=} data.name User account full name
      * @param {string=} data.birthdate User account birthdate
+     * @param {string=} data.contactNumber User account contact number
      * @param {string=} data.description User account description
-     * @param {number=} data.type_id User account user type id
+     * @param {number=} data.typeId User account user type id
      * @param {object=} data.photo User account photo
      * @returns {Promise<Users>} Users model instance
+     * @throws {InternalServerError} If failed to process photo
      * @throws {InternalServerError} If failed to update user
      * @throws {InternalServerError} If failed to update profile
      */
     async updateUserAccount(data) {
-        const uploadedPhoto = null;
+        let storeResponse;
 
-        let user;
+        if (data.photo !== undefined) {
+            try {
+                const resizeData = await this.file.resizeImage(data.photo.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+
+                storeResponse = await this.storage.store(data.photo.name, resizeData, USER_PHOTO_PATH, {
+                    contentType: data.photo.mimetype,
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            } catch (error) {
+                this.logger.error(error.message, error);
+
+                throw new exceptions.InternalServerError('Failed to process photo', error);
+            }
+        }
+
         try {
-            user = await this.database.models.Users.findOne({
-                attributes: { exclude: ['deleted_at', 'password', 'google_id', 'apple_id'] },
-                where: { id: data.userId },
+            const usersUpdatePayload = {
+                ...(data.email && { email: data.email }),
+                ...(data.typeId && { type_id: data.typeId }),
+            };
+
+            const userProfilesUpdatePayload = {
+                ...(data.name && { name: data.name }),
+                ...(data.contactNumber && { contact_number: data.contactNumber }),
+                ...(data.birthdate && { birthdate: data.birthdate }),
+                ...(data.description && { description: data.description }),
+                ...(storeResponse?.path && { photo: `${ASSET_URL}/${storeResponse?.path}` }),
+            };
+
+            const user = await this.getUser({ userId: data.userId, withProfile: true });
+
+            await this.database.transaction(async (transaction) => {
+                await this.database.models.Users.update(
+                    usersUpdatePayload,
+                    {
+                        where: { id: data.userId },
+                    },
+                    {
+                        transaction: transaction,
+                    },
+                );
+
+                await this.database.models.UserProfiles.update(
+                    userProfilesUpdatePayload,
+                    { where: { user_id: data.userId } },
+                    { transaction: transaction },
+                );
             });
 
-            user.email = data.email ?? user.email;
+            await this.storage.delete(user.user_profile.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
 
-            user.type_id = data.type_id ?? user.type_id;
+            await user.reload();
+            await user.user_profile.reload();
 
-            if (user.changed()) {
-                await user.save();
-            }
+            delete user.dataValues.password;
+            delete user.dataValues.google_id;
+            delete user.dataValues.apple_id;
+            delete user.dataValues.deleted_at;
+            delete user.user_profile.dataValues.id;
+            delete user.user_profile.dataValues.user_id;
+            delete user.user_profile.dataValues.created_at;
+            delete user.user_profile.dataValues.updated_at;
+            delete user.user_profile.dataValues.deleted_at;
+
+            return user;
         } catch (error) {
+            if (storeResponse !== undefined) {
+                await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+
             this.logger.error('Failed to update user', error);
 
             throw new exceptions.InternalServerError('Failed to update user', error);
         }
-
-        let profile;
-        try {
-            profile = await this.database.models.UserProfiles.findOne({
-                attributes: { exclude: ['deleted_at', 'user_id', 'created_at', 'updated_at'] },
-                where: { user_id: data.userId },
-            });
-
-            profile.name = data.name ?? profile.name;
-
-            profile.contact_number = data.contact_number ?? profile.contact_number;
-
-            profile.description = data.description ?? profile.description;
-
-            profile.birthdate = data.birthdate ?? profile.birthdate;
-
-            profile.photo = uploadedPhoto ?? profile.photo;
-
-            if (profile.changed()) {
-                await profile.save();
-            }
-
-            delete profile.dataValues.id;
-            delete profile.dataValues.updated_at;
-        } catch (error) {
-            this.logger.error('Failed to update user', error);
-        }
-
-        user.dataValues.user_profile = profile;
-
-        return user;
     }
 
     /**
