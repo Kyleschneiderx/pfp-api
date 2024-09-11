@@ -155,8 +155,8 @@ export default class UserService {
         return {
             data: rows,
             page: filter.page,
-            page_items: filter.page_items,
-            max_page: Math.ceil(count / filter.page_items),
+            page_items: filter.pageItems,
+            max_page: Math.ceil(count / filter.pageItems),
         };
     }
 
