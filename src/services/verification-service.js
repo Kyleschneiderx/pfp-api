@@ -39,7 +39,7 @@ export default class VerificationService {
         try {
             timeToConsiderResend = dateFns.sub(new Date(), { seconds: OTP_RESEND_IN_SECONDS });
             pendingOtp = await this.database.models.VerificationCodes.findOne({
-                where: { email: email, updated_at: { [Sequelize.Op.gt]: timeToConsiderResend } },
+                where: { email: email, verified_at: null, updated_at: { [Sequelize.Op.gt]: timeToConsiderResend } },
                 order: [['id', 'DESC']],
             });
         } catch (error) {
