@@ -12,8 +12,8 @@ export default ({ userService, file, selectionService }) => [
                 throw new Error('Email already exist.');
             }
         }),
-    body('name').trim().optional().notEmpty().isString().isLength({ max: 300 }),
-    body('birthdate').trim().optional().notEmpty().isDate().isISO8601(),
+    body('name').trim().optional().notEmpty().isString().isLength({ max: 150 }),
+    body('birthdate').trim().optional().notEmpty().isDate().isISO8601().isBefore(new Date().toUTCString()),
     body('contact_number').trim().optional().notEmpty().isString().isLength({ max: 20 }).isNumeric(),
     body('description').trim().optional().isString(),
     ...commonValidation.userTypeIdValidation({ selectionService: selectionService, isOptional: true }),
