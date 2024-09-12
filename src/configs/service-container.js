@@ -17,7 +17,12 @@ const serviceContainer = {
     password: utils.Password,
     file: utils.File,
     firebase: firebase,
-    smtp: new utils.Smtp(configSmtp, { logger: logger }),
+    smtp: new utils.Smtp(
+        {
+            [process.env.SMTP_TYPE]: configSmtp[process.env.SMTP_TYPE],
+        },
+        { logger: logger },
+    ),
     storage: new utils.Storage({ driver: s3Client, logger: logger, file: utils.File, s3: s3 }),
 };
 
