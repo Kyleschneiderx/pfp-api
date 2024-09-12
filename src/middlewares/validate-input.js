@@ -9,9 +9,9 @@ export default (validations) => async (req, res, next) => {
         const result = await validation.run(req);
         if (result.errors.length) {
             if (result.errors[0].nestedErrors !== undefined && result.errors[0].nestedErrors.length !== 0) {
-                throw new exceptions.BadRequest(result.errors[0].nestedErrors);
+                throw new exceptions.BadRequest(result.errors[0].nestedErrors[0]);
             }
-            throw new exceptions.BadRequest(result.errors);
+            throw new exceptions.BadRequest(result.errors[0]);
         }
     }
 
