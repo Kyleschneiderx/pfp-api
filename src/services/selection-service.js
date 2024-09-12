@@ -1,3 +1,4 @@
+import { Sequelize } from 'sequelize';
 import * as exceptions from '../exceptions/index.js';
 
 export default class SelectionService {
@@ -152,6 +153,105 @@ export default class SelectionService {
             this.logger.error('Failed to verify user type', error);
 
             throw new exceptions.InternalServerError('Failed to verify user type', error);
+        }
+    }
+
+    /**
+     * Create exercise category
+     *
+     * @param {object} data
+     * @param {string} data.value Exercise category value
+     * @returns {Promise<ExerciseCategories>}
+     * @throws {InternalServerError} If failed to create exercise category
+     */
+    async createExerciseCategory(data) {
+        try {
+            return await this.database.models.ExerciseCategories.create(data);
+        } catch (error) {
+            this.logger.error('Failed to create exercise category', error);
+
+            throw new exceptions.InternalServerError('Failed to create exercise category', error);
+        }
+    }
+
+    /**
+     * Update exercise category
+     * @param {number} id Exercise category id
+     * @param {object} data
+     * @param {string} data.value Exercise category value
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to update exercise category
+     */
+    async updateExerciseCategory(id, data) {
+        try {
+            await this.database.models.ExerciseCategories.update(data, {
+                where: { id: id },
+            });
+
+            return await this.database.models.ExerciseCategories.findOne({
+                attributes: {
+                    exclude: ['deleted_at'],
+                },
+                where: { id: id },
+            });
+        } catch (error) {
+            this.logger.error('Failed to update exercise category', error);
+
+            throw new exceptions.InternalServerError('Failed to update exercise category', error);
+        }
+    }
+
+    /**
+     * Remove exercise category
+     *
+     * @param {number} id Exercise category id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to remove exercise category
+     */
+    async removeExerciseCategory(id) {
+        try {
+            return await this.database.models.ExerciseCategories.destroy({
+                where: { id },
+            });
+        } catch (error) {
+            this.logger.error('Failed to remove exercise category', error);
+
+            throw new exceptions.InternalServerError('Failed to remove exercise category', error);
+        }
+    }
+
+    /**
+     * Check if exercise category exist using id
+     * @param {number} id Exercise category id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to verify exercise category
+     */
+    async isExerciseCategoryExistById(id) {
+        try {
+            return Boolean(await this.database.models.ExerciseCategories.count({ where: { id: id } }));
+        } catch (error) {
+            this.logger.error('Failed to verify exercise category', error);
+
+            throw new exceptions.InternalServerError('Failed to verify exercise category', error);
+        }
+    }
+
+    /**
+     * Check if exercise category exist using name
+     * @param {string} name Exercise category name
+     * @param {number=} id Exercise category id to exclude
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to verify exercise category
+     */
+    async isExerciseCategoryExistByValue(name, id = undefined) {
+        try {
+            return Boolean(
+                await this.database.models.ExerciseCategories.count({ where: { value: name, ...(id && { id: { [Sequelize.Op.ne]: id } }) } }),
+            );
+        } catch (error) {
+            this.logger.error('Failed to verify exercise category', error);
+
+            throw new exceptions.InternalServerError('Failed to verify exercise category', error);
         }
     }
 }

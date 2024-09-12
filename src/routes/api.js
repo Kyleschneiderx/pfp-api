@@ -90,7 +90,9 @@ export default ({
     router.use(
         '/v1/selections',
         routeV1Selections({
+            verifyAdmin: middlewares.verifyAdmin,
             selectionController: selectionController,
+            selectionService: selectionService,
         }),
     );
 
