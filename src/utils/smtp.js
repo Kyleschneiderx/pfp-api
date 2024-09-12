@@ -69,12 +69,13 @@ export default class Smtp {
                     ses: new aws.SES({ ...this.config.ses }),
                     aws,
                 },
+                port: this.config.ses.port ?? 587,
             }),
         };
         try {
             this.client = nodemailer.createTransport({
                 ...transportOptions,
-                secure: true,
+                port: transportOptions.port ?? 465,
             });
             return this;
         } catch (error) {

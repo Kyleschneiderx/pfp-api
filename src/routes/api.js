@@ -64,11 +64,16 @@ export default ({
             forgotPasswordController: forgotPasswordController,
             userService: userService,
             verificationService: verificationService,
+            authService: authService,
+            password: password,
         }),
     );
 
     router.use(
-        middlewares.verifyAuth({ jwt: jwt, exceptions: ['/api/v1/users/signup', '/api/v1/verifications/otp', '/api/v1/verifications/otp/verify'] }),
+        middlewares.verifyAuth({
+            jwt: jwt,
+            exceptions: ['/api/v1/users/signup', '/api/v1/verifications/otp', '/api/v1/verifications/otp/verify', '/api/v1/verifications/token'],
+        }),
     );
 
     router.use('/assets', routeAsset());
@@ -78,7 +83,7 @@ export default ({
         routeV1Verifications({
             verificationController: verificationController,
             verificationService: verificationService,
-            jwt: jwt,
+            authService: authService,
         }),
     );
 

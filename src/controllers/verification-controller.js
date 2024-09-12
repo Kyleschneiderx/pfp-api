@@ -13,4 +13,8 @@ export default class VerificationController {
     async handleVerifyOtp(req, res) {
         return res.status(204).json();
     }
+
+    async handleVerifyTokenRoute(req, res) {
+        return res.status(204).json();
+    }
 }

@@ -63,6 +63,7 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         userService: serviceContainer.userService,
         verificationService: serviceContainer.verificationService,
+        authService: serviceContainer.authService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,

@@ -482,8 +482,8 @@ export default class UserService {
 
     /**
      * Reset user password
-     * @param {*} userId User account user id
-     * @param {*} password User account new password
+     * @param {number} userId User account user id
+     * @param {string} password User account new password
      * @returns {Promise<boolean>}
      * @throws {InternalServerError} If failed to reset user password
      */

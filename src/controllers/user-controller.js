@@ -1,9 +1,10 @@
 import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS } from '../constants/index.js';
 
 export default class UserController {
-    constructor({ userService, verificationService }) {
+    constructor({ userService, verificationService, authService }) {
         this.userService = userService;
         this.verificationService = verificationService;
+        this.authService = authService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -19,7 +20,9 @@ export default class UserController {
             verified_at: new Date(),
         });
 
-        return res.status(201).json(user);
+        const authenticatedUser = this.authService.generateSession(user);
+
+        return res.status(201).json(authenticatedUser);
     }
 
     async handleCreateUserRoute(req, res) {

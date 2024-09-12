@@ -8,3 +8,4 @@ export { default as userAccessUserIdValidation } from './user-access-user-id.js'
 export { default as oneTimePinValidation } from './one-time-pin.js';
 export { default as passwordValidation } from './password.js';
 export { default as emailValidation } from './email.js';
+export { default as tokenValidation } from './token.js';

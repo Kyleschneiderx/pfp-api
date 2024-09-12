@@ -1,4 +1,10 @@
-import { ADMIN_ACCOUNT_TYPE_ID, WEB_RESET_PASSWORD_URL, APP_RESET_PASSWORD_URL } from '../constants/index.js';
+import {
+    ADMIN_ACCOUNT_TYPE_ID,
+    WEB_RESET_PASSWORD_URL,
+    APP_RESET_PASSWORD_URL,
+    USED_RESET_PASSWORD_REQUEST_STATUS_ID,
+    DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID,
+} from '../constants/index.js';
 
 export default class ForgotPasswordController {
     constructor({ emailService, userService, authService, verificationService }) {
@@ -8,7 +14,7 @@ export default class ForgotPasswordController {
         this.verificationService = verificationService;
     }
 
-    async handleForgotPasswordRoute(req, res) {
+    async handleForgotPasswordWebRoute(req, res) {
         const token = await this.authService.generateResetPasswordToken(req.user);
 
         await this.emailService.sendForgotPasswordEmail({
@@ -23,13 +29,21 @@ export default class ForgotPasswordController {
     }
 
     async handleForgotPasswordAppRoute(req, res) {
-        await this.verificationService.sendOtp(req.body.email);
+        const verificationCode = await this.verificationService.sendOtp(req.body.email);
+
+        await this.authService.createResetPasswordRequest({
+            userId: req.user.id,
+            reference: verificationCode.code,
+            statusId: DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID,
+        });
 
         return res.json({ msg: 'Successfully sent OTP to your email for reset password. Check your OTP to proceed with your action.' });
     }
 
     async handleResetPasswordRoute(req, res) {
         await this.userService.resetUserPassword(req.user.id, req.body.password);
+
+        await this.authService.updateResetPasswordRequestStatus(req.resetRequest.id, USED_RESET_PASSWORD_REQUEST_STATUS_ID);
 
         return res.json({ msg: 'Password successfully reset.' });
     }

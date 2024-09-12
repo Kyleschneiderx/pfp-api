@@ -53,8 +53,9 @@ export default class VerificationService {
             throw new exceptions.UnprocessableEntity(`Please try again after ${remainingWaitingTime}.`);
         }
 
+        let verificationCode;
         try {
-            await this.database.models.VerificationCodes.create({
+            verificationCode = await this.database.models.VerificationCodes.create({
                 email: email,
                 code: code,
             });
@@ -71,6 +72,8 @@ export default class VerificationService {
             },
             code: code,
         });
+
+        return verificationCode;
     }
 
     /**
