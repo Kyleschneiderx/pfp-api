@@ -8,7 +8,7 @@ export default (sequelize, DataTypes) => {
                 primaryKey: true,
             },
             name: {
-                type: DataTypes.STRING(300),
+                type: DataTypes.STRING(200),
             },
             category_id: {
                 type: DataTypes.INTEGER,
@@ -29,19 +29,19 @@ export default (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
             },
             description: {
-                type: DataTypes.TEXT,
+                type: DataTypes.STRING(200),
             },
             how_to: {
                 type: DataTypes.TEXT,
             },
             audio: {
-                type: DataTypes.STRING(300),
+                type: DataTypes.STRING(250),
             },
             photo: {
-                type: DataTypes.STRING(300),
+                type: DataTypes.STRING(250),
             },
             video: {
-                type: DataTypes.STRING(300),
+                type: DataTypes.STRING(250),
             },
             created_at: {
                 type: DataTypes.DATE,
@@ -70,5 +70,10 @@ export default (sequelize, DataTypes) => {
             ],
         },
     );
+    model.associate = () => {
+        const { Exercises, ExerciseCategories } = sequelize.models;
+
+        Exercises.belongsTo(ExerciseCategories, { as: 'exercise_category', foreignKey: 'category_id' });
+    };
     return model;
 };

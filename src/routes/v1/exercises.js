@@ -13,5 +13,7 @@ export default ({ verifyAdmin, exerciseController, exerciseService, selectionSer
         exerciseController.handleCreateExerciseRoute.bind(exerciseController),
     );
 
+    router.get('/', validateInput(validations.getExercisesValidation()), exerciseController.handleGetExercisesRoute.bind(exerciseController));
+
     return router;
 };

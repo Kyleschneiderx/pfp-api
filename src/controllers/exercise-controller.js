@@ -1,3 +1,5 @@
+import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS } from '../constants/index.js';
+
 export default class ExerciseController {
     constructor({ exerciseService }) {
         this.exerciseService = exerciseService;
@@ -17,5 +19,20 @@ export default class ExerciseController {
             audio: req.files?.audio,
         });
         return res.status(201).json(exercise);
+    }
+
+    async handleGetExercisesRoute(req, res) {
+        const list = await this.exerciseService.getExercises({
+            id: req.query.id,
+            name: req.query.name,
+            categoryId: req.query.category_id,
+            setsFrom: req.query.sets_from,
+            setsTo: req.query.sets_to,
+            repsFrom: req.query.reps_from,
+            repsTo: req.query.reps_to,
+            page: req.query.page ?? REPORT_DEFAULT_PAGE,
+            pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
+        });
+        return res.json(list);
     }
 }
