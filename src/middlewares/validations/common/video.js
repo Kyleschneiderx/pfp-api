@@ -8,7 +8,7 @@ export default ({ field, file }) => [
         const video = req.files?.[field];
 
         if (video !== undefined) {
-            if (video.mimetype.includes('image') === false) throw new Error('You can only upload video file.');
+            if (video.mimetype.includes('video') === false) throw new Error('You can only upload video file.');
 
             if (!constants.ALLOWED_VIDEO_TYPE.includes(file.extractExtension(video.name))) throw new Error('Invalid video file type.');
 

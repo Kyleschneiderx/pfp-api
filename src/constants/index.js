@@ -18,9 +18,13 @@ export const ALLOWED_PHOTO_TYPE = ['jpg', 'jpeg', 'png'];
 
 export const ALLOWED_VIDEO_TYPE = ['mp4', 'avi', 'mov'];
 
+export const ALLOWED_AUDIO_TYPE = ['m4a', 'flac', 'mp3', 'wav', 'aac'];
+
 export const MAX_PHOTO_SIZE_IN_MB = 5;
 
 export const MAX_VIDEO_SIZE_IN_MB = 20;
+
+export const MAX_AUDIO_SIZE_IN_MB = 20;
 
 export const OTP_RESEND_IN_SECONDS = 120;
 
@@ -47,3 +51,9 @@ export const USER_PHOTO_WIDTH = 200;
 export const ASSET_URL = `${process.env.APP_URL}/api/assets`;
 
 export const S3_OBJECT_URL = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_REGION}.amazonaws.com`;
+
+export const EXERCISE_PHOTO_PATH = 'exercises-photo';
+
+export const EXERCISE_VIDEO_PATH = 'exercises-video';
+
+export const EXERCISE_AUDIO_PATH = 'exercises-audio';

@@ -46,6 +46,8 @@ app.use(
         verificationController: serviceContainer.verificationController,
         verificationService: serviceContainer.verificationService,
         forgotPasswordController: serviceContainer.forgotPasswordController,
+        exerciseController: serviceContainer.exerciseController,
+        exerciseService: serviceContainer.exerciseService,
     }),
 );
 

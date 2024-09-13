@@ -5,6 +5,7 @@ import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
 import routeV1Verifications from './v1/verifications.js';
 import routeV1ForgotPassword from './v1/forgot-password.js';
+import routeV1Exercises from './v1/exercises.js';
 import routeAsset from './assets.js';
 import * as middlewares from '../middlewares/index.js';
 
@@ -23,6 +24,8 @@ export default ({
     verificationController,
     verificationService,
     forgotPasswordController,
+    exerciseController,
+    exerciseService,
 }) => {
     const router = express.Router();
 
@@ -106,6 +109,17 @@ export default ({
             file: file,
             verificationService: verificationService,
             autService: authService,
+        }),
+    );
+
+    router.use(
+        '/v1/exercises',
+        routeV1Exercises({
+            verifyAdmin: middlewares.verifyAdmin,
+            exerciseController: exerciseController,
+            exerciseService: exerciseService,
+            selectionService: selectionService,
+            file: file,
         }),
     );
 

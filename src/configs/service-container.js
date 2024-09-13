@@ -56,6 +56,11 @@ Object.assign(serviceContainer, {
         file: serviceContainer.file,
         emailService: serviceContainer.emailService,
     }),
+    exerciserService: new services.ExerciseService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        storage: serviceContainer.storage,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -85,6 +90,10 @@ Object.assign(serviceContainer, {
         userService: serviceContainer.userService,
         emailService: serviceContainer.emailService,
         verificationService: serviceContainer.verificationService,
+    }),
+    exerciseController: new controllers.ExerciseController({
+        logger: serviceContainer.logger,
+        exerciseService: serviceContainer.exerciserService,
     }),
 });
 
