@@ -4,10 +4,17 @@ export default () => [
     query('sort')
         .trim()
         .optional()
-        .customSanitizer((value) => {
-            if (Array.isArray(value)) return value.flatMap((val) => (val.includes(':') ? [val.split(':')] : []));
-            return value === '' ? undefined : [value];
-        }),
+        .custom((value) => {
+            if (!Array.isArray(value)) return true;
+
+            value.forEach((val) => {
+                const [, order] = val.split(':');
+                if (order.toLowerCase() !== 'asc' && order.toLowerCase() !== 'desc') throw new Error('Invalid sort order');
+            });
+
+            return true;
+        })
+        .customSanitizer((value) => value.flatMap((val) => (val.includes(':') ? [val.split(':')] : [['id', val]]))),
     query('page')
         .trim()
         .optional()
