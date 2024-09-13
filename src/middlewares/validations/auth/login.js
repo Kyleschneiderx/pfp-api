@@ -21,7 +21,7 @@ export default ({ userService, password, isAdmin, authService }) => [
         })
         .custom(async (value, { req }) => {
             if (!req.user) {
-                throw new Error('Account does not exist.');
+                throw new Error('Incorrect email or password.');
             }
 
             return true;
@@ -35,7 +35,7 @@ export default ({ userService, password, isAdmin, authService }) => [
         .isString()
         .custom(async (value, { req }) => {
             if (!password.verify(value, req.user.password)) {
-                throw new Error('Incorrect password.');
+                throw new Error('Incorrect email or password.');
             }
 
             return true;
