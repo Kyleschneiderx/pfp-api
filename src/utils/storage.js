@@ -45,20 +45,27 @@ export default class Storage {
     /**
      * Remove file from storage
      *
-     * @param {string} path Path to file
+     * @param {string[]|string} path Path to file
      * @param {object=} options
      */
     async delete(path, options = {}) {
+        if (!path || path?.length === 0) return [];
         try {
-            let bucketUrl;
-            if (path.includes('amazonaws.com/')) {
-                bucketUrl = path.split('amazonaws.com/');
-            }
+            if (!Array.isArray(path)) path = [path];
 
-            return await this.driver.send(
-                new this.s3.DeleteObjectCommand({
-                    Bucket: options?.s3?.bucket,
-                    Key: bucketUrl[1] ?? path,
+            return await Promise.all(
+                path.map(async (each) => {
+                    let bucketUrl;
+                    if (each.includes('amazonaws.com/')) {
+                        bucketUrl = each.split('amazonaws.com/');
+                    }
+
+                    return this.driver.send(
+                        new this.s3.DeleteObjectCommand({
+                            Bucket: options?.s3?.bucket,
+                            Key: bucketUrl?.[1] ?? each,
+                        }),
+                    );
                 }),
             );
         } catch (error) {
