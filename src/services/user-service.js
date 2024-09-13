@@ -126,18 +126,18 @@ export default class UserService {
         };
 
         if (filter.sort !== undefined) {
-            if (filter.sort.length === 1 && !Array.isArray(filter.sort[0])) {
-                options.order = [['id', ...filter.sort]];
-            } else {
-                filter.sort = filter.sort.map((sort) => {
-                    if (sort[0] === 'name') {
-                        sort[0] = this.database.col(`user_profile.${sort[0]}`);
-                    }
-                    sort[1] = sort[1].toUpperCase();
+            const sortable = {
+                id: undefined,
+                name: 'user_profile',
+                last_login_at: undefined,
+            };
+            filter.sort = filter.sort
+                .filter((sort) => Object.keys(sortable).includes(sort[0]))
+                .map((sort) => {
+                    sort[0] = this.database.col(sortable[sort[0]] ? `${sortable[sort[0]]}.${sort[0]}` : sort[0]);
                     return sort;
                 });
-                options.order = filter.sort;
-            }
+            options.order = filter.sort;
         }
 
         let count;
