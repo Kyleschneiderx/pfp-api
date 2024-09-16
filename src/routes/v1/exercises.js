@@ -18,8 +18,14 @@ export default ({ verifyAdmin, exerciseController, exerciseService, selectionSer
 
     router.delete(
         '/:id',
-        validateInput(commonValidations.exerciseIdValidation({ exerciseService })),
+        validateInput([commonValidations.exerciseIdValidation({ exerciseService })]),
         exerciseController.handleRemoveExerciseRoute.bind(exerciseController),
+    );
+
+    router.put(
+        '/:id',
+        validateInput(validations.updateExerciseValidation({ exerciseService, file, selectionService })),
+        exerciseController.handleUpdateExerciseRoute.bind(exerciseController),
     );
 
     return router;

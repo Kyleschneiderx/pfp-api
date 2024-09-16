@@ -1,6 +1,6 @@
 import { param } from 'express-validator';
 
-export default ({ exerciseService }) => [
+export default ({ exerciseService }) =>
     param('id')
         .exists({ values: 'falsy' })
         .withMessage('Exercise id is required.')
@@ -9,5 +9,4 @@ export default ({ exerciseService }) => [
             if (!(await exerciseService.isExerciseExistById(value))) {
                 throw new Error('Exercise does not exist.');
             }
-        }),
-];
+        });

@@ -42,4 +42,21 @@ export default class ExerciseController {
 
         return res.status(204).send();
     }
+
+    async handleUpdateExerciseRoute(req, res) {
+        const list = await this.exerciseService.updateExercise({
+            id: req.params.id,
+            name: req.body.name,
+            categoryId: req.body.category_id,
+            sets: req.body.sets,
+            reps: req.body.reps,
+            hold: req.body.hold,
+            description: req.body.description,
+            howTo: req.body.how_to,
+            photo: req.files?.photo,
+            video: req.files?.video,
+            audio: req.files?.audio,
+        });
+        return res.json(list);
+    }
 }

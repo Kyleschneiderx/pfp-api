@@ -11,6 +11,81 @@ export default class ExerciseService {
     }
 
     /**
+     * Upload files to s3 bucket
+     *
+     * @param {object} files
+     * @param {object} files.photo Photo file
+     * @param {object} files.video Video file
+     * @param {object} files.audio Audio file
+     * @returns {Promise<{
+     * photo: { originalFilename: string, fileName: string, path: string, s3: object } | undefined,
+     * video: { originalFilename: string, fileName: string, path: string, s3: object } | undefined,
+     * audio: { originalFilename: string, fileName: string, path: string, s3: object } | undefined,
+     * uploadedFilePaths: string[]
+     * }>}
+     */
+    async _uploadFilesToS3(files) {
+        try {
+            const filesToUpload = [
+                ...((files.photo && [
+                    this.storage.store(files.photo.name, files.photo.data, EXERCISE_PHOTO_PATH, {
+                        contentType: files.photo.mimetype,
+                        s3: { bucket: process.env.S3_BUCKET_NAME },
+                    }),
+                ]) ??
+                    []),
+                ...((files.video && [
+                    this.storage.store(files.video.name, files.video.data, EXERCISE_VIDEO_PATH, {
+                        contentType: files.video.mimetype,
+                        s3: { bucket: process.env.S3_BUCKET_NAME },
+                    }),
+                ]) ??
+                    []),
+                ...((files.audio && [
+                    this.storage.store(files.audio.name, files.audio.data, EXERCISE_AUDIO_PATH, {
+                        contentType: files.audio.mimetype,
+                        s3: { bucket: process.env.S3_BUCKET_NAME },
+                    }),
+                ]) ??
+                    []),
+            ];
+
+            if (filesToUpload.length === 0) return {};
+
+            const storeResponse = await Promise.allSettled();
+
+            let rejectedStore;
+
+            const [photoStoreResponse, videoStoreResponse, audioStoreResponse] = storeResponse.map((response) => {
+                if (response.status === 'rejected') rejectedStore = response;
+
+                return response?.value ?? undefined;
+            });
+
+            const uploadedPaths = [photoStoreResponse?.path ?? [], videoStoreResponse?.path ?? [], audioStoreResponse?.path ?? []].flat();
+
+            if (rejectedStore) {
+                this.logger.error('Failed to upload files on s3', rejectedStore.reason);
+
+                await this.storage.delete(uploadedPaths, {
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+
+                throw new exceptions.InternalServerError('Failed to upload files on s3', rejectedStore.reason);
+            }
+
+            return {
+                photo: photoStoreResponse,
+                video: videoStoreResponse,
+                audio: audioStoreResponse,
+                uploadedFilePaths: uploadedPaths,
+            };
+        } catch (error) {
+            throw new exceptions.InternalServerError('Failed to process files', error);
+        }
+    }
+
+    /**
      * Create exercise
      * @param {object} data
      * @param {string} data.name Exercise name
@@ -27,42 +102,17 @@ export default class ExerciseService {
      * @throws {InternalServerError} If failed to create exercise
      */
     async createExercise(data) {
-        const s3UploadResponse = await Promise.allSettled([
-            this.storage.store(data.photo.name, data.photo.data, EXERCISE_PHOTO_PATH, {
-                contentType: data.photo.mimetype,
-                s3: { bucket: process.env.S3_BUCKET_NAME },
-            }),
-            this.storage.store(data.video.name, data.video.data, EXERCISE_VIDEO_PATH, {
-                contentType: data.video.mimetype,
-                s3: { bucket: process.env.S3_BUCKET_NAME },
-            }),
-            this.storage.store(data.audio.name, data.audio.data, EXERCISE_AUDIO_PATH, {
-                contentType: data.audio.mimetype,
-                s3: { bucket: process.env.S3_BUCKET_NAME },
-            }),
-        ]);
-
-        let s3UploadRejected;
-
-        const [photoStoreResponse, videoStoreResponse, audioStoreResponse] = s3UploadResponse.map((response) => {
-            if (response.status === 'rejected') s3UploadRejected = response;
-
-            return response?.value ?? undefined;
-        });
-
-        const successUploadPaths = [photoStoreResponse?.path ?? [], videoStoreResponse?.path ?? [], audioStoreResponse?.path ?? []].flat();
-
-        if (s3UploadRejected) {
-            this.logger.error('Failed to process files', s3UploadRejected.reason);
-
-            await this.storage.delete(successUploadPaths, {
-                s3: { bucket: process.env.S3_BUCKET_NAME },
-            });
-
-            throw new exceptions.InternalServerError('Failed to process files', s3UploadRejected.reason);
-        }
+        let s3UploadResponse;
 
         try {
+            s3UploadResponse = await this._uploadFilesToS3({
+                photo: data.photo,
+                video: data.video,
+                audio: data.audio,
+            });
+
+            const { photo: photoStoreResponse, video: videoStoreResponse, audio: audioStoreResponse } = s3UploadResponse;
+
             return await this.database.models.Exercises.create({
                 name: data.name,
                 category_id: data.categoryId,
@@ -76,9 +126,11 @@ export default class ExerciseService {
                 audio: audioStoreResponse?.path ? `${ASSET_URL}/${audioStoreResponse?.path}` : null,
             });
         } catch (error) {
-            await this.storage.delete(successUploadPaths, {
-                s3: { bucket: process.env.S3_BUCKET_NAME },
-            });
+            if (s3UploadResponse?.uploadedFilePaths) {
+                await this.storage.delete(s3UploadResponse.uploadedFilePaths, {
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
 
             this.logger.error('Failed to create exercise.', error);
 
@@ -201,6 +253,75 @@ export default class ExerciseService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to remove exercise', error);
+        }
+    }
+
+    /**
+     * Update exercise
+     * @param {object} data
+     * @param {number} data.id Exercise id
+     * @param {string=} data.name Exercise name
+     * @param {number=} data.categoryId Exercise category
+     * @param {number=} data.sets Exercise number of sets
+     * @param {number=} data.reps Exercise number of reps
+     * @param {number=} data.hold Exercise hold time
+     * @param {string=} data.description Exercise description
+     * @param {string=} data.howTo Exercise how to
+     * @param {object=} data.photo Exercise photo
+     * @param {object=} data.video Exercise video
+     * @param {object=} data.audio Exercise audio
+     * @returns {Promise<Exercises>} Exercises model instance
+     * @throws {InternalServerError} If failed to update exercise
+     */
+    async updateExercise(data) {
+        let s3UploadResponse;
+        try {
+            const exercise = await this.database.models.Exercises.findOne({ where: { id: data.id } });
+
+            s3UploadResponse = await this._uploadFilesToS3({
+                photo: data.photo,
+                video: data.video,
+                audio: data.audio,
+            });
+
+            const { photo: photoStoreResponse, video: videoStoreResponse, audio: audioStoreResponse } = s3UploadResponse;
+
+            const toRemoveFiles = [
+                ...(exercise.photo && [exercise.photo.replace(ASSET_URL, S3_OBJECT_URL)]),
+                ...(exercise.video && [exercise.video.replace(ASSET_URL, S3_OBJECT_URL)]),
+                ...(exercise.audio && [exercise.audio.replace(ASSET_URL, S3_OBJECT_URL)]),
+            ];
+
+            exercise.name = data.name;
+            exercise.category_id = data.categoryId;
+            exercise.sets = data.sets;
+            exercise.reps = data.reps;
+            exercise.hold = data.hold;
+            exercise.description = data.description;
+            exercise.how_to = data.howTo;
+            exercise.photo = photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : undefined;
+            exercise.video = videoStoreResponse?.path ? `${ASSET_URL}/${videoStoreResponse?.path}` : undefined;
+            exercise.audio = audioStoreResponse?.path ? `${ASSET_URL}/${audioStoreResponse?.path}` : undefined;
+
+            await exercise.save();
+
+            await exercise.reload();
+
+            await this.storage.delete(toRemoveFiles, {
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
+
+            delete exercise.dataValues.deleted_at;
+
+            return exercise;
+        } catch (error) {
+            await this.storage.delete(s3UploadResponse.uploadedFilePaths, {
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
+
+            this.logger.error('Failed to update exercise.', error);
+
+            throw new exceptions.InternalServerError('Failed to update exercise', error);
         }
     }
 
