@@ -24,6 +24,7 @@ const serviceContainer = {
         { logger: logger },
     ),
     storage: new utils.Storage({ driver: s3Client, logger: logger, file: utils.File, s3: s3 }),
+    helper: utils.Helper,
 };
 
 Object.assign(serviceContainer, {
@@ -39,6 +40,7 @@ Object.assign(serviceContainer, {
         password: serviceContainer.password,
         storage: serviceContainer.storage,
         file: serviceContainer.file,
+        helper: serviceContainer.helper,
     }),
     authService: new services.AuthService({
         database: serviceContainer.database,
@@ -60,6 +62,7 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         database: serviceContainer.database,
         storage: serviceContainer.storage,
+        helper: serviceContainer.helper,
     }),
 });
 

@@ -3,10 +3,11 @@ import { EXERCISE_AUDIO_PATH, EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_UR
 import * as exceptions from '../exceptions/index.js';
 
 export default class ExerciseService {
-    constructor({ logger, database, storage }) {
+    constructor({ logger, database, storage, helper }) {
         this.database = database;
         this.logger = logger;
         this.storage = storage;
+        this.helper = helper;
     }
 
     /**
@@ -140,17 +141,14 @@ export default class ExerciseService {
         };
 
         if (filter.sort !== undefined) {
-            const sortable = {
-                id: undefined,
-                name: undefined,
-            };
-            filter.sort = filter.sort
-                .filter((sort) => Object.keys(sortable).includes(sort[0]))
-                .map((sort) => {
-                    sort[0] = this.database.col(sortable[sort[0]] ? `${sortable[sort[0]]}.${sort[0]}` : sort[0]);
-                    return sort;
-                });
-            options.order = filter.sort;
+            options.order = this.helper.parseSortList(
+                filter.sort,
+                {
+                    id: undefined,
+                    name: undefined,
+                },
+                this.database,
+            );
         }
 
         let count;

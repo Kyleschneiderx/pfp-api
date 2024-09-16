@@ -12,12 +12,13 @@ import {
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
-    constructor({ logger, database, password, storage, file }) {
+    constructor({ logger, database, password, storage, file, helper }) {
         this.database = database;
         this.logger = logger;
         this.password = password;
         this.storage = storage;
         this.file = file;
+        this.helper = helper;
     }
 
     /**
@@ -126,18 +127,15 @@ export default class UserService {
         };
 
         if (filter.sort !== undefined) {
-            const sortable = {
-                id: undefined,
-                name: 'user_profile',
-                last_login_at: undefined,
-            };
-            filter.sort = filter.sort
-                .filter((sort) => Object.keys(sortable).includes(sort[0]))
-                .map((sort) => {
-                    sort[0] = this.database.col(sortable[sort[0]] ? `${sortable[sort[0]]}.${sort[0]}` : sort[0]);
-                    return sort;
-                });
-            options.order = filter.sort;
+            options.order = this.helper.parseSortList(
+                filter.sort,
+                {
+                    id: undefined,
+                    name: 'user_profile',
+                    last_login_at: undefined,
+                },
+                this.database,
+            );
         }
 
         let count;
