@@ -4,24 +4,21 @@ export default () => [
     query('sort')
         .trim()
         .optional()
-        .custom((value) => {
-            if (Array.isArray(value)) {
-                value.forEach((val) => {
-                    if (val.includes(':')) {
-                        const [, order] = val.split(':');
-                        if (order.toLowerCase() !== 'asc' && order.toLowerCase() !== 'desc') throw new Error('Invalid sort order');
-                    }
-                });
-            }
-
-            return true;
-        })
         .customSanitizer((value) => {
             if (!Array.isArray(value)) {
                 value = [value];
             }
             return value.flatMap((val) => (val.includes(':') ? [val.split(':')] : [['id', val]]));
+        })
+        .custom((value) => {
+            value.forEach((val) => {
+                const [, order] = val;
+                if (order.toLowerCase() !== 'asc' && order.toLowerCase() !== 'desc') throw new Error('Invalid sort order');
+            });
+
+            return true;
         }),
+
     query('page')
         .trim()
         .optional()
