@@ -1,11 +1,14 @@
 import { check } from 'express-validator';
 import * as constants from '../../../constants/index.js';
 
-export default ({ field, file }) => [
+export default ({ field, file, isRequired = false }) => [
     check(field).custom((value, { req }) => {
-        if (req.files === undefined || req.files === null) return true;
+        if ((req.files === undefined || req.files === null) && isRequired === false) return true;
 
         const photo = req.files?.[field];
+
+        if (isRequired && photo === undefined) throw new Error(`${field} is required.`);
+
         if (photo !== undefined) {
             if (photo.mimetype.includes('image') === false) throw new Error('You can only upload image file.');
 

@@ -32,7 +32,7 @@ export default ({ selectionService, file }) => [
         .isNumeric(),
     body('description').trim().optional().isString().isLength({ max: 200 }),
     body('how_to').trim().optional().isString(),
-    ...commonValidation.photoValidation({ field: 'photo', file: file }),
-    ...commonValidation.videoValidation({ field: 'video', file: file }),
+    ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
+    ...commonValidation.videoValidation({ field: 'video', file: file, isRequired: true }),
     ...commonValidation.audioValidation({ field: 'audio', file: file }),
 ];

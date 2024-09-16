@@ -1,11 +1,13 @@
 import { check } from 'express-validator';
 import * as constants from '../../../constants/index.js';
 
-export default ({ field, file }) => [
+export default ({ field, file, isRequired = false }) => [
     check(field).custom((value, { req }) => {
-        if (req.files === undefined) return false;
+        if ((req.files === undefined || req.files === null) && isRequired === false) return true;
 
         const audio = req.files?.[field];
+
+        if (isRequired && audio === undefined) throw new Error(`${field} is required.`);
 
         if (audio !== undefined) {
             if (audio.mimetype.includes('audio') === false) throw new Error('You can only upload audio file.');
