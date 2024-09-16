@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { EXERCISE_AUDIO_PATH, EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL } from '../constants/index.js';
+import { EXERCISE_AUDIO_PATH, EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class ExerciseService {
@@ -169,5 +169,55 @@ export default class ExerciseService {
             page_items: filter.pageItems,
             max_page: Math.ceil(count / filter.pageItems),
         };
+    }
+
+    /**
+     * Remove exercise
+     *
+     * @param {number} id Exercise id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to remove exercise
+     */
+    async removeExercise(id) {
+        try {
+            const exercise = await this.database.models.Exercises.findOne({ where: { id: id } });
+
+            const toRemoveFiles = [
+                ...(exercise.photo && [exercise.photo.replace(ASSET_URL, S3_OBJECT_URL)]),
+                ...(exercise.video && [exercise.video.replace(ASSET_URL, S3_OBJECT_URL)]),
+                ...(exercise.audio && [exercise.audio.replace(ASSET_URL, S3_OBJECT_URL)]),
+            ];
+
+            await this.storage.delete(toRemoveFiles, {
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
+
+            return await this.database.models.Exercises.destroy({
+                where: {
+                    id: id,
+                },
+            });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to remove exercise', error);
+        }
+    }
+
+    /**
+     * Check if exercise exist using id
+     *
+     * @param {number} id Exercise id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check exercise by id
+     */
+    async isExerciseExistById(id) {
+        try {
+            return Boolean(await this.database.models.Exercises.count({ where: { id: id } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check exercise', error);
+        }
     }
 }

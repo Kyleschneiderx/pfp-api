@@ -58,7 +58,7 @@ Object.assign(serviceContainer, {
         file: serviceContainer.file,
         emailService: serviceContainer.emailService,
     }),
-    exerciserService: new services.ExerciseService({
+    exerciseService: new services.ExerciseService({
         logger: serviceContainer.logger,
         database: serviceContainer.database,
         storage: serviceContainer.storage,
@@ -96,7 +96,7 @@ Object.assign(serviceContainer, {
     }),
     exerciseController: new controllers.ExerciseController({
         logger: serviceContainer.logger,
-        exerciseService: serviceContainer.exerciserService,
+        exerciseService: serviceContainer.exerciseService,
     }),
 });
 

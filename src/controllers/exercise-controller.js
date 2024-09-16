@@ -36,4 +36,10 @@ export default class ExerciseController {
         });
         return res.json(list);
     }
+
+    async handleRemoveExerciseRoute(req, res) {
+        await this.exerciseService.removeExercise(req.params.id);
+
+        return res.status(204).send();
+    }
 }
