@@ -26,7 +26,7 @@ export default class ExerciseService {
      */
     async _uploadFilesToS3(files) {
         try {
-            const filesToUpload = [
+            const storeResponse = await Promise.allSettled([
                 ...((files.photo && [
                     this.storage.store(files.photo.name, files.photo.data, EXERCISE_PHOTO_PATH, {
                         contentType: files.photo.mimetype,
@@ -48,11 +48,7 @@ export default class ExerciseService {
                     }),
                 ]) ??
                     []),
-            ];
-
-            if (filesToUpload.length === 0) return {};
-
-            const storeResponse = await Promise.allSettled();
+            ]);
 
             let rejectedStore;
 
@@ -286,11 +282,13 @@ export default class ExerciseService {
 
             const { photo: photoStoreResponse, video: videoStoreResponse, audio: audioStoreResponse } = s3UploadResponse;
 
-            const toRemoveFiles = [
-                ...(exercise.photo && [exercise.photo.replace(ASSET_URL, S3_OBJECT_URL)]),
-                ...(exercise.video && [exercise.video.replace(ASSET_URL, S3_OBJECT_URL)]),
-                ...(exercise.audio && [exercise.audio.replace(ASSET_URL, S3_OBJECT_URL)]),
-            ];
+            const toRemoveFiles = [];
+
+            if (exercise.photo) toRemoveFiles.push(exercise.photo.replace(ASSET_URL, S3_OBJECT_URL));
+
+            if (exercise.video) toRemoveFiles.push(exercise.video.replace(ASSET_URL, S3_OBJECT_URL));
+
+            if (exercise.audio) toRemoveFiles.push(exercise.audio.replace(ASSET_URL, S3_OBJECT_URL));
 
             exercise.name = data.name;
             exercise.category_id = data.categoryId;
