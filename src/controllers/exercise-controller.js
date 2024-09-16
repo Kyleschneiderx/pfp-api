@@ -30,6 +30,7 @@ export default class ExerciseController {
             setsTo: req.query.sets_to,
             repsFrom: req.query.reps_from,
             repsTo: req.query.reps_to,
+            sort: req.query.sort,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });

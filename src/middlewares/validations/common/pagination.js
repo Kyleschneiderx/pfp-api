@@ -5,12 +5,14 @@ export default () => [
         .trim()
         .optional()
         .custom((value) => {
-            if (!Array.isArray(value)) return true;
-
-            value.forEach((val) => {
-                const [, order] = val.split(':');
-                if (order.toLowerCase() !== 'asc' && order.toLowerCase() !== 'desc') throw new Error('Invalid sort order');
-            });
+            if (Array.isArray(value)) {
+                value.forEach((val) => {
+                    if (val.includes(':')) {
+                        const [, order] = val.split(':');
+                        if (order.toLowerCase() !== 'asc' && order.toLowerCase() !== 'desc') throw new Error('Invalid sort order');
+                    }
+                });
+            }
 
             return true;
         })
