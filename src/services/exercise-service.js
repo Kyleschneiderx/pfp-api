@@ -313,9 +313,11 @@ export default class ExerciseService {
 
             return exercise;
         } catch (error) {
-            await this.storage.delete(s3UploadResponse.uploadedFilePaths, {
-                s3: { bucket: process.env.S3_BUCKET_NAME },
-            });
+            if (s3UploadResponse?.uploadedFilePaths !== undefined) {
+                await this.storage.delete(s3UploadResponse.uploadedFilePaths, {
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
 
             this.logger.error('Failed to update exercise.', error);
 
