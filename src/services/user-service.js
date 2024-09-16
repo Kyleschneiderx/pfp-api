@@ -408,7 +408,9 @@ export default class UserService {
                 );
             });
 
-            await this.storage.delete(user.user_profile.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            if (storeResponse?.path) {
+                await this.storage.delete(user.user_profile.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
 
             await user.reload();
             await user.user_profile.reload();

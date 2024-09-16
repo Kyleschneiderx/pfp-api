@@ -284,11 +284,11 @@ export default class ExerciseService {
 
             const toRemoveFiles = [];
 
-            if (exercise.photo) toRemoveFiles.push(exercise.photo.replace(ASSET_URL, S3_OBJECT_URL));
+            if (photoStoreResponse) toRemoveFiles.push(exercise.photo.replace(ASSET_URL, S3_OBJECT_URL));
 
-            if (exercise.video) toRemoveFiles.push(exercise.video.replace(ASSET_URL, S3_OBJECT_URL));
+            if (videoStoreResponse) toRemoveFiles.push(exercise.video.replace(ASSET_URL, S3_OBJECT_URL));
 
-            if (exercise.audio) toRemoveFiles.push(exercise.audio.replace(ASSET_URL, S3_OBJECT_URL));
+            if (audioStoreResponse) toRemoveFiles.push(exercise.audio.replace(ASSET_URL, S3_OBJECT_URL));
 
             exercise.name = data.name;
             exercise.category_id = data.categoryId;
@@ -305,9 +305,11 @@ export default class ExerciseService {
 
             await exercise.reload();
 
-            await this.storage.delete(toRemoveFiles, {
-                s3: { bucket: process.env.S3_BUCKET_NAME },
-            });
+            if (toRemoveFiles.length !== 0) {
+                await this.storage.delete(toRemoveFiles, {
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
 
             delete exercise.dataValues.deleted_at;
 
