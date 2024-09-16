@@ -48,6 +48,7 @@ app.use(
         forgotPasswordController: serviceContainer.forgotPasswordController,
         exerciseController: serviceContainer.exerciseController,
         exerciseService: serviceContainer.exerciseService,
+        helper: serviceContainer.helper,
     }),
 );
 

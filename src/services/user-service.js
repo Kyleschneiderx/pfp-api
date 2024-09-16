@@ -150,6 +150,17 @@ export default class UserService {
 
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
+        rows = rows.map((row) => {
+            if (row.user_profile.photo) {
+                row.user_profile.photo = this.helper.generateProtectedUrl(
+                    row.user_profile.photo,
+                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                );
+            }
+
+            return row;
+        });
+
         return {
             data: rows,
             page: filter.page,

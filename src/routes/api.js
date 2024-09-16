@@ -26,6 +26,7 @@ export default ({
     forgotPasswordController,
     exerciseController,
     exerciseService,
+    helper,
 }) => {
     const router = express.Router();
 
@@ -43,6 +44,8 @@ export default ({
             limit: '100mb',
         }),
     );
+
+    router.use('/assets', routeAsset({ helper: helper }));
 
     router.use(
         middlewares.apiLogger({
@@ -78,8 +81,6 @@ export default ({
             exceptions: ['/api/v1/users/signup', '/api/v1/verifications/otp', '/api/v1/verifications/otp/verify', '/api/v1/verifications/token'],
         }),
     );
-
-    router.use('/assets', routeAsset());
 
     router.use(
         '/v1/verifications',

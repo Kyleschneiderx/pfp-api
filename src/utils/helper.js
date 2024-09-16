@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export default class Helper {
     /**
      * Parse sort parameter for report query
@@ -16,5 +18,28 @@ export default class Helper {
                 sort[0] = database.col(sortable[sort[0]] ? `${sortable[sort[0]]}.${sort[0]}` : sort[0]);
                 return sort;
             });
+    }
+
+    static generateProtectedUrl(url, secret, options = { expiration: 15 }) {
+        const urlObject = new URL(url);
+        let urlBreakdown = urlObject.pathname.split('/');
+        const file = urlBreakdown.pop();
+        const [filename, filetype] = file.split('.');
+        const expires = Date.now() + options.expiration * 60 * 1000;
+        const hash = crypto.createHmac('sha256', secret).update(`${filename}:${expires}`).digest('hex');
+        urlBreakdown = [...urlBreakdown, `${expires}:${hash}`, `${filename}.${filetype}`];
+        return `${urlObject.origin}${urlBreakdown.join('/')}`;
+    }
+
+    static verifyProtectedUrl(token, secret, filename) {
+        const [expires, hash] = token.split(':');
+
+        if (Date.now() > expires) {
+            return false;
+        }
+
+        const validHash = crypto.createHmac('sha256', secret).update(`${filename}:${expires}`).digest('hex');
+
+        return hash === validHash;
     }
 }
