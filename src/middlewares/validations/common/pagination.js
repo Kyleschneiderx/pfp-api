@@ -16,7 +16,12 @@ export default () => [
 
             return true;
         })
-        .customSanitizer((value) => value.flatMap((val) => (val.includes(':') ? [val.split(':')] : [['id', val]]))),
+        .customSanitizer((value) => {
+            if (!Array.isArray(value)) {
+                value = [value];
+            }
+            return value.flatMap((val) => (val.includes(':') ? [val.split(':')] : [['id', val]]));
+        }),
     query('page')
         .trim()
         .optional()
