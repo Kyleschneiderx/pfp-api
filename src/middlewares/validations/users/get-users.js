@@ -14,5 +14,15 @@ export default () => [
         .trim()
         .optional()
         .customSanitizer((value) => (value === '' ? undefined : value)),
+    query('status_id')
+        .trim()
+        .optional()
+        .customSanitizer((value) => {
+            if (!Array.isArray(value)) {
+                value = [value];
+            }
+
+            return value.map((val) => Number(val));
+        }),
     ...commonValidation.paginationValidation(),
 ];

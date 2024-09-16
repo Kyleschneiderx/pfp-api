@@ -72,6 +72,7 @@ export default class UserService {
      * @param {string=} filter.email User account email address
      * @param {number=} filter.userId User account id
      * @param {string=} filter.name User account name
+     * @param {number[]} filter.statusId User account status id
      * @param {Array=} filter.sort Field and order to be use for sorting
      * @example [ [ {field}:{order} ] ]
      * @param {number=} filter.page Page for list to navigate
@@ -122,6 +123,7 @@ export default class UserService {
             where: {
                 account_type_id: USER_ACCOUNT_TYPE_ID,
                 ...(filter.userId && { id: filter.userId }),
+                ...(filter.statusId && { status_id: filter.statusId }),
                 ...(filter.email && { email: { [Sequelize.Op.like]: `%${filter.email}%` } }),
                 ...(filter.name && { '$user_profile.name$': { [Sequelize.Op.like]: `%${filter.name}%` } }),
             },
