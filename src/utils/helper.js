@@ -21,6 +21,7 @@ export default class Helper {
     }
 
     static generateProtectedUrl(url, secret, options = { expiration: 15 }) {
+        if (url === undefined || url === null) return url;
         const urlObject = new URL(url);
         let urlBreakdown = urlObject.pathname.split('/');
         const file = urlBreakdown.pop();

@@ -1,5 +1,12 @@
 import { Sequelize } from 'sequelize';
-import { EXERCISE_AUDIO_PATH, EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
+import {
+    EXERCISE_AUDIO_PATH,
+    EXERCISE_VIDEO_PATH,
+    EXERCISE_PHOTO_PATH,
+    ASSET_URL,
+    S3_OBJECT_URL,
+    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class ExerciseService {
@@ -109,7 +116,7 @@ export default class ExerciseService {
 
             const { photo: photoStoreResponse, video: videoStoreResponse, audio: audioStoreResponse } = s3UploadResponse;
 
-            return await this.database.models.Exercises.create({
+            const exercise = await this.database.models.Exercises.create({
                 name: data.name,
                 category_id: data.categoryId,
                 sets: data.sets,
@@ -121,6 +128,20 @@ export default class ExerciseService {
                 video: videoStoreResponse?.path ? `${ASSET_URL}/${videoStoreResponse?.path}` : null,
                 audio: audioStoreResponse?.path ? `${ASSET_URL}/${audioStoreResponse?.path}` : null,
             });
+
+            exercise.photo = this.helper.generateProtectedUrl(exercise.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            exercise.video = this.helper.generateProtectedUrl(exercise.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            exercise.audio = this.helper.generateProtectedUrl(exercise.audio, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            return exercise;
         } catch (error) {
             if (s3UploadResponse?.uploadedFilePaths) {
                 await this.storage.delete(s3UploadResponse.uploadedFilePaths, {
@@ -211,6 +232,22 @@ export default class ExerciseService {
 
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
+        rows = rows.map((row) => {
+            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            row.video = this.helper.generateProtectedUrl(row.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            row.audio = this.helper.generateProtectedUrl(row.audio, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            return row;
+        });
+
         return {
             data: rows,
             page: filter.page,
@@ -284,11 +321,11 @@ export default class ExerciseService {
 
             const toRemoveFiles = [];
 
-            if (photoStoreResponse) toRemoveFiles.push(exercise.photo.replace(ASSET_URL, S3_OBJECT_URL));
+            if (photoStoreResponse && exercise.photo) toRemoveFiles.push(exercise.photo.replace(ASSET_URL, S3_OBJECT_URL));
 
-            if (videoStoreResponse) toRemoveFiles.push(exercise.video.replace(ASSET_URL, S3_OBJECT_URL));
+            if (videoStoreResponse && exercise.video) toRemoveFiles.push(exercise.video.replace(ASSET_URL, S3_OBJECT_URL));
 
-            if (audioStoreResponse) toRemoveFiles.push(exercise.audio.replace(ASSET_URL, S3_OBJECT_URL));
+            if (audioStoreResponse && exercise.audio) toRemoveFiles.push(exercise.audio.replace(ASSET_URL, S3_OBJECT_URL));
 
             exercise.name = data.name;
             exercise.category_id = data.categoryId;
@@ -304,6 +341,18 @@ export default class ExerciseService {
             await exercise.save();
 
             await exercise.reload();
+
+            exercise.photo = this.helper.generateProtectedUrl(exercise.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            exercise.video = this.helper.generateProtectedUrl(exercise.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            exercise.audio = this.helper.generateProtectedUrl(exercise.audio, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
 
             if (toRemoveFiles.length !== 0) {
                 await this.storage.delete(toRemoveFiles, {

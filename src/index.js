@@ -23,7 +23,16 @@ app.use(
     }),
 );
 
-app.use(helmet());
+app.use(
+    helmet(
+        process.env.APP_ENV !== 'production'
+            ? {
+                  strictTransportSecurity: false,
+                  contentSecurityPolicy: false,
+              }
+            : {},
+    ),
+);
 
 app.use(compression());
 

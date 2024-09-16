@@ -8,6 +8,7 @@ import {
     USER_PHOTO_WIDTH,
     ASSET_URL,
     S3_OBJECT_URL,
+    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -151,12 +152,13 @@ export default class UserService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            if (row.user_profile.photo) {
-                row.user_profile.photo = this.helper.generateProtectedUrl(
-                    row.user_profile.photo,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                );
-            }
+            row.user_profile.photo = this.helper.generateProtectedUrl(
+                row.user_profile.photo,
+                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                },
+            );
 
             return row;
         });
@@ -278,6 +280,10 @@ export default class UserService {
                     },
                     { transaction: transaction },
                 );
+
+                profile.photo = this.helper.generateProtectedUrl(profile.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                });
 
                 delete user.dataValues.password;
                 delete profile.dataValues.id;
@@ -425,6 +431,14 @@ export default class UserService {
 
             await user.reload();
             await user.user_profile.reload();
+
+            user.user_profile.photo = this.helper.generateProtectedUrl(
+                user.user_profile.photo,
+                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                },
+            );
 
             delete user.dataValues.password;
             delete user.dataValues.google_id;

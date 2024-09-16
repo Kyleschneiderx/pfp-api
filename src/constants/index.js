@@ -57,3 +57,5 @@ export const EXERCISE_PHOTO_PATH = 'exercises-photo';
 export const EXERCISE_VIDEO_PATH = 'exercises-video';
 
 export const EXERCISE_AUDIO_PATH = 'exercises-audio';
+
+export const ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES = 60;
