@@ -20,9 +20,12 @@ export default class UserController {
             verified_at: new Date(),
         });
 
-        const authenticatedUser = this.authService.generateSession(user);
+        const token = this.authService.generateSession(user);
 
-        return res.status(201).json(authenticatedUser);
+        return res.status(201).json({
+            user: user,
+            token: token,
+        });
     }
 
     async handleCreateUserRoute(req, res) {
