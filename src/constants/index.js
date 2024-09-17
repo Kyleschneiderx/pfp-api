@@ -59,3 +59,7 @@ export const EXERCISE_VIDEO_PATH = 'exercises-video';
 export const EXERCISE_AUDIO_PATH = 'exercises-audio';
 
 export const ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES = 60;
+
+export const DRAFT_WORKOUT_STATUS_ID = 4;
+
+export const PUBLISHED_WORKOUT_STATUS_ID = 5;

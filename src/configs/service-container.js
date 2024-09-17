@@ -64,6 +64,11 @@ Object.assign(serviceContainer, {
         storage: serviceContainer.storage,
         helper: serviceContainer.helper,
     }),
+    workoutService: new services.WorkoutService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        helper: serviceContainer.helper,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -97,6 +102,10 @@ Object.assign(serviceContainer, {
     exerciseController: new controllers.ExerciseController({
         logger: serviceContainer.logger,
         exerciseService: serviceContainer.exerciseService,
+    }),
+    workoutController: new controllers.WorkoutController({
+        logger: serviceContainer.logger,
+        workoutService: serviceContainer.workoutService,
     }),
 });
 

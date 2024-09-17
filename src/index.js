@@ -58,6 +58,8 @@ app.use(
         exerciseController: serviceContainer.exerciseController,
         exerciseService: serviceContainer.exerciseService,
         helper: serviceContainer.helper,
+        workoutController: serviceContainer.workoutController,
+        workoutService: serviceContainer.workoutService,
     }),
 );
 

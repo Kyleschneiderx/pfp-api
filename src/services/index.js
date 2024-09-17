@@ -5,3 +5,4 @@ export { default as LoggerService } from './logger-service.js';
 export { default as VerificationService } from './verification-service.js';
 export { default as EmailService } from './email-service.js';
 export { default as ExerciseService } from './exercise-service.js';
+export { default as WorkoutService } from './workout-service.js';
