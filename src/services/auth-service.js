@@ -24,6 +24,7 @@ export default class AuthService {
      */
     generateSession(user) {
         let token;
+
         try {
             token = this.jwt.generate(
                 process.env.JWT_SECRET,

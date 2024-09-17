@@ -1,13 +1,13 @@
 export default ({ logger }) =>
     (err, req, res, next) => {
-        let message;
+        let { message } = err;
         try {
-            message = JSON.parse(err.message);
+            message = JSON.parse(message);
         } catch (error) {
             /* empty */
         }
 
-        if (message === null || message === undefined) {
+        if (err.isCustom === null || err.isCustom === undefined || err.isCustom === false) {
             message = 'An error occured. Please try again later.';
             logger.error(err.message, err);
         }
