@@ -95,4 +95,9 @@ export default class UserController {
     async handleVerifyEmailExist(req, res) {
         return res.status(204).send();
     }
+
+    async handleChangePasswordRoute(req, res) {
+        await this.userService.resetUserPassword(req.params.user_id, req.body.password);
+        return res.json({ msg: 'Password successfully changed.' });
+    }
 }

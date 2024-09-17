@@ -113,6 +113,7 @@ export default ({
             file: file,
             verificationService: verificationService,
             autService: authService,
+            password: password,
         }),
     );
 

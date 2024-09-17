@@ -3,7 +3,7 @@ import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/users/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ verifyAdmin, userController, userService, file, selectionService, verificationService, authService }) => {
+export default ({ verifyAdmin, userController, userService, file, selectionService, verificationService, authService, password }) => {
     const router = express.Router();
 
     router.post(
@@ -16,6 +16,12 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
         '/:user_id',
         validateInput(commonValidations.userAccessUserIdValidation({ userService })),
         userController.handleGetUserRoute.bind(userController),
+    );
+
+    router.put(
+        '/:user_id/password',
+        validateInput(validations.changePasswordValidation({ userService, password })),
+        userController.handleChangePasswordRoute.bind(userController),
     );
 
     router.use(verifyAdmin);
