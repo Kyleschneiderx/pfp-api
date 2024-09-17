@@ -28,6 +28,6 @@ export default class SelectionController {
     async handleRemoveExerciseCategoryRoute(req, res) {
         await this.selectionService.removeExerciseCategory(req.params.id);
 
-        return res.status(204).json();
+        return res.json({ msg: 'Successfully removed category.' });
     }
 }
