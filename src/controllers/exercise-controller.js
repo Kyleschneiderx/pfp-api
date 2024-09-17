@@ -40,7 +40,7 @@ export default class ExerciseController {
     async handleRemoveExerciseRoute(req, res) {
         await this.exerciseService.removeExercise(req.params.id);
 
-        return res.status(204).send();
+        return res.json({ msg: 'Successfully removed exercise.' });
     }
 
     async handleUpdateExerciseRoute(req, res) {

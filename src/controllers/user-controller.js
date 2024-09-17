@@ -59,7 +59,7 @@ export default class UserController {
     async handleRemoveUserRoute(req, res) {
         await this.userService.removeUserAccount(req.params.user_id);
 
-        return res.status(204).send();
+        return res.json({ msg: 'Successfully removed patient.' });
     }
 
     async handleGetUsersRoute(req, res) {
@@ -89,7 +89,7 @@ export default class UserController {
     async handleRemoveUserPhotoRoute(req, res) {
         await this.userService.removeUserPhoto(req.params.user_id);
 
-        return res.status(204).send();
+        return res.json({ msg: 'Successfully removed patient photo.' });
     }
 
     async handleVerifyEmailExist(req, res) {
