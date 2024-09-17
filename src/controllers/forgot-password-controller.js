@@ -25,7 +25,10 @@ export default class ForgotPasswordController {
             link: req.user.account_type_id === ADMIN_ACCOUNT_TYPE_ID ? `${WEB_RESET_PASSWORD_URL}/${token}` : `${APP_RESET_PASSWORD_URL}/${token}`,
         });
 
-        return res.json({ msg: 'Successfully sent reset password link to your email.' });
+        return res.json({
+            msg: 'Successfully sent reset password link to your email.',
+            ...(process.env.APP_ENV !== 'production' && { token: token }),
+        });
     }
 
     async handleForgotPasswordAppRoute(req, res) {
@@ -37,7 +40,10 @@ export default class ForgotPasswordController {
             statusId: DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID,
         });
 
-        return res.json({ msg: 'Successfully sent OTP to your email for reset password. Check your OTP to proceed with your action.' });
+        return res.json({
+            msg: 'Successfully sent OTP to your email for reset password. Check your OTP to proceed with your action.',
+            ...(process.env.APP_ENV !== 'production' && { code: verificationCode.code }),
+        });
     }
 
     async handleResetPasswordRoute(req, res) {

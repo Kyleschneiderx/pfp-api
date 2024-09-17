@@ -5,9 +5,12 @@ export default class VerificationController {
     }
 
     async handleSendOtpRoute(req, res) {
-        await this.verificationService.sendOtp(req.body.email);
+        const verificationCode = await this.verificationService.sendOtp(req.body.email);
 
-        return res.status(200).json({ msg: 'Successfully sent OTP to your email. Check your OTP to proceed with your action.' });
+        return res.status(200).json({
+            msg: 'Successfully sent OTP to your email. Check your OTP to proceed with your action.',
+            ...(process.env.APP_ENV !== 'production' && { code: verificationCode.code }),
+        });
     }
 
     async handleVerifyOtp(req, res) {
