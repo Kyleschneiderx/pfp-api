@@ -34,25 +34,6 @@ export default class VerificationService {
     async sendOtp(email, name = undefined) {
         const code = this.generateVerificationCode();
 
-        let pendingOtp;
-        let timeToConsiderResend;
-        try {
-            timeToConsiderResend = dateFns.sub(new Date(), { seconds: OTP_RESEND_IN_SECONDS });
-            pendingOtp = await this.database.models.VerificationCodes.findOne({
-                where: { email: email, verified_at: null, updated_at: { [Sequelize.Op.gt]: timeToConsiderResend } },
-                order: [['id', 'DESC']],
-            });
-        } catch (error) {
-            this.logger.error('Failed to get pending OTP', error);
-
-            throw new exceptions.InternalServerError('Failed to get pending OTP', error);
-        }
-
-        if (pendingOtp) {
-            const remainingWaitingTime = dateFns.formatDistance(timeToConsiderResend, pendingOtp.updated_at, { includeSeconds: true });
-            throw new exceptions.UnprocessableEntity(`Please try again after ${remainingWaitingTime}.`);
-        }
-
         let verificationCode;
         try {
             verificationCode = await this.database.models.VerificationCodes.create({
