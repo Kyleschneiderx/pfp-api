@@ -18,4 +18,14 @@ export default class AuthController {
             token: token,
         });
     }
+
+    async handleRefreshTokenRoute(req, res) {
+        const user = this.userService.getUser({ userId: req.user });
+
+        const token = this.authService.generateSession(user);
+
+        return res.json({
+            token: token,
+        });
+    }
 }

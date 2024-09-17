@@ -30,6 +30,11 @@ export default ({
 }) => {
     const router = express.Router();
 
+    const verifyAuth = middlewares.verifyAuth({
+        jwt: jwt,
+        exceptions: ['/api/v1/users/signup'],
+    });
+
     router.use(fileUpload());
 
     router.use(
@@ -61,6 +66,7 @@ export default ({
             userService: userService,
             password: password,
             authService: authService,
+            verifyAuth: verifyAuth,
         }),
     );
 
@@ -86,12 +92,7 @@ export default ({
         }),
     );
 
-    router.use(
-        middlewares.verifyAuth({
-            jwt: jwt,
-            exceptions: ['/api/v1/users/signup'],
-        }),
-    );
+    router.use(verifyAuth);
 
     router.use(
         '/v1/selections',
