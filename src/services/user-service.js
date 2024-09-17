@@ -474,7 +474,9 @@ export default class UserService {
         try {
             const user = await this.getUser({ userId: userId, withProfile: true });
 
-            await this.storage.delete(user.user_profile.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            if (user.user_profile.photo) {
+                await this.storage.delete(user.user_profile.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
 
             return await this.database.models.Users.destroy({
                 where: {
