@@ -23,10 +23,6 @@ export default class AuthService {
      * @throws {InternalServerError} If failed to generate JWT token
      */
     generateSession(user) {
-        delete user.dataValues.password;
-        delete user.dataValues.google_id;
-        delete user.dataValues.apple_id;
-
         let token;
         try {
             token = this.jwt.generate(
@@ -41,11 +37,8 @@ export default class AuthService {
         }
 
         return {
-            user: user,
-            token: {
-                access: token.token,
-                expires: token.expires,
-            },
+            access: token.token,
+            expires: token.expires,
         };
     }
 

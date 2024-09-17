@@ -5,10 +5,17 @@ export default class AuthController {
     }
 
     async handleLoginRoute(req, res) {
-        const authenticate = this.authService.generateSession(req.user);
+        const token = this.authService.generateSession(req.user);
 
-        await this.userService.updateUserLastLogin(authenticate.user.id);
+        await this.userService.updateUserLastLogin(req.user.id);
 
-        return res.json(authenticate);
+        delete req.user.dataValues.password;
+        delete req.user.dataValues.google_id;
+        delete req.user.dataValues.apple_id;
+
+        return res.json({
+            user: req.user,
+            token: token,
+        });
     }
 }

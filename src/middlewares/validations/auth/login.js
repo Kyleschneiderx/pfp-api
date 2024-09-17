@@ -15,6 +15,7 @@ export default ({ userService, password, isAdmin, authService }) => [
             req.user = await userService.getUser({
                 email: value,
                 accountTypeId: isAdmin ? constants.ADMIN_ACCOUNT_TYPE_ID : constants.USER_ACCOUNT_TYPE_ID,
+                withProfile: true,
             });
 
             return value;
@@ -57,6 +58,7 @@ export default ({ userService, password, isAdmin, authService }) => [
             req.user = await userService.getUser({
                 googleId: googleId,
                 accountTypeId: constants.USER_ACCOUNT_TYPE_ID,
+                withProfile: true,
             });
             if (!req.user) {
                 throw new Error('Account does not exist.');
@@ -81,6 +83,7 @@ export default ({ userService, password, isAdmin, authService }) => [
             req.user = await userService.getUser({
                 appleId: appleId,
                 accountTypeId: constants.USER_ACCOUNT_TYPE_ID,
+                withProfile: true,
             });
             if (!req.user) {
                 throw new Error('Account does not exist.');
