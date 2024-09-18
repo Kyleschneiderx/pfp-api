@@ -4,6 +4,7 @@ import {
     AUTH_TOKEN_EXPIRATION_IN_MINUTES,
     DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID,
     RESET_PASSWORD_EXPIRATION_IN_SECONDS,
+    USER_ACCOUNT_TYPE_ID,
 } from '../constants/index.js';
 
 export default class AuthService {
@@ -29,7 +30,10 @@ export default class AuthService {
             token = this.jwt.generate(
                 process.env.JWT_SECRET,
                 { user: { user_id: user.id, account_type_id: user.account_type_id } },
-                { algorithm: process.env.JWT_ALGORITHM, expiration: AUTH_TOKEN_EXPIRATION_IN_MINUTES },
+                {
+                    algorithm: process.env.JWT_ALGORITHM,
+                    expiration: user.account_type_id === USER_ACCOUNT_TYPE_ID ? 0 : AUTH_TOKEN_EXPIRATION_IN_MINUTES,
+                },
             );
         } catch (error) {
             this.logger.error('Failed to generate JWT token.', error);
