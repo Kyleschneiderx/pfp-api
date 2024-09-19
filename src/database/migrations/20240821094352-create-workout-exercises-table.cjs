@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const createMigration = require('../../utils/sequelize-migration.cjs');
 
 module.exports = createMigration({
-    table: 'workout_days',
+    table: 'workout_exercises',
     schema: {
         id: {
             autoIncrement: true,
@@ -24,9 +24,6 @@ module.exports = createMigration({
                 model: 'exercises',
                 key: 'id',
             },
-        },
-        day: {
-            type: DataTypes.INTEGER,
         },
         sets: {
             type: DataTypes.INTEGER,
@@ -51,19 +48,14 @@ module.exports = createMigration({
     columns: {},
     indexes: [
         {
-            name: 'workout_days_workout_id',
+            name: 'workout_exercises_workout_id',
             using: 'BTREE',
             fields: [{ name: 'workout_id' }],
         },
         {
-            name: 'workout_days_workout_id_exercise_id',
+            name: 'workout_exercises_workout_id_exercise_id',
             using: 'BTREE',
             fields: [{ name: 'workout_id' }, { name: 'exercise_id' }],
-        },
-        {
-            name: 'workout_days_workout_id_exercise_id_day',
-            using: 'BTREE',
-            fields: [{ name: 'workout_id' }, { name: 'exercise_id' }, { name: 'day' }],
         },
     ],
 });

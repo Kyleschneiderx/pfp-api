@@ -13,6 +13,9 @@ export default (sequelize, DataTypes) => {
             description: {
                 type: DataTypes.TEXT,
             },
+            is_premium: {
+                type: DataTypes.BOOLEAN,
+            },
             status_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see statuses table',
@@ -50,8 +53,27 @@ export default (sequelize, DataTypes) => {
                     using: 'BTREE',
                     fields: [{ name: 'status_id' }, { name: 'name' }],
                 },
+                {
+                    name: 'workouts_is_premium',
+                    using: 'BTREE',
+                    fields: [{ name: 'is_premium' }],
+                },
+                {
+                    name: 'workouts_status_id_is_premium',
+                    using: 'BTREE',
+                    fields: [{ name: 'status_id' }, { name: 'is_premium' }],
+                },
             ],
         },
     );
+    model.associate = () => {
+        const { WorkoutExercises, Statuses, Workouts } = sequelize.models;
+
+        Workouts.hasMany(WorkoutExercises, { as: 'workout_exercises', foreignKey: 'workout_id' });
+
+        Workouts.hasOne(WorkoutExercises, { as: 'workout_exercise', foreignKey: 'workout_id' });
+
+        Workouts.belongsTo(Statuses, { as: 'status', foreignKey: 'status_id' });
+    };
     return model;
 };

@@ -1,6 +1,6 @@
 export default (sequelize, DataTypes) => {
     const model = sequelize.define(
-        'WorkoutDays',
+        'WorkoutExercises',
         {
             id: {
                 autoIncrement: true,
@@ -22,9 +22,6 @@ export default (sequelize, DataTypes) => {
                     model: 'exercises',
                     key: 'id',
                 },
-            },
-            day: {
-                type: DataTypes.INTEGER,
             },
             sets: {
                 type: DataTypes.INTEGER,
@@ -48,25 +45,25 @@ export default (sequelize, DataTypes) => {
         },
         {
             sequelize,
-            tableName: 'workout_days',
+            tableName: 'workout_exercises',
             indexes: [
                 {
-                    name: 'workout_days_workout_id',
+                    name: 'workout_exercises_workout_id',
                     using: 'BTREE',
                     fields: [{ name: 'workout_id' }],
                 },
                 {
-                    name: 'workout_days_workout_id_exercise_id',
+                    name: 'workout_exercises_workout_id_exercise_id',
                     using: 'BTREE',
                     fields: [{ name: 'workout_id' }, { name: 'exercise_id' }],
-                },
-                {
-                    name: 'workout_days_workout_id_exercise_id_day',
-                    using: 'BTREE',
-                    fields: [{ name: 'workout_id' }, { name: 'exercise_id' }, { name: 'day' }],
                 },
             ],
         },
     );
+    model.associate = () => {
+        const { WorkoutExercises, Exercises } = sequelize.models;
+
+        WorkoutExercises.belongsTo(Exercises, { as: 'exercise', foreignKey: 'exercise_id' });
+    };
     return model;
 };
