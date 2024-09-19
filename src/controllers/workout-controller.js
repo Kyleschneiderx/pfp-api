@@ -40,9 +40,9 @@ export default class WorkoutController {
     }
 
     async handleRemoveWorkoutRoute(req, res) {
-        await this.workoutService.removeExercise(req.params.id);
+        await this.workoutService.removeWorkout(req.params.id);
 
-        return res.status(204).send();
+        return res.json({ msg: 'Successfully removed workout.' });
     }
 
     async handleUpdateWorkoutRoute(req, res) {

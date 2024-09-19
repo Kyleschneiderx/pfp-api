@@ -303,6 +303,27 @@ export default class WorkoutService {
     }
 
     /**
+     * Remove workout
+     *
+     * @param {number} id workout id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to remove workout
+     */
+    async removeWorkout(id) {
+        try {
+            return await this.database.models.Workouts.destroy({
+                where: {
+                    id: id,
+                },
+            });
+        } catch (error) {
+            this.logger.error('Failed to remove workout', error);
+
+            throw new exceptions.InternalServerError('Failed to remove workout', error);
+        }
+    }
+
+    /**
      * Check if workout exist using id
      *
      * @param {number} id Workout id
