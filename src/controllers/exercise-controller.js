@@ -36,6 +36,15 @@ export default class ExerciseController {
         return res.json(list);
     }
 
+    async handleGetExerciseRoute(req, res) {
+        const exercise = await this.exerciseService.getExercises({
+            id: req.params.id,
+            page: req.query.page ?? REPORT_DEFAULT_PAGE,
+            pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
+        });
+        return res.json(exercise.data[0]);
+    }
+
     async handleRemoveExerciseRoute(req, res) {
         await this.exerciseService.removeExercise(req.params.id);
 

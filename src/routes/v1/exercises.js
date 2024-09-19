@@ -16,6 +16,12 @@ export default ({ verifyAdmin, exerciseController, exerciseService, selectionSer
 
     router.get('/', validateInput(validations.getExercisesValidation()), exerciseController.handleGetExercisesRoute.bind(exerciseController));
 
+    router.get(
+        '/:id',
+        validateInput([commonValidations.exerciseIdValidation({ exerciseService })]),
+        exerciseController.handleGetExerciseRoute.bind(exerciseController),
+    );
+
     router.delete(
         '/:id',
         validateInput([commonValidations.exerciseIdValidation({ exerciseService })]),
