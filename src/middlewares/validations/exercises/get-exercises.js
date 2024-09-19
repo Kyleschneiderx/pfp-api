@@ -15,6 +15,11 @@ export default () => [
             if (!Array.isArray(value)) {
                 value = [value];
             }
+
+            value = value.filter((val) => val !== '' && val !== undefined);
+
+            if (value.length === 0) return undefined;
+
             return value;
         }),
     query('sets_from')
