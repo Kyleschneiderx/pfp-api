@@ -106,6 +106,7 @@ Object.assign(serviceContainer, {
     workoutController: new controllers.WorkoutController({
         logger: serviceContainer.logger,
         workoutService: serviceContainer.workoutService,
+        userService: serviceContainer.userService,
     }),
 });
 
