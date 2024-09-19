@@ -33,10 +33,6 @@ export default () => [
         .trim()
         .optional()
         .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('email')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : value)),
     query('name')
         .trim()
         .optional()

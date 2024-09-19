@@ -39,5 +39,4 @@ export default ({ selectionService, file, exerciseService }) => [
     body('how_to').trim().optional().isString(),
     ...commonValidation.photoValidation({ field: 'photo', file: file }),
     ...commonValidation.videoValidation({ field: 'video', file: file }),
-    ...commonValidation.audioValidation({ field: 'audio', file: file }),
 ];

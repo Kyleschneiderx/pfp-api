@@ -36,9 +36,6 @@ module.exports = createMigration({
         how_to: {
             type: DataTypes.TEXT,
         },
-        audio: {
-            type: DataTypes.STRING(300),
-        },
         photo: {
             type: DataTypes.STRING(300),
         },

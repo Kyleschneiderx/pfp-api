@@ -16,7 +16,6 @@ export default class ExerciseController {
             howTo: req.body.how_to,
             photo: req.files?.photo,
             video: req.files?.video,
-            audio: req.files?.audio,
         });
         return res.status(201).json(exercise);
     }
@@ -55,7 +54,6 @@ export default class ExerciseController {
             howTo: req.body.how_to,
             photo: req.files?.photo,
             video: req.files?.video,
-            audio: req.files?.audio,
         });
         return res.json(list);
     }

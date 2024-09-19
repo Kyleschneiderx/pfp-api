@@ -34,9 +34,6 @@ export default (sequelize, DataTypes) => {
             how_to: {
                 type: DataTypes.TEXT,
             },
-            audio: {
-                type: DataTypes.STRING(250),
-            },
             photo: {
                 type: DataTypes.STRING(250),
             },

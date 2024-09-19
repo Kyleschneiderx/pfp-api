@@ -1,12 +1,5 @@
 import { Sequelize } from 'sequelize';
-import {
-    EXERCISE_AUDIO_PATH,
-    EXERCISE_VIDEO_PATH,
-    EXERCISE_PHOTO_PATH,
-    ASSET_URL,
-    S3_OBJECT_URL,
-    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-} from '../constants/index.js';
+import { EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class ExerciseService {
@@ -23,11 +16,9 @@ export default class ExerciseService {
      * @param {object} files
      * @param {object} files.photo Photo file
      * @param {object} files.video Video file
-     * @param {object} files.audio Audio file
      * @returns {Promise<{
      * photo: { originalFilename: string, fileName: string, path: string, s3: object } | undefined,
      * video: { originalFilename: string, fileName: string, path: string, s3: object } | undefined,
-     * audio: { originalFilename: string, fileName: string, path: string, s3: object } | undefined,
      * uploadedFilePaths: string[]
      * }>}
      */
@@ -48,24 +39,17 @@ export default class ExerciseService {
                     }),
                 ]) ??
                     []),
-                ...((files.audio && [
-                    this.storage.store(files.audio.name, files.audio.data, EXERCISE_AUDIO_PATH, {
-                        contentType: files.audio.mimetype,
-                        s3: { bucket: process.env.S3_BUCKET_NAME },
-                    }),
-                ]) ??
-                    []),
             ]);
 
             let rejectedStore;
 
-            const [photoStoreResponse, videoStoreResponse, audioStoreResponse] = storeResponse.map((response) => {
+            const [photoStoreResponse, videoStoreResponse] = storeResponse.map((response) => {
                 if (response.status === 'rejected') rejectedStore = response;
 
                 return response?.value ?? undefined;
             });
 
-            const uploadedPaths = [photoStoreResponse?.path ?? [], videoStoreResponse?.path ?? [], audioStoreResponse?.path ?? []].flat();
+            const uploadedPaths = [photoStoreResponse?.path ?? [], videoStoreResponse?.path ?? []].flat();
 
             if (rejectedStore) {
                 this.logger.error('Failed to upload files on s3', rejectedStore.reason);
@@ -80,7 +64,6 @@ export default class ExerciseService {
             return {
                 photo: photoStoreResponse,
                 video: videoStoreResponse,
-                audio: audioStoreResponse,
                 uploadedFilePaths: uploadedPaths,
             };
         } catch (error) {
@@ -100,7 +83,6 @@ export default class ExerciseService {
      * @param {string} data.howTo Exercise how to
      * @param {object} data.photo Exercise photo
      * @param {object} data.video Exercise video
-     * @param {object} data.audio Exercise audio
      * @returns {Promise<Exercises>} Exercises model instance
      * @throws {InternalServerError} If failed to create exercise
      */
@@ -111,10 +93,9 @@ export default class ExerciseService {
             s3UploadResponse = await this._uploadFilesToS3({
                 photo: data.photo,
                 video: data.video,
-                audio: data.audio,
             });
 
-            const { photo: photoStoreResponse, video: videoStoreResponse, audio: audioStoreResponse } = s3UploadResponse;
+            const { photo: photoStoreResponse, video: videoStoreResponse } = s3UploadResponse;
 
             const exercise = await this.database.models.Exercises.create({
                 name: data.name,
@@ -126,7 +107,6 @@ export default class ExerciseService {
                 how_to: data.howTo,
                 photo: photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : null,
                 video: videoStoreResponse?.path ? `${ASSET_URL}/${videoStoreResponse?.path}` : null,
-                audio: audioStoreResponse?.path ? `${ASSET_URL}/${audioStoreResponse?.path}` : null,
             });
 
             exercise.photo = this.helper.generateProtectedUrl(exercise.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
@@ -134,10 +114,6 @@ export default class ExerciseService {
             });
 
             exercise.video = this.helper.generateProtectedUrl(exercise.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
-
-            exercise.audio = this.helper.generateProtectedUrl(exercise.audio, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
 
@@ -241,10 +217,6 @@ export default class ExerciseService {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
 
-            row.audio = this.helper.generateProtectedUrl(row.audio, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
-
             return row;
         });
 
@@ -270,7 +242,6 @@ export default class ExerciseService {
             const toRemoveFiles = [
                 ...(exercise.photo && [exercise.photo.replace(ASSET_URL, S3_OBJECT_URL)]),
                 ...(exercise.video && [exercise.video.replace(ASSET_URL, S3_OBJECT_URL)]),
-                ...(exercise.audio && [exercise.audio.replace(ASSET_URL, S3_OBJECT_URL)]),
             ];
 
             await this.storage.delete(toRemoveFiles, {
@@ -302,7 +273,6 @@ export default class ExerciseService {
      * @param {string=} data.howTo Exercise how to
      * @param {object=} data.photo Exercise photo
      * @param {object=} data.video Exercise video
-     * @param {object=} data.audio Exercise audio
      * @returns {Promise<Exercises>} Exercises model instance
      * @throws {InternalServerError} If failed to update exercise
      */
@@ -314,18 +284,15 @@ export default class ExerciseService {
             s3UploadResponse = await this._uploadFilesToS3({
                 photo: data.photo,
                 video: data.video,
-                audio: data.audio,
             });
 
-            const { photo: photoStoreResponse, video: videoStoreResponse, audio: audioStoreResponse } = s3UploadResponse;
+            const { photo: photoStoreResponse, video: videoStoreResponse } = s3UploadResponse;
 
             const toRemoveFiles = [];
 
             if (photoStoreResponse && exercise.photo) toRemoveFiles.push(exercise.photo.replace(ASSET_URL, S3_OBJECT_URL));
 
             if (videoStoreResponse && exercise.video) toRemoveFiles.push(exercise.video.replace(ASSET_URL, S3_OBJECT_URL));
-
-            if (audioStoreResponse && exercise.audio) toRemoveFiles.push(exercise.audio.replace(ASSET_URL, S3_OBJECT_URL));
 
             exercise.name = data.name;
             exercise.category_id = data.categoryId;
@@ -336,7 +303,6 @@ export default class ExerciseService {
             exercise.how_to = data.howTo;
             exercise.photo = photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : undefined;
             exercise.video = videoStoreResponse?.path ? `${ASSET_URL}/${videoStoreResponse?.path}` : undefined;
-            exercise.audio = audioStoreResponse?.path ? `${ASSET_URL}/${audioStoreResponse?.path}` : undefined;
 
             await exercise.save();
 
@@ -347,10 +313,6 @@ export default class ExerciseService {
             });
 
             exercise.video = this.helper.generateProtectedUrl(exercise.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
-
-            exercise.audio = this.helper.generateProtectedUrl(exercise.audio, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
 
