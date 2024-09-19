@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import * as dateFns from 'date-fns';
 import { Sequelize } from 'sequelize';
 import * as exceptions from '../exceptions/index.js';
-import { OTP_RESEND_IN_SECONDS, OTP_EXPIRATION_IN_SECONDS } from '../constants/index.js';
+import { OTP_EXPIRATION_IN_SECONDS } from '../constants/index.js';
 
 export default class VerificationService {
     constructor({ logger, database, smtp, jwt, file, emailService }) {
