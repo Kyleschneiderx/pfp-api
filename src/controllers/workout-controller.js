@@ -41,6 +41,7 @@ export default class WorkoutController {
             id: req.params.id,
             name: req.body.name,
             description: req.body.description,
+            isPremium: req.body.is_premium,
             exercises: req.body.exercises,
         });
         return res.json(workout);

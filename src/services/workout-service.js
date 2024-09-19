@@ -22,6 +22,7 @@ export default class WorkoutService {
             return await this.database.models.Workouts.create({
                 name: data.name,
                 description: data.description,
+                is_premium: false,
                 status_id: DRAFT_WORKOUT_STATUS_ID,
             });
         } catch (error) {
@@ -37,6 +38,7 @@ export default class WorkoutService {
      * @param {number} data.id Workout id
      * @param {string=} data.name Workout name
      * @param {string=} data.description Workout description
+     * @param {boolean=} data.isPremium Workout premium indicator
      * @param {object[]=} data.exercises Workout exercises
      * @param {number} data.exercises[].exercise_id Workout exercise name
      * @param {number} data.exercises[].sets Workout exercise number of sets
@@ -52,6 +54,8 @@ export default class WorkoutService {
             workout.name = data.name;
 
             workout.description = data.description;
+
+            workout.is_premium = data.isPremium;
 
             await workout.save();
 
