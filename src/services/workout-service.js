@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, DRAFT_WORKOUT_STATUS_ID } from '../constants/index.js';
+import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutService {
@@ -56,6 +56,8 @@ export default class WorkoutService {
             workout.description = data.description;
 
             workout.is_premium = data.isPremium;
+
+            workout.status_id = data.exercises ? PUBLISHED_WORKOUT_STATUS_ID : workout.status_id;
 
             await workout.save();
 
