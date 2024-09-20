@@ -100,4 +100,12 @@ export default class UserController {
         await this.userService.resetUserPassword(req.params.user_id, req.body.password);
         return res.json({ msg: 'Password successfully changed.' });
     }
+
+    async handleUploadUserPhotoRoute(req, res) {
+        const user = await this.userService.updateUserAccount({
+            userId: req.params.user_id,
+            photo: req.files?.photo,
+        });
+        return res.json({ photo: user.user_profile.photo });
+    }
 }

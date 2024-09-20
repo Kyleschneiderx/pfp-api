@@ -24,6 +24,15 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
         userController.handleChangePasswordRoute.bind(userController),
     );
 
+    router.put(
+        '/:user_id/photo',
+        validateInput([
+            ...commonValidations.userAccessUserIdValidation({ userService }),
+            ...commonValidations.photoValidation({ field: 'photo', file: file, isRequired: true }),
+        ]),
+        userController.handleUploadUserPhotoRoute.bind(userController),
+    );
+
     router.use(verifyAdmin);
 
     router.post(
