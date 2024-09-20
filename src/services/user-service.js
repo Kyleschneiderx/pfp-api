@@ -36,7 +36,7 @@ export default class UserService {
      */
     async getUser(filter) {
         try {
-            return await this.database.models.Users.findOne({
+            const user = await this.database.models.Users.findOne({
                 attributes: {
                     exclude: ['deleted_at'],
                 },
@@ -59,6 +59,18 @@ export default class UserService {
                         []),
                 ],
             });
+
+            if (user.user_profile) {
+                user.user_profile.photo = this.helper.generateProtectedUrl(
+                    user.user_profile.photo,
+                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                    {
+                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                    },
+                );
+            }
+
+            return user;
         } catch (error) {
             this.logger.error(error.message, error);
 
