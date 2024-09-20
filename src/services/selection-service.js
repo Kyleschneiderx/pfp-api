@@ -254,4 +254,21 @@ export default class SelectionService {
             throw new exceptions.InternalServerError('Failed to verify exercise category', error);
         }
     }
+
+    /**
+     * Check if status exist using id
+     *
+     * @param {number} id Status id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to verify status
+     */
+    async isStatusExistById(id) {
+        try {
+            return Boolean(await this.database.models.Statuses.count({ where: { id: id } }));
+        } catch (error) {
+            this.logger.error('Failed to verify status', error);
+
+            throw new exceptions.InternalServerError('Failed to verify status', error);
+        }
+    }
 }

@@ -11,6 +11,7 @@ export default class WorkoutController {
         const workout = await this.workoutService.createWorkout({
             name: req.body.name,
             description: req.body.description,
+            statusId: req.body.status_id,
             exercises: req.body.exercises,
         });
         return res.status(201).json(workout);
@@ -50,6 +51,7 @@ export default class WorkoutController {
             id: req.params.id,
             name: req.body.name,
             description: req.body.description,
+            statusId: req.body.status_id,
             isPremium: req.body.is_premium,
             exercises: req.body.exercises,
         });

@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../constants/index.js';
+import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutService {
@@ -14,16 +14,39 @@ export default class WorkoutService {
      * @param {object} data
      * @param {string} data.name Workout name
      * @param {string} data.description Workout description
+     * @param {number} data.statusId Workout status id
      * @returns {Promise<Workouts>} Workouts model instance
      * @throws {InternalServerError} If failed to create workout
      */
     async createWorkout(data) {
         try {
-            return await this.database.models.Workouts.create({
-                name: data.name,
-                description: data.description,
-                is_premium: false,
-                status_id: DRAFT_WORKOUT_STATUS_ID,
+            return await this.database.transaction(async (transaction) => {
+                const workout = await this.database.models.Workouts.create(
+                    {
+                        name: data.name,
+                        description: data.description,
+                        is_premium: false,
+                        status_id: data.statusId,
+                    },
+                    { transaction: transaction },
+                );
+
+                if (data.exercises) {
+                    await this.database.models.WorkoutExercises.bulkCreate(
+                        data.exercises.map((exercise) => ({
+                            workout_id: workout.id,
+                            exercise_id: exercise.exercise_id,
+                            sets: exercise.sets,
+                            reps: exercise.reps,
+                            hold: exercise.hold,
+                        })),
+                        {
+                            transaction: transaction,
+                        },
+                    );
+                }
+
+                return workout;
             });
         } catch (error) {
             this.logger.error('Failed to create workout.', error);
@@ -38,6 +61,7 @@ export default class WorkoutService {
      * @param {number} data.id Workout id
      * @param {string=} data.name Workout name
      * @param {string=} data.description Workout description
+     * @param {number=} data.statusId Workout status id
      * @param {boolean=} data.isPremium Workout premium indicator
      * @param {object[]=} data.exercises Workout exercises
      * @param {number} data.exercises[].exercise_id Workout exercise name
@@ -57,7 +81,7 @@ export default class WorkoutService {
 
             workout.is_premium = data.isPremium;
 
-            workout.status_id = data.exercises ? PUBLISHED_WORKOUT_STATUS_ID : workout.status_id;
+            workout.status_id = data.statusId;
 
             await workout.save();
 

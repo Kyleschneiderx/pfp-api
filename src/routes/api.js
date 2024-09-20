@@ -138,6 +138,7 @@ export default ({
             workoutController: workoutController,
             workoutService: workoutService,
             exerciseService: exerciseService,
+            selectionService: selectionService,
         }),
     );
 
