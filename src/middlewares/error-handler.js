@@ -11,5 +11,13 @@ export default ({ logger }) =>
             message = 'An error occured. Please try again later.';
             logger.error(err.message, err);
         }
-        return res.status(err.statusCode ?? 500).json({ error: typeof message === 'string' ? [{ msg: message }] : [message], code: err.statusCode });
+
+        const photo = req?.files?.photo;
+
+        if (photo !== undefined) {
+            delete photo.data;
+        }
+        return res
+            .status(err.statusCode ?? 500)
+            .json({ error: typeof message === 'string' ? [{ msg: message }] : [message], code: err.statusCode, file: photo });
     };
