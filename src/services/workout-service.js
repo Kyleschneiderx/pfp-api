@@ -122,6 +122,7 @@ export default class WorkoutService {
      * @param {object} filter
      * @param {string=} filter.id Workout id
      * @param {string=} filter.name Workout name
+     * @param {string=} filter.statusId Workout status id
      * @param {Array=} filter.sort Field and order to be use for sorting
      * @example [ [ {field}:{order} ] ]
      * @param {number=} filter.page Page for list to navigate
@@ -174,6 +175,7 @@ export default class WorkoutService {
             where: {
                 ...(filter.id && { id: filter.id }),
                 ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
+                ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
             },
         };
 
@@ -242,10 +244,12 @@ export default class WorkoutService {
      * Get workout details including all exercises in it
      *
      * @param {number} id Workout id
+     * @param {object} filter
+     * @param {number=} filter.statusId Workout status id
      * @throws {InternalServerError} If failed to get workouts
      * @throws {NotFoundError} If no records found
      */
-    async getWorkoutDetails(id) {
+    async getWorkoutDetails(id, filter) {
         try {
             const workout = await this.database.models.Workouts.findOne({
                 nest: true,
@@ -293,6 +297,7 @@ export default class WorkoutService {
                 order: [['id', 'DESC']],
                 where: {
                     id: id,
+                    ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
                 },
             });
 
