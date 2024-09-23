@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
+import { ADMIN_ACCOUNT_TYPE_ID, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutService {
@@ -246,6 +246,7 @@ export default class WorkoutService {
      * @param {number} id Workout id
      * @param {object} filter
      * @param {number=} filter.statusId Workout status id
+     * @param {number=} filter.authenticatedUser Authenticated user
      * @throws {InternalServerError} If failed to get workouts
      * @throws {NotFoundError} If no records found
      */
@@ -254,9 +255,14 @@ export default class WorkoutService {
             const workout = await this.database.models.Workouts.findOne({
                 nest: true,
                 subQuery: false,
-                attributes: {
-                    exclude: ['deleted_at', 'status_id'],
-                },
+                attributes: [
+                    'id',
+                    'name',
+                    'description',
+                    [Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite'],
+                    'created_at',
+                    'updated_at',
+                ],
                 include: [
                     {
                         model: this.database.models.Statuses,
@@ -293,6 +299,19 @@ export default class WorkoutService {
                         ],
                         order: [['id', 'DESC']],
                     },
+                    ...((filter.authenticatedUser &&
+                        filter.authenticatedUser.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && [
+                            {
+                                model: this.database.models.UserFavoriteWorkouts,
+                                as: 'user_favorite_workouts',
+                                attributes: [],
+                                required: false,
+                                where: {
+                                    user_id: filter.authenticatedUser.user_id,
+                                },
+                            },
+                        ]) ??
+                        []),
                 ],
                 order: [['id', 'DESC']],
                 where: {
@@ -300,6 +319,8 @@ export default class WorkoutService {
                     ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
                 },
             });
+
+            workout.dataValues.is_favorite = Boolean(workout.dataValues.is_favorite);
 
             if (workout.workout_exercises) {
                 workout.dataValues.workout_exercises = workout.dataValues.workout_exercises.map((workoutExercise) => {
@@ -367,5 +388,141 @@ export default class WorkoutService {
 
             throw new exceptions.InternalServerError('Failed to check workout', error);
         }
+    }
+
+    /**
+     * Update user workout favorite status
+     *
+     * @param {number} userId User account id
+     * @param {number} workoutId Workout id
+     * @param {boolean} favoriteStatus Workout favorite status
+     * @throws {InternalServerError} If failed to update favorite workouts
+     * @returns {Promise<UserFavoriteWorkouts>} UserFavoriteWorkouts instance
+     */
+    async updateUserFavoriteWorkouts(userId, workoutId, favoriteStatus) {
+        try {
+            const [userWorkoutFavorite, createdUserWorkoutFavorite] = await this.database.models.UserFavoriteWorkouts.findOrCreate({
+                where: {
+                    user_id: userId,
+                    workout_id: workoutId,
+                },
+                defaults: {
+                    user_id: userId,
+                    workout_id: workoutId,
+                    is_favorite: favoriteStatus,
+                },
+            });
+
+            if (userWorkoutFavorite) {
+                userWorkoutFavorite.is_favorite = favoriteStatus;
+
+                await userWorkoutFavorite.save();
+            }
+
+            return userWorkoutFavorite ?? createdUserWorkoutFavorite;
+        } catch (error) {
+            this.logger.error('Failed to update favorite workouts.', error);
+
+            throw new exceptions.InternalServerError('Failed to update favorite workouts.', error);
+        }
+    }
+
+    /**
+     * Get favorite workouts for user
+     *
+     * @param {number} userId User account user id
+     * @returns {Promise<Workouts[]>} Workout instance
+     * @throws {InternalServerError} If failed to get favorite workouts
+     * @throws {NotFoundError} If no records found
+     */
+    async getFavoriteWorkouts(userId) {
+        const options = {
+            nest: true,
+            subQuery: false,
+            attributes: {
+                exclude: ['deleted_at', 'status_id'],
+            },
+            include: [
+                {
+                    model: this.database.models.Statuses,
+                    as: 'status',
+                    attributes: ['id', 'value'],
+                    where: {},
+                },
+                {
+                    model: this.database.models.WorkoutExercises,
+                    as: 'workout_exercises',
+                    attributes: {
+                        exclude: ['deleted_at', 'workout_id', 'created_at', 'updated_at'],
+                    },
+                    include: [
+                        {
+                            model: this.database.models.Exercises,
+                            as: 'exercise',
+                            attributes: ['id', 'photo', 'video'],
+                            where: {},
+                        },
+                    ],
+                    order: [['id', 'DESC']],
+                    separate: true,
+                    limit: 1,
+                },
+                {
+                    model: this.database.models.UserFavoriteWorkouts,
+                    as: 'user_favorite_workouts',
+                    required: true,
+                    attributes: [],
+                    where: {
+                        user_id: userId,
+                        is_favorite: true,
+                    },
+                },
+            ],
+            order: [['id', 'DESC']],
+            where: {},
+        };
+
+        let favorites;
+        try {
+            favorites = await this.database.models.Workouts.findAll(options);
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get favorite workouts', error);
+        }
+
+        if (favorites.length === 0) throw new exceptions.NotFound('No records found.');
+
+        favorites = favorites.map((row) => {
+            const workoutExercise = row.dataValues.workout_exercises[0];
+
+            delete row.dataValues.workout_exercises;
+
+            row.dataValues.workout_exercise = workoutExercise ?? null;
+
+            if (workoutExercise) {
+                delete row.dataValues.workout_exercise.dataValues.exercise_id;
+
+                row.dataValues.workout_exercise.exercise.photo = this.helper.generateProtectedUrl(
+                    row.dataValues.workout_exercise.exercise.photo,
+                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                    {
+                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                    },
+                );
+
+                row.dataValues.workout_exercise.exercise.video = this.helper.generateProtectedUrl(
+                    row.dataValues.workout_exercise.exercise.video,
+                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                    {
+                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                    },
+                );
+            }
+
+            return row;
+        });
+
+        return favorites;
     }
 }

@@ -63,3 +63,7 @@ export const ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES = 60;
 export const DRAFT_WORKOUT_STATUS_ID = 4;
 
 export const PUBLISHED_WORKOUT_STATUS_ID = 5;
+
+export const FAVORITE_WORKOUT_STATUS = true;
+
+export const UNFAVORITE_WORKOUT_STATUS = false;

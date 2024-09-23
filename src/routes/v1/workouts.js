@@ -8,10 +8,24 @@ export default ({ verifyAdmin, workoutController, workoutService, exerciseServic
 
     router.get('/', validateInput(validations.getWorkoutsValidation()), workoutController.handleGetWorkoutsRoute.bind(workoutController));
 
+    router.get('/favorites', workoutController.handleGetFavoriteWorkoutsRoute.bind(workoutController));
+
     router.get(
         '/:id',
         validateInput([commonValidations.workoutIdValidation({ workoutService })]),
         workoutController.handleGetWorkoutRoute.bind(workoutController),
+    );
+
+    router.post(
+        '/:id/favorite',
+        validateInput([commonValidations.workoutIdValidation({ workoutService })]),
+        workoutController.handleAddFavoriteWorkoutRoute.bind(workoutController),
+    );
+
+    router.delete(
+        '/:id/favorite',
+        validateInput([commonValidations.workoutIdValidation({ workoutService })]),
+        workoutController.handleRemoveFavoriteWorkoutRoute.bind(workoutController),
     );
 
     router.use(verifyAdmin);

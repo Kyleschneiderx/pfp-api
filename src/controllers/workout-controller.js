@@ -4,6 +4,8 @@ import {
     PREMIUM_USER_TYPE_ID,
     ADMIN_ACCOUNT_TYPE_ID,
     PUBLISHED_WORKOUT_STATUS_ID,
+    FAVORITE_WORKOUT_STATUS,
+    UNFAVORITE_WORKOUT_STATUS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -43,10 +45,11 @@ export default class WorkoutController {
         const workout = await this.workoutService.getWorkoutDetails(req.params.id, {
             ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
                 statusId: PUBLISHED_WORKOUT_STATUS_ID,
+                authenticatedUser: req.auth,
             }),
         });
 
-        if (user.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && !(workout.is_premium && user.type_id === PREMIUM_USER_TYPE_ID)) {
+        if (user.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && workout.is_premium && !(workout.is_premium && user.type_id === PREMIUM_USER_TYPE_ID)) {
             throw new exceptions.Forbidden('You cannot access this content.');
         }
 
@@ -69,5 +72,24 @@ export default class WorkoutController {
             exercises: req.body.exercises,
         });
         return res.json(workout);
+    }
+
+    async handleAddFavoriteWorkoutRoute(req, res) {
+        const userWorkoutFavorite = await this.workoutService.updateUserFavoriteWorkouts(req.auth.user_id, req.params.id, FAVORITE_WORKOUT_STATUS);
+
+        return res.json(userWorkoutFavorite);
+    }
+
+    async handleRemoveFavoriteWorkoutRoute(req, res) {
+        await this.workoutService.updateUserFavoriteWorkouts(req.auth.user_id, req.params.id, UNFAVORITE_WORKOUT_STATUS);
+        return res.json({ msg: 'Successfully removed workout to favorites.' });
+    }
+
+    async handleGetFavoriteWorkoutsRoute(req, res) {
+        const favorites = await this.workoutService.getFavoriteWorkouts(req.auth.user_id);
+
+        return res.json({
+            data: favorites,
+        });
     }
 }

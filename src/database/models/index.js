@@ -15,3 +15,4 @@ export { default as WorkoutDays } from './workout-exercises.js';
 export { default as Workouts } from './workouts.js';
 export { default as VerificationCodes } from './verification-codes.js';
 export { default as ResetPasswordRequests } from './reset-password-requests.js';
+export { default as UserFavoriteWorkouts } from './user-favorite-workouts.js';
