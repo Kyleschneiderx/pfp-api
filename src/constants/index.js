@@ -67,3 +67,5 @@ export const PUBLISHED_WORKOUT_STATUS_ID = 5;
 export const FAVORITE_WORKOUT_STATUS = true;
 
 export const UNFAVORITE_WORKOUT_STATUS = false;
+
+export const WORKOUT_PHOTO_PATH = 'workout-photo';

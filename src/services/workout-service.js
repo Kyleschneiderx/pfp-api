@@ -1,12 +1,13 @@
 import { Sequelize } from 'sequelize';
-import { ADMIN_ACCOUNT_TYPE_ID, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
+import { ADMIN_ACCOUNT_TYPE_ID, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, WORKOUT_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutService {
-    constructor({ logger, database, helper }) {
+    constructor({ logger, database, helper, storage }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
+        this.storage = storage;
     }
 
     /**
@@ -15,21 +16,40 @@ export default class WorkoutService {
      * @param {string} data.name Workout name
      * @param {string} data.description Workout description
      * @param {number} data.statusId Workout status id
+     * @param {object} data.photo Workout photo
+     * @param {object[]=} data.exercises Workout exercises
+     * @param {number} data.exercises[].exercise_id Workout exercise name
+     * @param {number} data.exercises[].sets Workout exercise number of sets
+     * @param {number} data.exercises[].reps Workout exercise number of reps
+     * @param {number} data.exercises[].hold Workout exercise hold time
      * @returns {Promise<Workouts>} Workouts model instance
      * @throws {InternalServerError} If failed to create workout
      */
     async createWorkout(data) {
         try {
+            let storeResponse;
+            if (data.photo !== undefined) {
+                storeResponse = await this.storage.store(data.photo.name, data.photo.data, WORKOUT_PHOTO_PATH, {
+                    contentType: data.photo.mimetype,
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
+
             return await this.database.transaction(async (transaction) => {
                 const workout = await this.database.models.Workouts.create(
                     {
                         name: data.name,
                         description: data.description,
+                        photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
                         is_premium: false,
                         status_id: data.statusId,
                     },
                     { transaction: transaction },
                 );
+
+                workout.photo = this.helper.generateProtectedUrl(workout.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                });
 
                 if (data.exercises) {
                     await this.database.models.WorkoutExercises.bulkCreate(
@@ -61,6 +81,7 @@ export default class WorkoutService {
      * @param {number} data.id Workout id
      * @param {string=} data.name Workout name
      * @param {string=} data.description Workout description
+     * @param {object=} data.photo Workout photo
      * @param {number=} data.statusId Workout status id
      * @param {boolean=} data.isPremium Workout premium indicator
      * @param {object[]=} data.exercises Workout exercises
@@ -73,11 +94,23 @@ export default class WorkoutService {
      */
     async updateWorkout(data) {
         try {
+            let storeResponse;
+            if (data.photo !== undefined) {
+                storeResponse = await this.storage.store(data.photo.name, data.photo.data, WORKOUT_PHOTO_PATH, {
+                    contentType: data.photo.mimetype,
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
+
             const workout = await this.database.models.Workouts.findOne({ where: { id: data.id } });
+
+            const oldPhoto = workout.photo;
 
             workout.name = data.name;
 
             workout.description = data.description;
+
+            workout.photo = storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : undefined;
 
             workout.is_premium = data.isPremium;
 
@@ -86,6 +119,14 @@ export default class WorkoutService {
             await workout.save();
 
             await workout.reload();
+
+            if (storeResponse?.path && oldPhoto) {
+                await this.storage.delete(oldPhoto.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+
+            workout.photo = this.helper.generateProtectedUrl(workout.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
 
             delete workout.dataValues.deleted_at;
 
@@ -152,24 +193,6 @@ export default class WorkoutService {
                     attributes: ['id', 'value'],
                     where: {},
                 },
-                {
-                    model: this.database.models.WorkoutExercises,
-                    as: 'workout_exercises',
-                    attributes: {
-                        exclude: ['deleted_at', 'workout_id', 'created_at', 'updated_at'],
-                    },
-                    include: [
-                        {
-                            model: this.database.models.Exercises,
-                            as: 'exercise',
-                            attributes: ['id', 'photo', 'video'],
-                            where: {},
-                        },
-                    ],
-                    order: [['id', 'DESC']],
-                    separate: true,
-                    limit: 1,
-                },
             ],
             order: [['id', 'DESC']],
             where: {
@@ -203,31 +226,9 @@ export default class WorkoutService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            const workoutExercise = row.dataValues.workout_exercises[0];
-
-            delete row.dataValues.workout_exercises;
-
-            row.dataValues.workout_exercise = workoutExercise ?? null;
-
-            if (workoutExercise) {
-                delete row.dataValues.workout_exercise.dataValues.exercise_id;
-
-                row.dataValues.workout_exercise.exercise.photo = this.helper.generateProtectedUrl(
-                    row.dataValues.workout_exercise.exercise.photo,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                    {
-                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                    },
-                );
-
-                row.dataValues.workout_exercise.exercise.video = this.helper.generateProtectedUrl(
-                    row.dataValues.workout_exercise.exercise.video,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                    {
-                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                    },
-                );
-            }
+            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
 
             return row;
         });
@@ -259,7 +260,13 @@ export default class WorkoutService {
                     'id',
                     'name',
                     'description',
-                    [Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite'],
+                    'photo',
+                    ...((filter.authenticatedUser &&
+                        filter.authenticatedUser.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && [
+                            Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0),
+                            'is_favorite',
+                        ]) ??
+                        []),
                     'created_at',
                     'updated_at',
                 ],
@@ -320,6 +327,10 @@ export default class WorkoutService {
                 },
             });
 
+            workout.photo = this.helper.generateProtectedUrl(workout.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
             workout.dataValues.is_favorite = Boolean(workout.dataValues.is_favorite);
 
             if (workout.workout_exercises) {
@@ -361,11 +372,12 @@ export default class WorkoutService {
      */
     async removeWorkout(id) {
         try {
-            return await this.database.models.Workouts.destroy({
-                where: {
-                    id: id,
-                },
-            });
+            const workout = await this.database.models.Workouts.findOne({ where: { id: id } });
+
+            if (workout.photo) {
+                await this.storage.delete(workout.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+            return await workout.destroy();
         } catch (error) {
             this.logger.error('Failed to remove workout', error);
 
@@ -450,24 +462,6 @@ export default class WorkoutService {
                     where: {},
                 },
                 {
-                    model: this.database.models.WorkoutExercises,
-                    as: 'workout_exercises',
-                    attributes: {
-                        exclude: ['deleted_at', 'workout_id', 'created_at', 'updated_at'],
-                    },
-                    include: [
-                        {
-                            model: this.database.models.Exercises,
-                            as: 'exercise',
-                            attributes: ['id', 'photo', 'video'],
-                            where: {},
-                        },
-                    ],
-                    order: [['id', 'DESC']],
-                    separate: true,
-                    limit: 1,
-                },
-                {
                     model: this.database.models.UserFavoriteWorkouts,
                     as: 'user_favorite_workouts',
                     required: true,
@@ -494,31 +488,9 @@ export default class WorkoutService {
         if (favorites.length === 0) throw new exceptions.NotFound('No records found.');
 
         favorites = favorites.map((row) => {
-            const workoutExercise = row.dataValues.workout_exercises[0];
-
-            delete row.dataValues.workout_exercises;
-
-            row.dataValues.workout_exercise = workoutExercise ?? null;
-
-            if (workoutExercise) {
-                delete row.dataValues.workout_exercise.dataValues.exercise_id;
-
-                row.dataValues.workout_exercise.exercise.photo = this.helper.generateProtectedUrl(
-                    row.dataValues.workout_exercise.exercise.photo,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                    {
-                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                    },
-                );
-
-                row.dataValues.workout_exercise.exercise.video = this.helper.generateProtectedUrl(
-                    row.dataValues.workout_exercise.exercise.video,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                    {
-                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                    },
-                );
-            }
+            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
 
             return row;
         });
