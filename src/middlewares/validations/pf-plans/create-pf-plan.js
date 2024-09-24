@@ -15,7 +15,7 @@ export default ({ workoutService, selectionService, file }) => [
             } catch (error) {
                 /** empty */
             }
-            console.log(value);
+
             return value;
         }),
     body('dailies.*.day')
