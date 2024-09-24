@@ -11,7 +11,7 @@ export default class PfPlanService {
     }
 
     /**
-     * Create pf plan
+     * Create PF plan
      *
      * @param {object} data
      * @param {string} data.name PF plan name
@@ -28,6 +28,7 @@ export default class PfPlanService {
     async createPfPlan(data) {
         try {
             let storeResponse;
+
             if (data.photo !== undefined) {
                 storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
                     contentType: data.photo.mimetype,
