@@ -12,4 +12,5 @@ export { default as tokenValidation } from './token.js';
 export { default as audioValidation } from './audio.js';
 export { default as exerciseIdValidation } from './exercise-id.js';
 export { default as workoutIdValidation } from './workout-id.js';
+export { default as pfPlanIdValidation } from './pf-plan-id.js';
 export { default as statusIdValidation } from './status.js';

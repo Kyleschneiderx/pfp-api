@@ -60,6 +60,8 @@ app.use(
         helper: serviceContainer.helper,
         workoutController: serviceContainer.workoutController,
         workoutService: serviceContainer.workoutService,
+        pfPlanController: serviceContainer.pfPlanController,
+        pfPlanService: serviceContainer.pfPlanService,
     }),
 );
 

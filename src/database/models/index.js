@@ -3,7 +3,7 @@ export { default as ApiLogs } from './api-logs.js';
 export { default as Educations } from './educations.js';
 export { default as ExerciseCategories } from './exercise-categories.js';
 export { default as Exercises } from './exercises.js';
-export { default as PfPlanDays } from './pf-plan-days.js';
+export { default as PfPlanExercises } from './pf-plan-exercises.js';
 export { default as PfPlans } from './pf-plans.js';
 export { default as Statuses } from './statuses.js';
 export { default as SubscriptionPackages } from './subscription-packages.js';

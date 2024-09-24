@@ -69,3 +69,7 @@ export const FAVORITE_WORKOUT_STATUS = true;
 export const UNFAVORITE_WORKOUT_STATUS = false;
 
 export const WORKOUT_PHOTO_PATH = 'workout-photo';
+
+export const DRAFT_PF_PLAN_STATUS_ID = 4;
+
+export const PUBLISHED_PF_PLAN_STATUS_ID = 5;

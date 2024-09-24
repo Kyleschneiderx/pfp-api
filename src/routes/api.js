@@ -7,6 +7,7 @@ import routeV1Verifications from './v1/verifications.js';
 import routeV1ForgotPassword from './v1/forgot-password.js';
 import routeV1Exercises from './v1/exercises.js';
 import routeV1Workouts from './v1/workouts.js';
+import routeV1PfPlans from './v1/pf-plans.js';
 import routeAsset from './assets.js';
 import * as middlewares from '../middlewares/index.js';
 
@@ -30,6 +31,8 @@ export default ({
     helper,
     workoutController,
     workoutService,
+    pfPlanController,
+    pfPlanService,
 }) => {
     const router = express.Router();
 
@@ -140,6 +143,16 @@ export default ({
             exerciseService: exerciseService,
             selectionService: selectionService,
             file: file,
+        }),
+    );
+
+    router.use(
+        '/v1/pf-plans',
+        routeV1PfPlans({
+            verifyAdmin: middlewares.verifyAdmin,
+            pfPlanController: pfPlanController,
+            pfPlanService: pfPlanService,
+            exerciseService: exerciseService,
         }),
     );
 

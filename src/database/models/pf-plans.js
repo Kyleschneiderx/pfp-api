@@ -13,6 +13,9 @@ export default (sequelize, DataTypes) => {
             description: {
                 type: DataTypes.TEXT,
             },
+            is_premium: {
+                type: DataTypes.BOOLEAN,
+            },
             status_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see statuses table',
@@ -44,6 +47,21 @@ export default (sequelize, DataTypes) => {
                     name: 'pf_plans_name',
                     using: 'BTREE',
                     fields: [{ name: 'name' }],
+                },
+                {
+                    name: 'pf_plans_status_id_name',
+                    using: 'BTREE',
+                    fields: [{ name: 'status_id' }, { name: 'name' }],
+                },
+                {
+                    name: 'pf_plans_is_premium',
+                    using: 'BTREE',
+                    fields: [{ name: 'is_premium' }],
+                },
+                {
+                    name: 'pf_plans_status_id_is_premium',
+                    using: 'BTREE',
+                    fields: [{ name: 'status_id' }, { name: 'is_premium' }],
                 },
             ],
         },

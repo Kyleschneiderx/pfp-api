@@ -1,6 +1,6 @@
 export default (sequelize, DataTypes) => {
     const model = sequelize.define(
-        'PfPlanDays',
+        'PfPlanExercises',
         {
             id: {
                 autoIncrement: true,
@@ -51,17 +51,17 @@ export default (sequelize, DataTypes) => {
             tableName: 'pf_plans',
             indexes: [
                 {
-                    name: 'pf_plan_days_pf_plan_id',
+                    name: 'pf_plan_exercises_pf_plan_id',
                     using: 'BTREE',
                     fields: [{ name: 'pf_plan_id' }],
                 },
                 {
-                    name: 'pf_plan_days_pf_plan_id_exercise_id',
+                    name: 'pf_plan_exercises_pf_plan_id_exercise_id',
                     using: 'BTREE',
                     fields: [{ name: 'pf_plan_id' }, { name: 'exercise_id' }],
                 },
                 {
-                    name: 'pf_plan_days_pf_plan_id_exercise_id_day',
+                    name: 'pf_plan_exercises_pf_plan_id_exercise_id_day',
                     using: 'BTREE',
                     fields: [{ name: 'pf_plan_id' }, { name: 'exercise_id' }, { name: 'day' }],
                 },

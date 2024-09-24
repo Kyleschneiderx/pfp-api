@@ -5,3 +5,4 @@ export { default as VerificationController } from './verification-controller.js'
 export { default as ForgotPasswordController } from './forgot-password-controller.js';
 export { default as ExerciseController } from './exercise-controller.js';
 export { default as WorkoutController } from './workout-controller.js';
+export { default as PfPlanController } from './pf-plan-controller.js';
