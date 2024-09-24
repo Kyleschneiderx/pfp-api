@@ -3,7 +3,7 @@ import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/pf-plans/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ verifyAdmin, pfPlanController, pfPlanService, exerciseService }) => {
+export default ({ verifyAdmin, pfPlanController, pfPlanService, workoutService, selectionService, file }) => {
     const router = express.Router();
 
     router.get('/', validateInput(validations.getPfPlansValidation()), pfPlanController.handleGetPfPlansRoute.bind(pfPlanController));
@@ -18,13 +18,13 @@ export default ({ verifyAdmin, pfPlanController, pfPlanService, exerciseService 
 
     router.post(
         '/',
-        validateInput(validations.createPfPlanValidation({ pfPlanService, exerciseService })),
+        validateInput(validations.createPfPlanValidation({ pfPlanService, workoutService, selectionService, file })),
         pfPlanController.handleCreatePfPlanRoute.bind(pfPlanController),
     );
 
     router.put(
         '/:id',
-        validateInput(validations.updatePfPlanValidation({ pfPlanService, exerciseService })),
+        validateInput(validations.updatePfPlanValidation({ pfPlanService, workoutService, selectionService, file })),
         pfPlanController.handleUpdatePfPlanRoute.bind(pfPlanController),
     );
 

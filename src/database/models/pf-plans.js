@@ -13,6 +13,9 @@ export default (sequelize, DataTypes) => {
             description: {
                 type: DataTypes.TEXT,
             },
+            photo: {
+                type: DataTypes.STRING(300),
+            },
             is_premium: {
                 type: DataTypes.BOOLEAN,
             },
@@ -66,5 +69,12 @@ export default (sequelize, DataTypes) => {
             ],
         },
     );
+    model.associate = () => {
+        const { PfPlanDailies, Statuses, PfPlans } = sequelize.models;
+
+        PfPlans.hasMany(PfPlanDailies, { as: 'pf_plan_dailies', foreignKey: 'pf_plan_id' });
+
+        PfPlans.belongsTo(Statuses, { as: 'status', foreignKey: 'status_id' });
+    };
     return model;
 };

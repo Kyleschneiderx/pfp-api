@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const createMigration = require('../../utils/sequelize-migration.cjs');
 
 module.exports = createMigration({
-    table: 'pf_plan_exercises',
+    table: 'pf_plan_dailies',
     schema: {
         id: {
             autoIncrement: true,
@@ -17,23 +17,24 @@ module.exports = createMigration({
                 key: 'id',
             },
         },
-        exercise_id: {
+        day: {
             type: DataTypes.INTEGER,
-            comment: 'see exercises table',
+        },
+        workout_id: {
+            type: DataTypes.INTEGER,
+            comment: 'see workouts table',
             references: {
-                model: 'exercises',
+                model: 'workouts',
                 key: 'id',
             },
         },
-        sets: {
+        education_id: {
             type: DataTypes.INTEGER,
-        },
-        reps: {
-            type: DataTypes.INTEGER,
-        },
-        hold: {
-            comment: 'in seconds',
-            type: DataTypes.INTEGER,
+            comment: 'see educations table',
+            references: {
+                model: 'educations',
+                key: 'id',
+            },
         },
         created_at: {
             type: DataTypes.DATE,
@@ -48,19 +49,19 @@ module.exports = createMigration({
     columns: {},
     indexes: [
         {
-            name: 'pf_plan_exercises_pf_plan_id',
+            name: 'pf_plan_dailies_pf_plan_id',
             using: 'BTREE',
             fields: [{ name: 'pf_plan_id' }],
         },
         {
-            name: 'pf_plan_exercises_pf_plan_id_exercise_id',
+            name: 'pf_plan_dailies_pf_plan_id_workout_id_day',
             using: 'BTREE',
-            fields: [{ name: 'pf_plan_id' }, { name: 'exercise_id' }],
+            fields: [{ name: 'pf_plan_id' }, { name: 'workout_id' }, { name: 'day' }],
         },
         {
-            name: 'pf_plan_exercises_pf_plan_id_exercise_id_day',
+            name: 'pf_plan_dailies_pf_plan_id_education_id_day',
             using: 'BTREE',
-            fields: [{ name: 'pf_plan_id' }, { name: 'exercise_id' }, { name: 'day' }],
+            fields: [{ name: 'pf_plan_id' }, { name: 'education_id' }, { name: 'day' }],
         },
     ],
 });

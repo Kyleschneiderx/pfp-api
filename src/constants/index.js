@@ -73,3 +73,5 @@ export const WORKOUT_PHOTO_PATH = 'workout-photo';
 export const DRAFT_PF_PLAN_STATUS_ID = 4;
 
 export const PUBLISHED_PF_PLAN_STATUS_ID = 5;
+
+export const PFPLAN_PHOTO_PATH = 'pf-plan-photo';

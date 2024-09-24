@@ -1,6 +1,6 @@
 export default (sequelize, DataTypes) => {
     const model = sequelize.define(
-        'PfPlanExercises',
+        'PfPlanDailies',
         {
             id: {
                 autoIncrement: true,
@@ -15,26 +15,24 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
-            exercise_id: {
-                type: DataTypes.INTEGER,
-                comment: 'see exercises table',
-                references: {
-                    model: 'exercises',
-                    key: 'id',
-                },
-            },
             day: {
                 type: DataTypes.INTEGER,
             },
-            sets: {
+            workout_id: {
                 type: DataTypes.INTEGER,
+                comment: 'see workouts table',
+                references: {
+                    model: 'workouts',
+                    key: 'id',
+                },
             },
-            reps: {
+            education_id: {
                 type: DataTypes.INTEGER,
-            },
-            hold: {
-                comment: 'in seconds',
-                type: DataTypes.INTEGER,
+                comment: 'see educations table',
+                references: {
+                    model: 'educations',
+                    key: 'id',
+                },
             },
             created_at: {
                 type: DataTypes.DATE,
@@ -48,22 +46,22 @@ export default (sequelize, DataTypes) => {
         },
         {
             sequelize,
-            tableName: 'pf_plans',
+            tableName: 'pf_plan_dailies',
             indexes: [
                 {
-                    name: 'pf_plan_exercises_pf_plan_id',
+                    name: 'pf_plan_dailies_pf_plan_id',
                     using: 'BTREE',
                     fields: [{ name: 'pf_plan_id' }],
                 },
                 {
-                    name: 'pf_plan_exercises_pf_plan_id_exercise_id',
+                    name: 'pf_plan_dailies_pf_plan_id_workout_id_day',
                     using: 'BTREE',
-                    fields: [{ name: 'pf_plan_id' }, { name: 'exercise_id' }],
+                    fields: [{ name: 'pf_plan_id' }, { name: 'workout_id' }, { name: 'day' }],
                 },
                 {
-                    name: 'pf_plan_exercises_pf_plan_id_exercise_id_day',
+                    name: 'pf_plan_dailies_pf_plan_id_education_id_day',
                     using: 'BTREE',
-                    fields: [{ name: 'pf_plan_id' }, { name: 'exercise_id' }, { name: 'day' }],
+                    fields: [{ name: 'pf_plan_id' }, { name: 'education_id' }, { name: 'day' }],
                 },
             ],
         },

@@ -74,6 +74,7 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         database: serviceContainer.database,
         helper: serviceContainer.helper,
+        storage: serviceContainer.storage,
     }),
 });
 

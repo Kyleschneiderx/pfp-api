@@ -1,12 +1,13 @@
 import { Sequelize } from 'sequelize';
-import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID } from '../constants/index.js';
+import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, PUBLISHED_PF_PLAN_STATUS_ID, PFPLAN_PHOTO_PATH, ASSET_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanService {
-    constructor({ logger, database, helper }) {
+    constructor({ logger, database, helper, storage }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
+        this.storage = storage;
     }
 
     /**
@@ -15,21 +16,61 @@ export default class PfPlanService {
      * @param {object} data
      * @param {string} data.name PF plan name
      * @param {string} data.description PF plan description
-     * @returns {Promise<PfPlans>} PF plan model instance
-     * @throws {InternalServerError} If failed to create pf plan
+     * @param {number} data.statusId PF plan status id
+     * @param {object} data.photo PF plan photo
+     * @param {object[]=} data.dailies PF plan daily content
+     * @param {number} data.dailies[].day PF plan daily day indicator
+     * @param {number=} data.dailies[].workout_id PF plan daily content workout id
+     * @param {number=} data.dailies[].education_id PF plan daily content education id
+     * @returns {Promise<PfPlans>} PfPlans instance
+     * @throws {InternalServerError} If failed to create PF plan
      */
     async createPfPlan(data) {
         try {
-            return await this.database.models.PfPlans.create({
-                name: data.name,
-                description: data.description,
-                is_premium: false,
-                status_id: DRAFT_PF_PLAN_STATUS_ID,
+            let storeResponse;
+            if (data.photo !== undefined) {
+                storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
+                    contentType: data.photo.mimetype,
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
+
+            return await this.database.transaction(async (transaction) => {
+                const pfPlan = await this.database.models.PfPlans.create(
+                    {
+                        name: data.name,
+                        description: data.description,
+                        photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
+                        is_premium: false,
+                        status_id: data.statusId,
+                    },
+                    { transaction: transaction },
+                );
+
+                pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                });
+
+                if (data.dailies) {
+                    await this.database.models.PfPlanDailies.bulkCreate(
+                        data.dailies.map((daily) => ({
+                            pf_plan_id: pfPlan.id,
+                            day: daily.day,
+                            workout_id: daily.workout_id ?? null,
+                            education_id: daily.education_id ?? null,
+                        })),
+                        {
+                            transaction: transaction,
+                        },
+                    );
+                }
+
+                return pfPlan;
             });
         } catch (error) {
-            this.logger.error('Failed to create pf plan.', error);
+            this.logger.error('Failed to create PF plan.', error);
 
-            throw new exceptions.InternalServerError('Failed to create pf plan', error);
+            throw new exceptions.InternalServerError('Failed to create PF plan', error);
         }
     }
 
