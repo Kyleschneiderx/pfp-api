@@ -6,11 +6,15 @@ export default ({ userService }) => [
         .exists({ values: 'falsy' })
         .withMessage('Email is required.')
         .custom(async (value, { req }) => {
-            req.user = await userService.getUser({
-                email: value,
-                accountTypeId: USER_ACCOUNT_TYPE_ID,
-                withProfile: true,
-            });
+            try {
+                req.user = await userService.getUser({
+                    email: value,
+                    accountTypeId: USER_ACCOUNT_TYPE_ID,
+                    withProfile: true,
+                });
+            } catch (error) {
+                throw new Error(JSON.parse(error.message));
+            }
 
             if (!req.user) {
                 throw new Error('Account does not exist.');

@@ -61,7 +61,7 @@ export default class UserService {
                 ],
             });
 
-            if (user.user_profile) {
+            if (user?.user_profile) {
                 user.user_profile.photo = this.helper.generateProtectedUrl(
                     user.user_profile.photo,
                     `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
