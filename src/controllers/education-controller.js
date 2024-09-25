@@ -27,8 +27,8 @@ export default class EducationController {
         return res.status(201).json(education);
     }
 
-    async handleGetWorkoutsRoute(req, res) {
-        const list = await this.workoutService.getWorkouts({
+    async handleGetEducationsRoute(req, res) {
+        const list = await this.educationService.getEducations({
             id: req.query.id,
             name: req.query.name,
             sort: req.query.sort,

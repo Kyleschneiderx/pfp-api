@@ -57,5 +57,10 @@ export default (sequelize, DataTypes) => {
             ],
         },
     );
+    model.associate = () => {
+        const { Educations, Statuses } = sequelize.models;
+
+        Educations.belongsTo(Statuses, { as: 'status', foreignKey: 'status_id' });
+    };
     return model;
 };

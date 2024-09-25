@@ -137,6 +137,94 @@ export default class EducationService {
     }
 
     /**
+     * Get list of educations
+     *
+     * @param {object} filter
+     * @param {string=} filter.id Education id
+     * @param {string=} filter.name Education name
+     * @param {string=} filter.statusId Education status id
+     * @param {Array=} filter.sort Field and order to be use for sorting
+     * @example [ [ {field}:{order} ] ]
+     * @param {number=} filter.page Page for list to navigate
+     * @param {number=} filter.pageItems Number of items return per page
+     * @returns {Promise<{
+     * data: Educations[],
+     * page: number,
+     * page_items: number,
+     * max_page: number
+     * }>} Educations isntance and pagination details
+     * @throws {InternalServerError} If failed to get educations
+     * @throws {NotFoundError} If no records found
+     */
+    async getEducations(filter) {
+        const options = {
+            nest: true,
+            subQuery: false,
+            limit: filter.pageItems,
+            offset: filter.page * filter.pageItems - filter.pageItems,
+            attributes: {
+                exclude: ['deleted_at', 'status_id'],
+            },
+            include: [
+                {
+                    model: this.database.models.Statuses,
+                    as: 'status',
+                    attributes: ['id', 'value'],
+                    where: {},
+                },
+            ],
+            order: [['id', 'DESC']],
+            where: {
+                ...(filter.id && { id: filter.id }),
+                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
+                ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
+            },
+        };
+
+        if (filter.sort !== undefined) {
+            options.order = this.helper.parseSortList(
+                filter.sort,
+                {
+                    id: undefined,
+                    name: undefined,
+                },
+                this.database,
+            );
+        }
+
+        let count;
+        let rows;
+        try {
+            ({ count, rows } = await this.database.models.Educations.findAndCountAll(options));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get educations', error);
+        }
+
+        if (!rows.length) throw new exceptions.NotFound('No records found.');
+
+        rows = rows.map((row) => {
+            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            row.media_upload = this.helper.generateProtectedUrl(row.media_upload, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            return row;
+        });
+
+        return {
+            data: rows,
+            page: filter.page,
+            page_items: filter.pageItems,
+            max_page: Math.ceil(count / filter.pageItems),
+        };
+    }
+
+    /**
      * Check if education exist using id
      *
      * @param {number} id Education id

@@ -5,6 +5,8 @@ import * as validations from '../../middlewares/validations/educations/index.js'
 export default ({ verifyAdmin, educationController, educationService, selectionService, file }) => {
     const router = express.Router();
 
+    router.get('/', validateInput(validations.getEducationsValidation()), educationController.handleGetEducationsRoute.bind(educationController));
+
     router.use(verifyAdmin);
 
     router.post(
