@@ -8,7 +8,7 @@ export default ({ verifyAdmin, workoutController, workoutService, exerciseServic
 
     router.get('/', validateInput(validations.getWorkoutsValidation()), workoutController.handleGetWorkoutsRoute.bind(workoutController));
 
-    router.get('/favorites', workoutController.handleGetFavoriteWorkoutsRoute.bind(workoutController));
+    router.get('/favorites', [...commonValidations.paginationValidation()], workoutController.handleGetFavoriteWorkoutsRoute.bind(workoutController));
 
     router.get(
         '/:id',
