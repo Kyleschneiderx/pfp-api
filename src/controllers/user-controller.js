@@ -1,4 +1,4 @@
-import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS } from '../constants/index.js';
+import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID } from '../constants/index.js';
 
 export default class UserController {
     constructor({ userService, verificationService, authService }) {
@@ -17,6 +17,7 @@ export default class UserController {
             googleId: req.body.google_id,
             appleId: req.body.apple_id,
             photo: req.files?.photo,
+            statusId: ACTIVE_STATUS_ID,
             verified_at: new Date(),
         });
 
@@ -38,6 +39,7 @@ export default class UserController {
             birthdate: req.body.birthdate,
             description: req.body.description,
             typeId: req.body.type_id,
+            statusId: INACTIVE_STATUS_ID,
             photo: req.files?.photo,
         });
 

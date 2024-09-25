@@ -1,7 +1,6 @@
 import { Sequelize } from 'sequelize';
 import {
     USER_ACCOUNT_TYPE_ID,
-    ACTIVE_STATUS_ID,
     INACTIVE_STATUS_ID,
     ADMIN_ACCOUNT_TYPE_ID,
     USER_PHOTO_PATH,
@@ -244,6 +243,7 @@ export default class UserService {
      * @param {object=} data.photo User account photo
      * @param {string=} data.googleId User account google id
      * @param {string=} data.appleId User account apple id
+     * @param {number} data.statusId User account status id
      * @param {Date=} data.verified_at User account verified date
      * @returns {Promise<Users>} Users model instance
      * @throws {InternalServerError} If failed to process photo
@@ -277,7 +277,7 @@ export default class UserService {
                         google_id: data.googleId ?? null,
                         apple_id: data.appleId ?? null,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
-                        status_id: INACTIVE_STATUS_ID,
+                        status_id: data.statusId ?? INACTIVE_STATUS_ID,
                         verified_at: data.verified_at ?? null,
                     },
                     {
