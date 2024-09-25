@@ -22,6 +22,8 @@ export default class UserController {
 
         const token = this.authService.generateSession(user);
 
+        await this.userService.updateUserLastLogin(user.id);
+
         return res.status(201).json({
             user: user,
             token: token,

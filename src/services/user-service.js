@@ -2,6 +2,7 @@ import { Sequelize } from 'sequelize';
 import {
     USER_ACCOUNT_TYPE_ID,
     ACTIVE_STATUS_ID,
+    INACTIVE_STATUS_ID,
     ADMIN_ACCOUNT_TYPE_ID,
     USER_PHOTO_PATH,
     USER_PHOTO_HEIGHT,
@@ -196,6 +197,7 @@ export default class UserService {
             return await this.database.models.Users.update(
                 {
                     last_login_at: new Date(),
+                    status_id: ACTIVE_STATUS_ID,
                     updated_at: new Date(),
                 },
                 { where: { id: userId } },
@@ -275,7 +277,7 @@ export default class UserService {
                         google_id: data.googleId ?? null,
                         apple_id: data.appleId ?? null,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
-                        status_id: ACTIVE_STATUS_ID,
+                        status_id: INACTIVE_STATUS_ID,
                         verified_at: data.verified_at ?? null,
                     },
                     {

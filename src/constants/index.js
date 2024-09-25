@@ -10,6 +10,8 @@ export const PREMIUM_USER_TYPE_ID = 2;
 
 export const ACTIVE_STATUS_ID = 1;
 
+export const INACTIVE_STATUS_ID = 2;
+
 export const REPORT_DEFAULT_ITEMS = 50;
 
 export const REPORT_DEFAULT_PAGE = 1;
