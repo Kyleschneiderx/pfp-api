@@ -158,6 +158,7 @@ export default ({
             workoutService: workoutService,
             selectionService: selectionService,
             file: file,
+            educationService: educationService,
         }),
     );
 

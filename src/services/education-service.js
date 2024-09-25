@@ -135,4 +135,21 @@ export default class EducationService {
             throw new exceptions.InternalServerError('Failed to create education', error);
         }
     }
+
+    /**
+     * Check if education exist using id
+     *
+     * @param {number} id Education id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check education by id
+     */
+    async isEducationExistById(id) {
+        try {
+            return Boolean(await this.database.models.Educations.count({ where: { id: id } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check education', error);
+        }
+    }
 }

@@ -14,3 +14,4 @@ export { default as exerciseIdValidation } from './exercise-id.js';
 export { default as workoutIdValidation } from './workout-id.js';
 export { default as pfPlanIdValidation } from './pf-plan-id.js';
 export { default as statusIdValidation } from './status.js';
+export { default as educationIdValidation } from './education-id.js';
