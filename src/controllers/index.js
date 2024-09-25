@@ -6,3 +6,4 @@ export { default as ForgotPasswordController } from './forgot-password-controlle
 export { default as ExerciseController } from './exercise-controller.js';
 export { default as WorkoutController } from './workout-controller.js';
 export { default as PfPlanController } from './pf-plan-controller.js';
+export { default as EducationController } from './education-controller.js';

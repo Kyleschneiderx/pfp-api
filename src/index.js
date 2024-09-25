@@ -62,6 +62,8 @@ app.use(
         workoutService: serviceContainer.workoutService,
         pfPlanController: serviceContainer.pfPlanController,
         pfPlanService: serviceContainer.pfPlanService,
+        educationController: serviceContainer.educationController,
+        educationService: serviceContainer.educationService,
     }),
 );
 

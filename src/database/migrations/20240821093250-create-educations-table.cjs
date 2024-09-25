@@ -15,11 +15,22 @@ module.exports = createMigration({
         content: {
             type: DataTypes.TEXT,
         },
-        video_url: {
+        photo: {
             type: DataTypes.STRING(300),
         },
-        video_upload: {
+        media_url: {
             type: DataTypes.STRING(300),
+        },
+        media_upload: {
+            type: DataTypes.STRING(300),
+        },
+        status_id: {
+            type: DataTypes.INTEGER,
+            comment: 'see statuses table',
+            references: {
+                model: 'statuses',
+                key: 'id',
+            },
         },
         created_at: {
             type: DataTypes.DATE,
@@ -37,6 +48,11 @@ module.exports = createMigration({
             name: 'educations_title',
             using: 'BTREE',
             fields: [{ name: 'title' }],
+        },
+        {
+            name: 'educations_status_id',
+            using: 'BTREE',
+            fields: [{ name: 'status_id' }],
         },
     ],
 });

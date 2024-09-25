@@ -76,6 +76,12 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
     }),
+    educationService: new services.EducationService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        helper: serviceContainer.helper,
+        storage: serviceContainer.storage,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -118,6 +124,11 @@ Object.assign(serviceContainer, {
     pfPlanController: new controllers.PfPlanController({
         logger: serviceContainer.logger,
         pfPlanService: serviceContainer.pfPlanService,
+        userService: serviceContainer.userService,
+    }),
+    educationController: new controllers.EducationController({
+        logger: serviceContainer.logger,
+        educationService: serviceContainer.educationService,
         userService: serviceContainer.userService,
     }),
 });

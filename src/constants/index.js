@@ -75,3 +75,11 @@ export const DRAFT_PF_PLAN_STATUS_ID = 4;
 export const PUBLISHED_PF_PLAN_STATUS_ID = 5;
 
 export const PFPLAN_PHOTO_PATH = 'pf-plan-photo';
+
+export const DRAFT_EDUCATION_STATUS_ID = 4;
+
+export const PUBLISHED_EDUCATION_STATUS_ID = 5;
+
+export const EDUCATION_PHOTO_PATH = 'education-photo';
+
+export const EDUCATION_MEDIA_PATH = 'education-media';

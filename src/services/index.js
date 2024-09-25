@@ -7,3 +7,4 @@ export { default as EmailService } from './email-service.js';
 export { default as ExerciseService } from './exercise-service.js';
 export { default as WorkoutService } from './workout-service.js';
 export { default as PfPlanService } from './pf-plan-service.js';
+export { default as EducationService } from './education-service.js';
