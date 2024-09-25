@@ -262,12 +262,9 @@ export default class WorkoutService {
                     'name',
                     'description',
                     'photo',
-                    ...((filter.authenticatedUser &&
-                        filter.authenticatedUser.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && [
-                            Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0),
-                            'is_favorite',
-                        ]) ??
-                        []),
+                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
+                        : []),
                     'created_at',
                     'updated_at',
                 ],
@@ -307,19 +304,19 @@ export default class WorkoutService {
                         ],
                         order: [['id', 'DESC']],
                     },
-                    ...((filter.authenticatedUser &&
-                        filter.authenticatedUser.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && [
-                            {
-                                model: this.database.models.UserFavoriteWorkouts,
-                                as: 'user_favorite_workouts',
-                                attributes: [],
-                                required: false,
-                                where: {
-                                    user_id: filter.authenticatedUser.user_id,
-                                },
-                            },
-                        ]) ??
-                        []),
+                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [
+                              {
+                                  model: this.database.models.UserFavoriteWorkouts,
+                                  as: 'user_favorite_workouts',
+                                  attributes: [],
+                                  required: false,
+                                  where: {
+                                      user_id: filter.authenticatedUser.user_id,
+                                  },
+                              },
+                          ]
+                        : []),
                 ],
                 order: [['id', 'DESC']],
                 where: {
@@ -332,7 +329,9 @@ export default class WorkoutService {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
 
-            workout.dataValues.is_favorite = Boolean(workout.dataValues.is_favorite);
+            if (workout.dataValues.is_favorite) {
+                workout.dataValues.is_favorite = Boolean(workout.dataValues.is_favorite);
+            }
 
             if (workout.workout_exercises) {
                 workout.dataValues.workout_exercises = workout.dataValues.workout_exercises.map((workoutExercise) => {
