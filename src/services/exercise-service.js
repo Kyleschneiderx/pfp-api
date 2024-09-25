@@ -179,7 +179,7 @@ export default class ExerciseService {
                     sets: { [Sequelize.Op.gte]: filter.setsFrom, ...(filter.setsTo && { [Sequelize.Op.lte]: filter.setsTo }) },
                 }),
                 ...(filter.repsFrom && {
-                    sets: { [Sequelize.Op.gte]: filter.repsFrom, ...(filter.repsTo && { [Sequelize.Op.lte]: filter.repsTo }) },
+                    reps: { [Sequelize.Op.gte]: filter.repsFrom, ...(filter.repsTo && { [Sequelize.Op.lte]: filter.repsTo }) },
                 }),
                 ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
             },
