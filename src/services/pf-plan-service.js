@@ -42,7 +42,7 @@ export default class PfPlanService {
                         name: data.name,
                         description: data.description,
                         photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
-                        is_premium: false,
+                        is_premium: true,
                         status_id: data.statusId,
                     },
                     { transaction: transaction },
