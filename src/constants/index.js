@@ -18,7 +18,7 @@ export const REPORT_DEFAULT_PAGE = 1;
 
 export const ALLOWED_PHOTO_TYPE = ['jpg', 'jpeg', 'png'];
 
-export const ALLOWED_VIDEO_TYPE = ['mp4', 'avi', 'mov'];
+export const ALLOWED_VIDEO_TYPE = ['mp4', 'avi', 'mov', 'wmv', 'mkv'];
 
 export const ALLOWED_AUDIO_TYPE = ['m4a', 'flac', 'mp3', 'wav', 'aac'];
 
