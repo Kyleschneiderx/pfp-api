@@ -21,6 +21,7 @@ export default class WorkoutController {
             description: req.body.description,
             photo: req?.files?.photo,
             statusId: req.body.status_id,
+            isPremium: req.body.is_premium,
             exercises: req.body.exercises,
         });
         return res.status(201).json(workout);

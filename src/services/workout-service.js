@@ -17,6 +17,7 @@ export default class WorkoutService {
      * @param {string} data.description Workout description
      * @param {number} data.statusId Workout status id
      * @param {object} data.photo Workout photo
+     * @param {boolean} data.isPremium Workout premium indicator
      * @param {object[]=} data.exercises Workout exercises
      * @param {number} data.exercises[].exercise_id Workout exercise name
      * @param {number} data.exercises[].sets Workout exercise number of sets
@@ -41,7 +42,7 @@ export default class WorkoutService {
                         name: data.name,
                         description: data.description,
                         photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
-                        is_premium: false,
+                        is_premium: data.isPremium,
                         status_id: data.statusId,
                     },
                     { transaction: transaction },
