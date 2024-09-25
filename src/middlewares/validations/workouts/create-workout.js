@@ -8,8 +8,6 @@ export default ({ exerciseService, selectionService, file }) => [
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     body('exercises')
-        // .if(body('exercises').exists({ value: 'falsy' }))
-
         .if(body('status_id').equals(String(PUBLISHED_WORKOUT_STATUS_ID)))
         .customSanitizer((value) => {
             if (value === '') return undefined;
