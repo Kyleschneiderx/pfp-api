@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize';
 import {
     USER_ACCOUNT_TYPE_ID,
+    ACTIVE_STATUS_ID,
     INACTIVE_STATUS_ID,
     ADMIN_ACCOUNT_TYPE_ID,
     USER_PHOTO_PATH,
