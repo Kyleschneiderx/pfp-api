@@ -8,8 +8,12 @@ export default ({ exerciseService, selectionService, file }) => [
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     body('exercises')
-        .if(body('exercises').exists({ value: 'falsy' }))
+        // .if(body('exercises').exists({ value: 'falsy' }))
+
+        .if(body('status_id').equals(String(PUBLISHED_WORKOUT_STATUS_ID)))
         .customSanitizer((value) => {
+            if (value === '') return undefined;
+
             try {
                 value = JSON.parse(value);
             } catch (error) {
@@ -17,7 +21,8 @@ export default ({ exerciseService, selectionService, file }) => [
             }
 
             return value;
-        }),
+        })
+        .exists({ value: 'falsy' }),
     commonValidation.exerciseIdValidation({ exerciseService, isBody: true, field: 'exercises.*.exercise_id' }),
     body('exercises.*.sets')
         .trim()
