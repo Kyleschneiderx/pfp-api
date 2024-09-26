@@ -171,29 +171,12 @@ export default class PfPlanService {
                     attributes: ['id', 'value'],
                     where: {},
                 },
-                {
-                    model: this.database.models.PfPlanExercises,
-                    as: 'pf_plan_exercises',
-                    attributes: {
-                        exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
-                    },
-                    include: [
-                        {
-                            model: this.database.models.Exercises,
-                            as: 'exercise',
-                            attributes: ['id', 'photo', 'video'],
-                            where: {},
-                        },
-                    ],
-                    order: [['id', 'DESC']],
-                    separate: true,
-                    limit: 1,
-                },
             ],
             order: [['id', 'DESC']],
             where: {
                 ...(filter.id && { id: filter.id }),
                 ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
+                ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
             },
         };
 
@@ -215,37 +198,15 @@ export default class PfPlanService {
         } catch (error) {
             this.logger.error(error.message, error);
 
-            throw new exceptions.InternalServerError('Failed to get pf plans', error);
+            throw new exceptions.InternalServerError('Failed to get PF plans', error);
         }
 
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            const pfPlanExercise = row.dataValues.pf_plan_exercises[0];
-
-            delete row.dataValues.pf_plan_exercises;
-
-            row.dataValues.pf_plan_exercise = pfPlanExercise ?? null;
-
-            if (pfPlanExercise) {
-                delete row.dataValues.pf_plan_exercise.dataValues.exercise_id;
-
-                row.dataValues.pf_plan_exercise.exercise.photo = this.helper.generateProtectedUrl(
-                    row.dataValues.pf_plan_exercise.exercise.photo,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                    {
-                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                    },
-                );
-
-                row.dataValues.pf_plan_exercise.exercise.video = this.helper.generateProtectedUrl(
-                    row.dataValues.pf_plan_exercise.exercise.video,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                    {
-                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                    },
-                );
-            }
+            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
 
             return row;
         });
