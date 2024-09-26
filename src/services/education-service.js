@@ -225,6 +225,85 @@ export default class EducationService {
     }
 
     /**
+     * Get education details
+     *
+     * @param {number} id Education id
+     * @param {object} filter
+     * @param {number=} filter.statusId Education status id
+     * @param {number=} filter.authenticatedUser Authenticated user
+     * @throws {InternalServerError} If failed to get educations
+     */
+    async getEducationDetails(id, filter) {
+        try {
+            const education = await this.database.models.Educations.findOne({
+                nest: true,
+                subQuery: false,
+                attributes: [
+                    'id',
+                    'title',
+                    'content',
+                    'photo',
+                    'media_url',
+                    'media_upload',
+                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
+                        : []),
+                    'created_at',
+                    'updated_at',
+                ],
+                include: [
+                    {
+                        model: this.database.models.Statuses,
+                        as: 'status',
+                        attributes: ['id', 'value'],
+                        where: {},
+                    },
+                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [
+                              {
+                                  model: this.database.models.UserFavoriteEducations,
+                                  as: 'user_favorite_educations',
+                                  attributes: [],
+                                  required: false,
+                                  where: {
+                                      user_id: filter.authenticatedUser.user_id,
+                                  },
+                              },
+                          ]
+                        : []),
+                ],
+                order: [['id', 'DESC']],
+                where: {
+                    id: id,
+                    ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
+                },
+            });
+
+            education.photo = this.helper.generateProtectedUrl(education.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            education.media_upload = this.helper.generateProtectedUrl(
+                education.media_upload,
+                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                },
+            );
+
+            if (education.dataValues.is_favorite) {
+                education.dataValues.is_favorite = Boolean(education.dataValues.is_favorite);
+            }
+
+            return education;
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get education details', error);
+        }
+    }
+
+    /**
      * Check if education exist using id
      *
      * @param {number} id Education id

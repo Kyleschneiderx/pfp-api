@@ -42,13 +42,13 @@ export default class EducationController {
         return res.json(list);
     }
 
-    async handleGetWorkoutRoute(req, res) {
+    async handleGetEducationRoute(req, res) {
         const user = await this.userService.getUser({ userId: req.auth.user_id });
 
-        const workout = await this.workoutService.getWorkoutDetails(req.params.id, {
+        const workout = await this.educationService.getEducationDetails(req.params.id, {
+            authenticatedUser: req.auth,
             ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
                 statusId: PUBLISHED_WORKOUT_STATUS_ID,
-                authenticatedUser: req.auth,
             }),
         });
 
