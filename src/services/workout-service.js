@@ -328,7 +328,7 @@ export default class WorkoutService {
                 order: [['id', 'DESC']],
                 where: {
                     id: id,
-                    ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
+                    ...(filter.statusId && { status_id: filter.statusId }),
                 },
             });
 
