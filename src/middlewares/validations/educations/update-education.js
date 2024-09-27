@@ -8,11 +8,12 @@ import {
     MAX_VIDEO_SIZE_IN_MB,
 } from '../../../constants/index.js';
 
-export default ({ selectionService, file }) => [
-    body('title').trim().exists({ values: 'falsy' }).withMessage('Title is required.').isString().isLength({ max: 150 }),
-    body('content').trim().exists({ values: 'falsy' }).withMessage('Content is required.').isString(),
+export default ({ educationService, selectionService, file }) => [
+    commonValidation.educationIdValidation({ educationService, field: 'id' }),
+    body('title').trim().optional().notEmpty().withMessage('Title is required.').isString().isLength({ max: 150 }),
+    body('content').trim().optional().notEmpty().isString(),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_EDUCATION_STATUS_ID, PUBLISHED_EDUCATION_STATUS_ID] }),
-    ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
+    ...commonValidation.photoValidation({ field: 'photo', file: file }),
     body('media_url').trim().optional().isString().if(body('media_url').notEmpty()).isURL(),
     check('media_upload').custom((value, { req }) => {
         if (req.files === undefined || req.files === null) return true;

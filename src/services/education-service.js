@@ -137,6 +137,87 @@ export default class EducationService {
     }
 
     /**
+     * Update education
+     * @param {object} data
+     * @param {number} data.id Education id
+     * @param {string=} data.title Education title
+     * @param {string=} data.content Education content
+     * @param {object=} data.photo Education photo
+     * @param {number=} data.statusId Education status id
+     * @param {object=} data.mediaUrl Education media URL. Video/Image
+     * @param {object=} data.mediaUpload Education media upload. Video/Image
+     * @returns {Promise<Educations>} Educations model instance
+     * @throws {InternalServerError} If failed to update education
+     */
+    async updateEducation(data) {
+        let s3UploadResponse;
+        try {
+            const education = await this.database.models.Educations.findOne({ where: { id: data.id } });
+
+            s3UploadResponse = await this._uploadFilesToS3({
+                photo: data.photo,
+                media: data.mediaUpload,
+            });
+
+            const { photo: photoStoreResponse, media: mediaStoreResponse } = s3UploadResponse;
+
+            const toRemoveFiles = [];
+
+            if (photoStoreResponse && education.photo) toRemoveFiles.push(education.photo.replace(ASSET_URL, S3_OBJECT_URL));
+
+            if (mediaStoreResponse && education.media_upload) toRemoveFiles.push(education.media_upload.replace(ASSET_URL, S3_OBJECT_URL));
+
+            education.title = data.title;
+
+            education.content = data.content;
+
+            education.photo = photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : undefined;
+
+            education.media_url = data.mediaUrl;
+
+            education.media_upload = mediaStoreResponse?.path ? `${ASSET_URL}/${mediaStoreResponse?.path}` : undefined;
+
+            education.status_id = data.statusId;
+
+            await education.save();
+
+            await education.reload();
+
+            education.photo = this.helper.generateProtectedUrl(education.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            education.media_upload = this.helper.generateProtectedUrl(
+                education.media_upload,
+                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                },
+            );
+
+            if (toRemoveFiles.length !== 0) {
+                await this.storage.delete(toRemoveFiles, {
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
+
+            delete education.dataValues.deleted_at;
+
+            return education;
+        } catch (error) {
+            if (s3UploadResponse?.uploadedFilePaths !== undefined) {
+                await this.storage.delete(s3UploadResponse.uploadedFilePaths, {
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
+
+            this.logger.error('Failed to update education.', error);
+
+            throw new exceptions.InternalServerError('Failed to update education', error);
+        }
+    }
+
+    /**
      * Get list of educations
      *
      * @param {object} filter
@@ -231,6 +312,7 @@ export default class EducationService {
      * @param {object} filter
      * @param {number=} filter.statusId Education status id
      * @param {number=} filter.authenticatedUser Authenticated user
+     * @returns {Promise<Educations>} Educations model instance
      * @throws {InternalServerError} If failed to get educations
      */
     async getEducationDetails(id, filter) {

@@ -1,13 +1,11 @@
 import {
     REPORT_DEFAULT_PAGE,
     REPORT_DEFAULT_ITEMS,
-    PREMIUM_USER_TYPE_ID,
     ADMIN_ACCOUNT_TYPE_ID,
     PUBLISHED_WORKOUT_STATUS_ID,
     FAVORITE_WORKOUT_STATUS,
     UNFAVORITE_WORKOUT_STATUS,
 } from '../constants/index.js';
-import * as exceptions from '../exceptions/index.js';
 
 export default class EducationController {
     constructor({ educationService, userService }) {
@@ -43,39 +41,33 @@ export default class EducationController {
     }
 
     async handleGetEducationRoute(req, res) {
-        const user = await this.userService.getUser({ userId: req.auth.user_id });
-
-        const workout = await this.educationService.getEducationDetails(req.params.id, {
+        const education = await this.educationService.getEducationDetails(req.params.id, {
             authenticatedUser: req.auth,
             ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
                 statusId: PUBLISHED_WORKOUT_STATUS_ID,
             }),
         });
 
-        if (user.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && workout.is_premium && !(workout.is_premium && user.type_id === PREMIUM_USER_TYPE_ID)) {
-            throw new exceptions.Forbidden('You cannot access this content.');
-        }
-
-        return res.json(workout);
+        return res.json(education);
     }
 
-    async handleRemoveWorkoutRoute(req, res) {
-        await this.workoutService.removeWorkout(req.params.id);
+    async handleRemoveEducationRoute(req, res) {
+        await this.workoutService.removeEducation(req.params.id);
 
-        return res.json({ msg: 'Successfully removed workout.' });
+        return res.json({ msg: 'Successfully removed education.' });
     }
 
-    async handleUpdateWorkoutRoute(req, res) {
-        const workout = await this.workoutService.updateWorkout({
+    async handleUpdateEducationRoute(req, res) {
+        const education = await this.educationService.updateEducation({
             id: req.params.id,
-            name: req.body.name,
-            description: req.body.description,
+            title: req.body.title,
+            content: req.body.content,
+            mediaUrl: req.body.media_url,
+            mediaUpload: req?.files?.media_upload,
             photo: req?.files?.photo,
             statusId: req.body.status_id,
-            isPremium: req.body.is_premium,
-            exercises: req.body.exercises,
         });
-        return res.json(workout);
+        return res.json(education);
     }
 
     async handleAddFavoriteWorkoutRoute(req, res) {

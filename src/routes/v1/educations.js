@@ -22,5 +22,11 @@ export default ({ verifyAdmin, educationController, educationService, selectionS
         educationController.handleCreateEducationRoute.bind(educationController),
     );
 
+    router.put(
+        '/:id',
+        validateInput(validations.updateEducationValidation({ educationService, selectionService, file })),
+        educationController.handleUpdateEducationRoute.bind(educationController),
+    );
+
     return router;
 };
