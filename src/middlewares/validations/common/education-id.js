@@ -22,7 +22,7 @@ export default ({ educationService, field = 'id', isBody = false, isRequired = t
             const isEducationExist =
                 req.auth.account_type_id === ADMIN_ACCOUNT_TYPE_ID
                     ? await educationService.isEducationExistById(value)
-                    : await educationService.isEducationExistById(value);
+                    : await educationService.isPublishedEducationExistById(value);
 
             if (!isEducationExist) {
                 throw new Error('Education does not exist.');
