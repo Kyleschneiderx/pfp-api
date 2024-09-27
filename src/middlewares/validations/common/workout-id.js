@@ -15,12 +15,12 @@ export default ({ workoutService, field = 'id', isBody = false, isRequired = tru
     rule.withMessage('Workout id is required.')
         .customSanitizer((value) => Number(value))
         .custom(async (value, { req }) => {
-            const isPfPlanExist =
+            const isWorkoutExist =
                 req.auth.account_type_id === ADMIN_ACCOUNT_TYPE_ID
                     ? await workoutService.isWorkoutExistById(value)
                     : await workoutService.isPublishedWorkoutExistById(value);
 
-            if (!isPfPlanExist) {
+            if (!isWorkoutExist) {
                 throw new Error('Workout does not exist.');
             }
 
