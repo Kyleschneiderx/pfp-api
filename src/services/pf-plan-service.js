@@ -88,44 +88,61 @@ export default class PfPlanService {
      * @param {number} data.id PF plan id
      * @param {string=} data.name PF plan name
      * @param {string=} data.description PF plan description
-     * @param {boolean=} data.isPremium PF plan premium indicator
+     * @param {number=} data.statusId PF plan status id
+     * @param {object=} data.photo PF plan photo
      * @param {object[]=} data.exercises PF plan exercises
-     * @param {number} data.exercises[].exercise_id PF plan exercise name
-     * @param {number} data.exercises[].sets PF plan exercise number of sets
-     * @param {number} data.exercises[].reps PF plan exercise number of reps
-     * @param {number} data.exercises[].hold PF plan exercise hold time
+     * @param {number} data.dailies[].day PF plan daily day indicator
+     * @param {number=} data.dailies[].workout_id PF plan daily content workout id
+     * @param {number=} data.dailies[].education_id PF plan daily content education id
      * @returns {Promise<PfPlans>} PF plans model instance
      * @throws {InternalServerError} If failed to update pf plan
      */
     async updatePfPlan(data) {
+        let storeResponse;
         try {
-            const plfPlan = await this.database.models.PfPlans.findOne({ where: { id: data.id } });
+            if (data.photo !== undefined) {
+                storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
+                    contentType: data.photo.mimetype,
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
 
-            plfPlan.name = data.name;
+            const pfPlan = await this.database.models.PfPlans.findOne({ where: { id: data.id } });
 
-            plfPlan.description = data.description;
+            const oldPhoto = pfPlan.photo;
 
-            plfPlan.is_premium = data.isPremium;
+            pfPlan.name = data.name;
 
-            plfPlan.status_id = data.exercises ? PUBLISHED_PF_PLAN_STATUS_ID : plfPlan.status_id;
+            pfPlan.description = data.description;
 
-            await plfPlan.save();
+            pfPlan.photo = storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : undefined;
 
-            await plfPlan.reload();
+            pfPlan.status_id = data.statusId;
 
-            delete plfPlan.dataValues.deleted_at;
+            await pfPlan.save();
 
-            if (data.exercises) {
+            await pfPlan.reload();
+
+            if (storeResponse?.path && oldPhoto) {
+                await this.storage.delete(oldPhoto.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+
+            pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            delete pfPlan.dataValues.deleted_at;
+
+            if (data.dailies) {
                 await this.database.transaction(async (transaction) => {
-                    await this.database.models.PfPlanExercises.destroy({ where: { plfPlan: plfPlan.id }, transaction: transaction });
+                    await this.database.models.PfPlanDailies.destroy({ where: { pf_plan_id: pfPlan.id }, transaction: transaction });
 
-                    await this.database.models.PfPlanExercises.bulkCreate(
-                        data.exercises.map((exercise) => ({
-                            workout_id: plfPlan.id,
-                            exercise_id: exercise.exercise_id,
-                            sets: exercise.sets,
-                            reps: exercise.reps,
-                            hold: exercise.hold,
+                    await this.database.models.PfPlanDailies.bulkCreate(
+                        data.dailies.map((daily) => ({
+                            pf_plan_id: pfPlan.id,
+                            day: daily.day,
+                            workout_id: daily.workout_id,
+                            education_id: daily.education_id,
                         })),
                         {
                             transaction: transaction,
@@ -134,11 +151,15 @@ export default class PfPlanService {
                 });
             }
 
-            return plfPlan;
+            return pfPlan;
         } catch (error) {
-            this.logger.error('Failed to update pf plan.', error);
+            if (storeResponse !== undefined) {
+                await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
 
-            throw new exceptions.InternalServerError('Failed to update pf plan', error);
+            this.logger.error('Failed to update PF plan.', error);
+
+            throw new exceptions.InternalServerError('Failed to update PF plan', error);
         }
     }
 
@@ -339,7 +360,7 @@ export default class PfPlanService {
      * Check if pf plan exist using id
      *
      * @param {number} id PF plan id
-     * @returns {boolean}
+     * @returns {Promise<boolean>}
      * @throws {InternalServerError} If failed to check pf plan by id
      */
     async isPfPlanExistById(id) {

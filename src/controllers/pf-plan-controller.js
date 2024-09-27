@@ -52,8 +52,9 @@ export default class PfPlanController {
             id: req.params.id,
             name: req.body.name,
             description: req.body.description,
-            isPremium: req.body.is_premium,
-            exercises: req.body.exercises,
+            statusId: req.body.status_id,
+            photo: req?.files?.photo,
+            dailies: req.body.dailies,
         });
         return res.json(workout);
     }

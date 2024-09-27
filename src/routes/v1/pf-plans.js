@@ -24,7 +24,7 @@ export default ({ verifyAdmin, pfPlanController, pfPlanService, workoutService, 
 
     router.put(
         '/:id',
-        validateInput(validations.updatePfPlanValidation({ pfPlanService, workoutService, selectionService, file })),
+        validateInput(validations.updatePfPlanValidation({ pfPlanService, workoutService, educationService, selectionService, file })),
         pfPlanController.handleUpdatePfPlanRoute.bind(pfPlanController),
     );
 
