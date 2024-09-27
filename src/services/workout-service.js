@@ -1,5 +1,12 @@
 import { Sequelize } from 'sequelize';
-import { ADMIN_ACCOUNT_TYPE_ID, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, WORKOUT_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
+import {
+    ADMIN_ACCOUNT_TYPE_ID,
+    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+    WORKOUT_PHOTO_PATH,
+    ASSET_URL,
+    S3_OBJECT_URL,
+    PUBLISHED_WORKOUT_STATUS_ID,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutService {
@@ -399,6 +406,23 @@ export default class WorkoutService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check workout', error);
+        }
+    }
+
+    /**
+     * Check if published workout exist using id
+     *
+     * @param {number} id Workout id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check workout by id
+     */
+    async isPublishedWorkoutExistById(id) {
+        try {
+            return Boolean(await this.database.models.Workouts.count({ where: { id: id, status_id: PUBLISHED_WORKOUT_STATUS_ID } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check published workout', error);
         }
     }
 
