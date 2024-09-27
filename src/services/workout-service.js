@@ -542,4 +542,20 @@ export default class WorkoutService {
             max_page: Math.ceil(count / filter.pageItems),
         };
     }
+
+    /**
+     *
+     * @param {number} id Workout id
+     * @throws {InternalServerError} If failed to check workout has exercises
+     * @returns {Promise<boolean>}
+     */
+    async hasExercises(id) {
+        try {
+            return Boolean(await this.database.models.WorkoutExercises.count({ where: { workout_id: id } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check workout has exercises', error);
+        }
+    }
 }
