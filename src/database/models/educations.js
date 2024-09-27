@@ -58,9 +58,11 @@ export default (sequelize, DataTypes) => {
         },
     );
     model.associate = () => {
-        const { Educations, Statuses } = sequelize.models;
+        const { Educations, Statuses, UserFavoriteEducations } = sequelize.models;
 
         Educations.belongsTo(Statuses, { as: 'status', foreignKey: 'status_id' });
+
+        Educations.hasMany(UserFavoriteEducations, { as: 'user_favorite_educations', foreignKey: 'education_id' });
     };
     return model;
 };
