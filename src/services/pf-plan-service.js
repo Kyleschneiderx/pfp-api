@@ -1,5 +1,12 @@
 import { Sequelize } from 'sequelize';
-import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, PFPLAN_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
+import {
+    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+    PFPLAN_PHOTO_PATH,
+    ASSET_URL,
+    S3_OBJECT_URL,
+    ADMIN_ACCOUNT_TYPE_ID,
+    PUBLISHED_PF_PLAN_STATUS_ID,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanService {
@@ -426,6 +433,23 @@ export default class PfPlanService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check pf plan', error);
+        }
+    }
+
+    /**
+     * Check if premium plan exist using id
+     *
+     * @param {number} id PF plan id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check pf plan by id
+     */
+    async isPublishedPfPlanExistById(id) {
+        try {
+            return Boolean(await this.database.models.PfPlans.count({ where: { id: id, status_id: PUBLISHED_PF_PLAN_STATUS_ID } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check published PF plan', error);
         }
     }
 }
