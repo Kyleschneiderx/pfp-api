@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import sharp from 'sharp';
+import mime from 'mime-types';
 
 export default class File {
     static dir = path.dirname(fileURLToPath(import.meta.url));
@@ -1289,15 +1290,19 @@ export default class File {
     };
 
     static getMimeTypeByExtension = (extension) => {
-        if (extension === undefined) {
-            return false;
+        try {
+            return mime.contentType(extension);
+        } catch (error) {
+            throw new Error('Error on getting mime type by extension.', { cause: error });
         }
+    };
 
-        if (this.mimeTypes[extension] === undefined) {
-            return false;
+    static getExtensionByMimeType = (mimeType) => {
+        try {
+            return mime.extension(mimeType);
+        } catch (error) {
+            throw new Error('Error on getting extension by mime type.', { cause: error });
         }
-
-        return this.mimeTypes[extension];
     };
 
     static readFile(filePath, options = {}) {
