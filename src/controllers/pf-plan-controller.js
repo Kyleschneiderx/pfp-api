@@ -42,9 +42,9 @@ export default class PfPlanController {
     }
 
     async handleRemovePfPlanRoute(req, res) {
-        await this.pfPlanService.removeWorkout(req.params.id);
+        await this.pfPlanService.removePfPlan(req.params.id);
 
-        return res.json({ msg: 'Successfully removed pf plan.' });
+        return res.json({ msg: 'Successfully removed PF plan.' });
     }
 
     async handleUpdatePfPlanRoute(req, res) {

@@ -1,5 +1,11 @@
 import { Sequelize } from 'sequelize';
-import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, PUBLISHED_PF_PLAN_STATUS_ID, PFPLAN_PHOTO_PATH, ASSET_URL } from '../constants/index.js';
+import {
+    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+    PUBLISHED_PF_PLAN_STATUS_ID,
+    PFPLAN_PHOTO_PATH,
+    ASSET_URL,
+    S3_OBJECT_URL,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanService {
@@ -308,23 +314,24 @@ export default class PfPlanService {
     }
 
     /**
-     * Remove pf plan
+     * Remove PF plan
      *
      * @param {number} id PF plan id
-     * @returns {boolean}
-     * @throws {InternalServerError} If failed to remove pf plan
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to remove PF plan
      */
     async removePfPlan(id) {
         try {
-            return await this.database.models.PfPlans.destroy({
-                where: {
-                    id: id,
-                },
-            });
-        } catch (error) {
-            this.logger.error('Failed to remove pf plan', error);
+            const pfPlan = await this.database.models.PfPlans.findOne({ where: { id: id } });
 
-            throw new exceptions.InternalServerError('Failed to remove pf plan', error);
+            if (pfPlan.photo) {
+                await this.storage.delete(pfPlan.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+            return await pfPlan.destroy();
+        } catch (error) {
+            this.logger.error('Failed to remove PF plan', error);
+
+            throw new exceptions.InternalServerError('Failed to remove PF plan', error);
         }
     }
 
