@@ -14,6 +14,7 @@ export default ({ workoutService, exerciseService, selectionService, file }) => 
             allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID],
             isRequired: false,
         })
+        .if(body('exercises').isEmpty())
         .custom(async (value, { req }) => {
             if (value === PUBLISHED_WORKOUT_STATUS_ID) {
                 if (!(await workoutService.hasExercises(req.params.id))) {
@@ -25,6 +26,8 @@ export default ({ workoutService, exerciseService, selectionService, file }) => 
     body('exercises')
         .if(body('exercises').exists({ value: 'falsy' }))
         .customSanitizer((value) => {
+            if (value === '') return undefined;
+
             try {
                 value = JSON.parse(value);
             } catch (error) {
