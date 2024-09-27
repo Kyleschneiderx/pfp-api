@@ -4,12 +4,13 @@ import { DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../../../c
 
 export default ({ workoutService, selectionService, file, educationService }) => [
     body('name').trim().exists({ values: 'falsy' }).withMessage('Name is required.').isString().isLength({ max: 150 }),
-    body('description').trim().optional().isString(),
+    body('description').trim().exists({ value: 'falsy' }).isString(),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     body('dailies')
-        .if(body('dailies').exists({ value: 'falsy' }))
         .customSanitizer((value) => {
+            if (value === '') return undefined;
+
             try {
                 value = JSON.parse(value);
             } catch (error) {
@@ -17,7 +18,10 @@ export default ({ workoutService, selectionService, file, educationService }) =>
             }
 
             return value;
-        }),
+        })
+        .if(body('status_id').equals(String(PUBLISHED_WORKOUT_STATUS_ID)))
+        .exists({ value: 'falsy' })
+        .withMessage('Daily contents are required.'),
     body('dailies.*.day')
         .trim()
         .exists({ values: 'falsy' })

@@ -452,4 +452,21 @@ export default class PfPlanService {
             throw new exceptions.InternalServerError('Failed to check published PF plan', error);
         }
     }
+
+    /**
+     * Check if pf plan has daily content
+     *
+     * @param {number} id PF plan id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check pf plan has daily content
+     */
+    async hasDailies(id) {
+        try {
+            return Boolean(await this.database.models.PfPlanDailies.count({ where: { pf_plan_id: id } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check PF plan has daily content', error);
+        }
+    }
 }
