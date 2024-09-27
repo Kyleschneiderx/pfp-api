@@ -1,7 +1,7 @@
 import { param, body } from 'express-validator';
 import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
-export default ({ workoutService, field = 'id', isBody = false, isRequired = true }) => {
+export default ({ workoutService, field = 'id', isBody = false, isRequired = true, isPublishedOnly = false }) => {
     let rule = param(field);
 
     if (isBody) rule = body(field);
@@ -16,9 +16,9 @@ export default ({ workoutService, field = 'id', isBody = false, isRequired = tru
         .customSanitizer((value) => Number(value))
         .custom(async (value, { req }) => {
             const isWorkoutExist =
-                req.auth.account_type_id === ADMIN_ACCOUNT_TYPE_ID
-                    ? await workoutService.isWorkoutExistById(value)
-                    : await workoutService.isPublishedWorkoutExistById(value);
+                req.auth.account_type_id !== ADMIN_ACCOUNT_TYPE_ID || isPublishedOnly
+                    ? await workoutService.isPublishedWorkoutExistById(value)
+                    : await workoutService.isWorkoutExistById(value);
 
             if (!isWorkoutExist) {
                 throw new Error('Workout does not exist.');

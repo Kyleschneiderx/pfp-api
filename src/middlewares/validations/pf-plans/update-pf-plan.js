@@ -26,6 +26,12 @@ export default ({ workoutService, educationService, selectionService, file }) =>
         .withMessage('Day is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric(),
-    commonValidation.workoutIdValidation({ workoutService, isBody: true, isRequired: false, field: 'dailies.*.workout_id' }),
-    commonValidation.educationIdValidation({ educationService, isBody: true, isRequired: false, field: 'dailies.*.education_id' }),
+    commonValidation.workoutIdValidation({ workoutService, isBody: true, isRequired: false, isPublishedOnly: true, field: 'dailies.*.workout_id' }),
+    commonValidation.educationIdValidation({
+        educationService,
+        isBody: true,
+        isRequired: false,
+        isPublishedOnly: true,
+        field: 'dailies.*.education_id',
+    }),
 ];
