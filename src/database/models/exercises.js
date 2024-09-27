@@ -29,7 +29,7 @@ export default (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
             },
             description: {
-                type: DataTypes.STRING(200),
+                type: DataTypes.TEXT,
             },
             how_to: {
                 type: DataTypes.TEXT,

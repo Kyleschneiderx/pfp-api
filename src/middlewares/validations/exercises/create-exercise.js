@@ -30,7 +30,7 @@ export default ({ selectionService, file }) => [
         .withMessage('Number of hold is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric(),
-    body('description').trim().optional().isString().isLength({ max: 200 }),
+    body('description').trim().optional().isString(),
     body('how_to').trim().optional().isString(),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     ...commonValidation.videoValidation({ field: 'video', file: file, isRequired: true }),

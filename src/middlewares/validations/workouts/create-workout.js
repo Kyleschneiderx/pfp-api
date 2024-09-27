@@ -4,7 +4,7 @@ import { DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../../../c
 
 export default ({ exerciseService, selectionService, file }) => [
     body('name').trim().exists({ values: 'falsy' }).withMessage('Name is required.').isString().isLength({ max: 150 }),
-    body('description').trim().optional().isString().isLength({ max: 200 }),
+    body('description').trim().optional().isString(),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     body('is_premium').trim().exists({ value: 'falsy' }).isBoolean(),

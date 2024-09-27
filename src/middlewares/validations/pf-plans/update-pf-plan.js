@@ -4,7 +4,7 @@ import * as commonValidation from '../common/index.js';
 export default ({ workoutService, exerciseService }) => [
     commonValidation.workoutIdValidation({ workoutService, field: 'id' }),
     body('name').trim().optional().notEmpty().withMessage('Name is required.').isString().isLength({ max: 150 }),
-    body('description').trim().optional().notEmpty().isString().isLength({ max: 200 }),
+    body('description').trim().optional().notEmpty().isString(),
     body('is_premium').trim().optional().notEmpty().isBoolean(),
     commonValidation.exerciseIdValidation({ exerciseService, isBody: true, field: 'exercises.*.exercise_id' }),
     body('exercises.*.sets')
