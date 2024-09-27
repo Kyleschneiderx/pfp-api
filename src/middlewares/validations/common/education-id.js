@@ -1,4 +1,5 @@
 import { param, body } from 'express-validator';
+import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
 export default ({ educationService, field = 'id', isBody = false, isRequired = true }) => {
     let rule = param(field);
@@ -13,10 +14,21 @@ export default ({ educationService, field = 'id', isBody = false, isRequired = t
 
     rule.withMessage('Education id is required.')
         .customSanitizer((value) => Number(value))
-        .custom(async (value) => {
+        .custom(async (value, { req }) => {
             if (!(await educationService.isEducationExistById(value))) {
                 throw new Error('Education does not exist.');
             }
+
+            const isEducationExist =
+                req.auth.account_type_id === ADMIN_ACCOUNT_TYPE_ID
+                    ? await educationService.isEducationExistById(value)
+                    : await educationService.isEducationExistById(value);
+
+            if (!isEducationExist) {
+                throw new Error('Education does not exist.');
+            }
+
+            return true;
         });
 
     return rule;

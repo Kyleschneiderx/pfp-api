@@ -6,6 +6,7 @@ import {
     S3_OBJECT_URL,
     EDUCATION_PHOTO_PATH,
     EDUCATION_MEDIA_PATH,
+    PUBLISHED_EDUCATION_STATUS_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -426,6 +427,23 @@ export default class EducationService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check education', error);
+        }
+    }
+
+    /**
+     * Check if published education exist using id
+     *
+     * @param {number} id Education id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check education by id
+     */
+    async isPublishedEducationExistById(id) {
+        try {
+            return Boolean(await this.database.models.Educations.count({ where: { id: id, status_id: PUBLISHED_EDUCATION_STATUS_ID } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check published education', error);
         }
     }
 }
