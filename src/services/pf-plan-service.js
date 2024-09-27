@@ -204,7 +204,7 @@ export default class PfPlanService {
             where: {
                 ...(filter.id && { id: filter.id }),
                 ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
-                ...(filter.statusId && { status_id: { [Sequelize.Op.like]: `%${filter.statusId}%` } }),
+                ...(filter.statusId && { status_id: filter.statusId }),
             },
         };
 
