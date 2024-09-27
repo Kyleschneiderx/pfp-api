@@ -1,11 +1,5 @@
 import { Sequelize } from 'sequelize';
-import {
-    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-    PUBLISHED_PF_PLAN_STATUS_ID,
-    PFPLAN_PHOTO_PATH,
-    ASSET_URL,
-    S3_OBJECT_URL,
-} from '../constants/index.js';
+import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES, PFPLAN_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanService {
