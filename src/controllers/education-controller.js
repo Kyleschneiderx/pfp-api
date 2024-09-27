@@ -52,7 +52,7 @@ export default class EducationController {
     }
 
     async handleRemoveEducationRoute(req, res) {
-        await this.workoutService.removeEducation(req.params.id);
+        await this.educationService.removeEducation(req.params.id);
 
         return res.json({ msg: 'Successfully removed education.' });
     }

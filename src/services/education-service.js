@@ -386,6 +386,33 @@ export default class EducationService {
     }
 
     /**
+     * Remove education
+     *
+     * @param {number} id Education id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to remove education
+     */
+    async removeEducation(id) {
+        try {
+            const education = await this.database.models.Educations.findOne({ where: { id: id } });
+
+            if (education.photo) {
+                await this.storage.delete(education.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+
+            if (education.media_upload) {
+                await this.storage.delete(education.media_upload.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+
+            return await education.destroy();
+        } catch (error) {
+            this.logger.error('Failed to remove education', error);
+
+            throw new exceptions.InternalServerError('Failed to remove education', error);
+        }
+    }
+
+    /**
      * Check if education exist using id
      *
      * @param {number} id Education id

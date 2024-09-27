@@ -28,5 +28,11 @@ export default ({ verifyAdmin, educationController, educationService, selectionS
         educationController.handleUpdateEducationRoute.bind(educationController),
     );
 
+    router.delete(
+        '/:id',
+        validateInput([commonValidations.educationIdValidation({ educationService })]),
+        educationController.handleRemoveEducationRoute.bind(educationController),
+    );
+
     return router;
 };
