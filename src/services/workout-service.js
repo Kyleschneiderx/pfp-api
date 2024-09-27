@@ -468,6 +468,8 @@ export default class WorkoutService {
      *
      * @param {object} filter
      * @param {number} filter.userId User account user id
+     * @param {string=} filter.id Workout id
+     * @param {string=} filter.name Workout name
      * @param {number} filter.page Page number
      * @param {number} filter.pageItems Items per page
      * @returns {Promise<{
@@ -507,7 +509,10 @@ export default class WorkoutService {
                 },
             ],
             order: [['id', 'DESC']],
-            where: {},
+            where: {
+                ...(filter.id && { id: filter.id }),
+                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
+            },
         };
 
         let count;

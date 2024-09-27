@@ -90,6 +90,8 @@ export default class WorkoutController {
     async handleGetFavoriteWorkoutsRoute(req, res) {
         const list = await this.workoutService.getFavoriteWorkouts({
             userId: req.auth.user_id,
+            id: req.query.id,
+            name: req.query.name,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });
