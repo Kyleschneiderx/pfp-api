@@ -244,17 +244,29 @@ export default class PfPlanService {
      * Get pf plan details including all exercises in it
      *
      * @param {number} id PF plan id
-     * @throws {InternalServerError} If failed to get pf plans
-     * @throws {NotFoundError} If no records found
+     * @param {object} filter
+     * @param {number=} filter.statusId Workout status id
+     * @param {number=} filter.authenticatedUser Authenticated user
+     * @returns {Promise<PfPlans>} PfPlans instance
+     * @throws {InternalServerError} If failed to get PF plan details
      */
-    async getPfPlanDetails(id) {
+    async getPfPlanDetails(id, filter) {
         try {
-            const pfPlan = await this.database.models.PfPlans.findOne({
+            let pfPlan = await this.database.models.PfPlans.findOne({
                 nest: true,
                 subQuery: false,
-                attributes: {
-                    exclude: ['deleted_at', 'status_id'],
-                },
+                attributes: [
+                    'id',
+                    'name',
+                    'description',
+                    'photo',
+                    'is_premium',
+                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
+                        : []),
+                    'created_at',
+                    'updated_at',
+                ],
                 include: [
                     {
                         model: this.database.models.Statuses,
@@ -263,61 +275,111 @@ export default class PfPlanService {
                         where: {},
                     },
                     {
-                        model: this.database.models.PfPlanExercises,
-                        as: 'pf_plan_exercises',
+                        model: this.database.models.PfPlanDailies,
+                        as: 'pf_plan_dailies',
                         required: false,
                         attributes: {
-                            exclude: ['deleted_at', 'pf_plan_id', 'day', 'created_at', 'updated_at', 'exercise_id'],
+                            exclude: ['deleted_at', 'pf_plan_id', 'workout_id', 'education_id', 'created_at', 'updated_at'],
                         },
                         include: [
                             {
-                                model: this.database.models.Exercises,
-                                as: 'exercise',
+                                model: this.database.models.Workouts,
+                                as: 'workout',
+                                required: false,
                                 attributes: {
-                                    exclude: ['deleted_at', 'updated_at', 'created_at', 'category_id', 'sets', 'reps', 'hold'],
+                                    exclude: ['deleted_at'],
                                 },
                                 where: {},
-                                include: [
-                                    {
-                                        model: this.database.models.ExerciseCategories,
-                                        as: 'exercise_category',
-                                        attributes: {
-                                            exclude: ['deleted_at', 'updated_at', 'created_at'],
-                                        },
-                                        where: {},
-                                    },
-                                ],
+                            },
+                            {
+                                model: this.database.models.Educations,
+                                as: 'education',
+                                required: false,
+                                attributes: {
+                                    exclude: ['deleted_at'],
+                                },
+                                where: {},
                             },
                         ],
-                        order: [['id', 'DESC']],
                     },
+                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [
+                              {
+                                  model: this.database.models.UserFavoritePfPlans,
+                                  as: 'user_favorite_pf_plans',
+                                  attributes: [],
+                                  required: false,
+                                  where: {
+                                      user_id: filter.authenticatedUser.user_id,
+                                  },
+                              },
+                          ]
+                        : []),
                 ],
-                order: [['id', 'DESC']],
+                order: [
+                    [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'day', 'ASC'],
+                    [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'id', 'ASC'],
+                ],
                 where: {
                     id: id,
+                    ...(filter.statusId && { status_id: filter.statusId }),
                 },
             });
 
-            if (pfPlan.pf_plan_exercises) {
-                pfPlan.dataValues.pf_plan_exercises = pfPlan.dataValues.pf_plan_exercises.map((pfPlanExercise) => {
-                    pfPlanExercise.exercise.photo = this.helper.generateProtectedUrl(
-                        pfPlanExercise.exercise.photo,
-                        `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                        {
-                            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                        },
-                    );
+            pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
 
-                    pfPlanExercise.exercise.video = this.helper.generateProtectedUrl(
-                        pfPlanExercise.exercise.video,
-                        `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                        {
-                            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                        },
-                    );
+            if (pfPlan.pf_plan_dailies) {
+                const dailies = {};
 
-                    return pfPlanExercise;
+                pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
+                    if (pfPlanDaily.dataValues.workout) {
+                        pfPlanDaily.dataValues.workout.photo = this.helper.generateProtectedUrl(
+                            pfPlanDaily.workout?.photo,
+                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                            {
+                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                            },
+                        );
+                    }
+
+                    if (pfPlanDaily.dataValues.education) {
+                        pfPlanDaily.dataValues.education.photo = this.helper.generateProtectedUrl(
+                            pfPlanDaily.education?.photo,
+                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                            {
+                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                            },
+                        );
+
+                        pfPlanDaily.dataValues.education.media_upload = this.helper.generateProtectedUrl(
+                            pfPlanDaily.education?.media_upload,
+                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                            {
+                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                            },
+                        );
+                    }
+
+                    dailies[`day_${pfPlanDaily.day}`] = dailies[`day_${pfPlanDaily.day}`] ?? {};
+
+                    dailies[`day_${pfPlanDaily.day}`].contents = [
+                        ...(dailies[`day_${pfPlanDaily.day}`]?.contents ?? []),
+                        {
+                            workout: pfPlanDaily.dataValues.workout,
+                            education: pfPlanDaily.dataValues.education,
+                        },
+                    ];
+                    return pfPlanDaily;
                 });
+
+                pfPlan = pfPlan.get({ plain: true });
+
+                pfPlan.pf_plan_dailies = Object.keys(dailies).map((key) => ({
+                    day: Number(key.split('_')[1]),
+                    contents: dailies[key].contents,
+                }));
             }
 
             return pfPlan;
