@@ -24,7 +24,7 @@ export const ALLOWED_AUDIO_TYPE = ['m4a', 'flac', 'mp3', 'wav', 'aac'];
 
 export const MAX_PHOTO_SIZE_IN_MB = 5;
 
-export const MAX_VIDEO_SIZE_IN_MB = 20;
+export const MAX_VIDEO_SIZE_IN_MB = 100;
 
 export const MAX_AUDIO_SIZE_IN_MB = 20;
 
