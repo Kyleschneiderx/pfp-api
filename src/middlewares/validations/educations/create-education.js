@@ -37,7 +37,10 @@ export default ({ selectionService, file }) => {
 
                 const contentType = response.headers.get('content-type');
 
-                validateMediaType(contentType, file.getExtensionByMimeType(contentType), [...ALLOWED_PHOTO_TYPE, ...ALLOWED_VIDEO_TYPE]);
+                validateMediaType(contentType, file.getExtensionByMimeType(contentType)?.toLowerCase(), [
+                    ...ALLOWED_PHOTO_TYPE,
+                    ...ALLOWED_VIDEO_TYPE,
+                ]);
 
                 return true;
             }),
@@ -47,7 +50,7 @@ export default ({ selectionService, file }) => {
             const media = req.files?.media_upload;
 
             if (media !== undefined) {
-                validateMediaType(media.mimetype, file.extractExtension(media.name), [...ALLOWED_PHOTO_TYPE, ...ALLOWED_VIDEO_TYPE]);
+                validateMediaType(media.mimetype, file.extractExtension(media.name)?.toLowerCase(), [...ALLOWED_PHOTO_TYPE, ...ALLOWED_VIDEO_TYPE]);
 
                 if (!file.isValidFileSize(media.size, MAX_VIDEO_SIZE_IN_MB)) {
                     throw Error(`Maximum media file size can be upload is ${MAX_VIDEO_SIZE_IN_MB} MB.`);
