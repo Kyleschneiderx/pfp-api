@@ -3,8 +3,8 @@ import {
     REPORT_DEFAULT_ITEMS,
     ADMIN_ACCOUNT_TYPE_ID,
     PUBLISHED_WORKOUT_STATUS_ID,
-    FAVORITE_WORKOUT_STATUS,
-    UNFAVORITE_WORKOUT_STATUS,
+    FAVORITE_EDUCATION_STATUS,
+    UNFAVORITE_EDUCATION_STATUS,
 } from '../constants/index.js';
 
 export default class EducationController {
@@ -70,19 +70,29 @@ export default class EducationController {
         return res.json(education);
     }
 
-    async handleAddFavoriteWorkoutRoute(req, res) {
-        const userWorkoutFavorite = await this.workoutService.updateUserFavoriteWorkouts(req.auth.user_id, req.params.id, FAVORITE_WORKOUT_STATUS);
+    async handleAddFavoriteEducationRoute(req, res) {
+        const userWorkoutFavorite = await this.educationService.updateUserFavoriteEducations(
+            req.auth.user_id,
+            req.params.id,
+            FAVORITE_EDUCATION_STATUS,
+        );
 
         return res.json(userWorkoutFavorite);
     }
 
-    async handleRemoveFavoriteWorkoutRoute(req, res) {
-        await this.workoutService.updateUserFavoriteWorkouts(req.auth.user_id, req.params.id, UNFAVORITE_WORKOUT_STATUS);
-        return res.json({ msg: 'Successfully removed workout to favorites.' });
+    async handleRemoveFavoriteEducationRoute(req, res) {
+        await this.educationService.updateUserFavoriteEducations(req.auth.user_id, req.params.id, UNFAVORITE_EDUCATION_STATUS);
+        return res.json({ msg: 'Successfully removed education to favorites.' });
     }
 
-    async handleGetFavoriteWorkoutsRoute(req, res) {
-        const favorites = await this.workoutService.getFavoriteWorkouts(req.auth.user_id);
+    async handleGetFavoriteEducationsRoute(req, res) {
+        const favorites = await this.educationService.getFavoriteEducations({
+            userId: req.auth.user_id,
+            id: req.query.id,
+            title: req.query.title,
+            page: req.query.page ?? REPORT_DEFAULT_PAGE,
+            pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
+        });
 
         return res.json({
             data: favorites,

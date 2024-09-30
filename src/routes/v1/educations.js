@@ -9,6 +9,24 @@ export default ({ verifyAdmin, educationController, educationService, selectionS
     router.get('/', validateInput(validations.getEducationsValidation()), educationController.handleGetEducationsRoute.bind(educationController));
 
     router.get(
+        '/favorites',
+        validateInput(validations.getFavoriteEducationsValidation()),
+        educationController.handleGetFavoriteEducationsRoute.bind(educationController),
+    );
+
+    router.post(
+        '/:id/favorite',
+        validateInput([commonValidations.educationIdValidation({ educationService })]),
+        educationController.handleAddFavoriteEducationRoute.bind(educationController),
+    );
+
+    router.delete(
+        '/:id/favorite',
+        validateInput([commonValidations.educationIdValidation({ educationService })]),
+        educationController.handleRemoveFavoriteEducationRoute.bind(educationController),
+    );
+
+    router.get(
         '/:id',
         validateInput([commonValidations.educationIdValidation({ educationService })]),
         educationController.handleGetEducationRoute.bind(educationController),

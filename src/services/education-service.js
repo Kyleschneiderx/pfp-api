@@ -444,4 +444,125 @@ export default class EducationService {
             throw new exceptions.InternalServerError('Failed to check published education', error);
         }
     }
+
+    /**
+     * Update user education favorite status
+     *
+     * @param {number} userId User account id
+     * @param {number} educationId Education id
+     * @param {boolean} favoriteStatus Education favorite status
+     * @throws {InternalServerError} If failed to update favorite educations
+     * @returns {Promise<UserFavoriteEducations>} UserFavoriteEducations instance
+     */
+    async updateUserFavoriteEducations(userId, educationId, favoriteStatus) {
+        try {
+            const [userEducationFavorite, createdUserEducationFavorite] = await this.database.models.UserFavoriteEducations.findOrCreate({
+                where: {
+                    user_id: userId,
+                    education_id: educationId,
+                },
+                defaults: {
+                    user_id: userId,
+                    education_id: educationId,
+                    is_favorite: favoriteStatus,
+                },
+            });
+
+            if (userEducationFavorite) {
+                userEducationFavorite.is_favorite = favoriteStatus;
+
+                await userEducationFavorite.save();
+            }
+
+            return userEducationFavorite ?? createdUserEducationFavorite;
+        } catch (error) {
+            this.logger.error('Failed to update favorite educations.', error);
+
+            throw new exceptions.InternalServerError('Failed to update favorite educations.', error);
+        }
+    }
+
+    /**
+     * Get favorite educations for user
+     *
+     * @param {object} filter
+     * @param {number} filter.userId User account user id
+     * @param {string=} filter.id Education id
+     * @param {string=} filter.title Education title
+     * @param {number} filter.page Page number
+     * @param {number} filter.pageItems Items per page
+     * @returns {Promise<{
+     * data: Educations[],
+     * page: number,
+     * page_items: number,
+     * max_page: number
+     * }>} Educations instance and pagination details
+     * @throws {InternalServerError} If failed to get favorite educations
+     * @throws {NotFoundError} If no records found
+     */
+    async getFavoriteEducations(filter) {
+        const options = {
+            nest: true,
+            subQuery: false,
+            limit: filter.pageItems,
+            offset: filter.page * filter.pageItems - filter.pageItems,
+            attributes: {
+                exclude: ['deleted_at', 'status_id'],
+            },
+            include: [
+                {
+                    model: this.database.models.Statuses,
+                    as: 'status',
+                    attributes: ['id', 'value'],
+                    where: {},
+                },
+                {
+                    model: this.database.models.UserFavoriteEducations,
+                    as: 'user_favorite_educations',
+                    required: true,
+                    attributes: [],
+                    where: {
+                        user_id: filter.userId,
+                        is_favorite: true,
+                    },
+                },
+            ],
+            order: [['id', 'DESC']],
+            where: {
+                ...(filter.id && { id: filter.id }),
+                ...(filter.title && { title: { [Sequelize.Op.like]: `%${filter.title}%` } }),
+            },
+        };
+
+        let count;
+        let rows;
+        try {
+            ({ count, rows } = await this.database.models.Educations.findAndCountAll(options));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get favorite educations', error);
+        }
+
+        if (!rows.length) throw new exceptions.NotFound('No records found.');
+
+        rows = rows.map((row) => {
+            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            row.media_upload = this.helper.generateProtectedUrl(row.media_upload, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            return row;
+        });
+
+        return {
+            data: rows,
+            page: filter.page,
+            page_items: filter.pageItems,
+            max_page: Math.ceil(count / filter.pageItems),
+        };
+    }
 }

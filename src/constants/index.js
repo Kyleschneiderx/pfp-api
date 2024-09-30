@@ -85,3 +85,7 @@ export const PUBLISHED_EDUCATION_STATUS_ID = 5;
 export const EDUCATION_PHOTO_PATH = 'education-photo';
 
 export const EDUCATION_MEDIA_PATH = 'education-media';
+
+export const FAVORITE_EDUCATION_STATUS = true;
+
+export const UNFAVORITE_EDUCATION_STATUS = false;
