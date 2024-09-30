@@ -5,7 +5,7 @@ export default ({ logger, loggerService }) =>
         const files = {};
         if (req.files) {
             Object.keys(req.files).forEach((key) => {
-                const file = req.files[key];
+                const file = { ...req.files[key] };
                 delete file.data;
                 files[key] = file;
             });
