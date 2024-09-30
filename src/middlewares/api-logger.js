@@ -2,6 +2,15 @@ import requestIp from 'request-ip';
 
 export default ({ logger, loggerService }) =>
     async (req, res, next) => {
+        const files = {};
+        if (req.files) {
+            Object.keys(req.files).forEach((key) => {
+                const file = req.files[key];
+                delete file.data;
+                files[key] = file;
+            });
+        }
+
         const log = {
             endpoint: req.originalUrl,
             method: req.method,
@@ -11,6 +20,7 @@ export default ({ logger, loggerService }) =>
                 query: req.query,
                 body: req.body,
                 params: req.params,
+                files: files,
             }),
             response_header: null,
             response: null,
