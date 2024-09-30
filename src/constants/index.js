@@ -89,3 +89,7 @@ export const EDUCATION_MEDIA_PATH = 'education-media';
 export const FAVORITE_EDUCATION_STATUS = true;
 
 export const UNFAVORITE_EDUCATION_STATUS = false;
+
+export const FAVORITE_PF_PLAN_STATUS = true;
+
+export const UNFAVORITE_PF_PLAN_STATUS = false;

@@ -4,6 +4,8 @@ import {
     PREMIUM_USER_TYPE_ID,
     ADMIN_ACCOUNT_TYPE_ID,
     PUBLISHED_PF_PLAN_STATUS_ID,
+    FAVORITE_PF_PLAN_STATUS,
+    UNFAVORITE_PF_PLAN_STATUS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -68,5 +70,30 @@ export default class PfPlanController {
             dailies: req.body.dailies,
         });
         return res.json(workout);
+    }
+
+    async handleAddFavoritePfPlanRoute(req, res) {
+        const userWorkoutFavorite = await this.pfPlanService.updateUserFavoritePfPlans(req.auth.user_id, req.params.id, FAVORITE_PF_PLAN_STATUS);
+
+        return res.json(userWorkoutFavorite);
+    }
+
+    async handleRemoveFavoritePfPlanRoute(req, res) {
+        await this.pfPlanService.updateUserFavoritePfPlans(req.auth.user_id, req.params.id, UNFAVORITE_PF_PLAN_STATUS);
+        return res.json({ msg: 'Successfully removed PF plan to favorites.' });
+    }
+
+    async handleGetFavoritePfPlansRoute(req, res) {
+        const favorites = await this.pfPlanService.getFavoritePfPlans({
+            userId: req.auth.user_id,
+            id: req.query.id,
+            name: req.query.name,
+            page: req.query.page ?? REPORT_DEFAULT_PAGE,
+            pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
+        });
+
+        return res.json({
+            data: favorites,
+        });
     }
 }

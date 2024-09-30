@@ -469,4 +469,125 @@ export default class PfPlanService {
             throw new exceptions.InternalServerError('Failed to check PF plan has daily content', error);
         }
     }
+
+    /**
+     * Update user PF plan favorite status
+     *
+     * @param {number} userId User account id
+     * @param {number} pfPlanId PF plan id
+     * @param {boolean} favoriteStatus PF plan favorite status
+     * @throws {InternalServerError} If failed to update favorite PF plans
+     * @returns {Promise<UserFavoritePfPlans>} UserFavoritePfPlans instance
+     */
+    async updateUserFavoritePfPlans(userId, pfPlanId, favoriteStatus) {
+        try {
+            const [userPfPlansFavorite, createdUserPfPlanFavorite] = await this.database.models.UserFavoritePfPlans.findOrCreate({
+                where: {
+                    user_id: userId,
+                    pf_plan_id: pfPlanId,
+                },
+                defaults: {
+                    user_id: userId,
+                    pf_plan_id: pfPlanId,
+                    is_favorite: favoriteStatus,
+                },
+            });
+
+            if (userPfPlansFavorite) {
+                userPfPlansFavorite.is_favorite = favoriteStatus;
+
+                await userPfPlansFavorite.save();
+            }
+
+            return userPfPlansFavorite ?? createdUserPfPlanFavorite;
+        } catch (error) {
+            this.logger.error('Failed to update favorite PF plans.', error);
+
+            throw new exceptions.InternalServerError('Failed to update favorite PF plans.', error);
+        }
+    }
+
+    /**
+     * Get favorite PF plans for user
+     *
+     * @param {object} filter
+     * @param {number} filter.userId User account user id
+     * @param {string=} filter.id Pf Plan id
+     * @param {string=} filter.name Pf Plan name
+     * @param {number} filter.page Page number
+     * @param {number} filter.pageItems Items per page
+     * @returns {Promise<{
+     * data: PfPlans[],
+     * page: number,
+     * page_items: number,
+     * max_page: number
+     * }>} PfPlans instance and pagination details
+     * @throws {InternalServerError} If failed to get favorite PF plans
+     * @throws {NotFoundError} If no records found
+     */
+    async getFavoritePfPlans(filter) {
+        const options = {
+            nest: true,
+            subQuery: false,
+            limit: filter.pageItems,
+            offset: filter.page * filter.pageItems - filter.pageItems,
+            attributes: {
+                exclude: ['deleted_at', 'status_id'],
+            },
+            include: [
+                {
+                    model: this.database.models.Statuses,
+                    as: 'status',
+                    attributes: ['id', 'value'],
+                    where: {},
+                },
+                {
+                    model: this.database.models.UserFavoritePfPlans,
+                    as: 'user_favorite_pf_plans',
+                    required: true,
+                    attributes: [],
+                    where: {
+                        user_id: filter.userId,
+                        is_favorite: true,
+                    },
+                },
+            ],
+            order: [['id', 'DESC']],
+            where: {
+                ...(filter.id && { id: filter.id }),
+                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
+            },
+        };
+
+        let count;
+        let rows;
+        try {
+            ({ count, rows } = await this.database.models.PfPlans.findAndCountAll(options));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get favorite PF plans', error);
+        }
+
+        if (!rows.length) throw new exceptions.NotFound('No records found.');
+
+        rows = rows.map((row) => {
+            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            row.media_upload = this.helper.generateProtectedUrl(row.media_upload, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            return row;
+        });
+
+        return {
+            data: rows,
+            page: filter.page,
+            page_items: filter.pageItems,
+            max_page: Math.ceil(count / filter.pageItems),
+        };
+    }
 }

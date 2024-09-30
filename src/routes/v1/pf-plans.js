@@ -9,6 +9,24 @@ export default ({ verifyAdmin, pfPlanController, pfPlanService, workoutService, 
     router.get('/', validateInput(validations.getPfPlansValidation()), pfPlanController.handleGetPfPlansRoute.bind(pfPlanController));
 
     router.get(
+        '/favorites',
+        validateInput(validations.getFavoritePfPlansValidation()),
+        pfPlanController.handleGetFavoritePfPlansRoute.bind(pfPlanController),
+    );
+
+    router.post(
+        '/:id/favorite',
+        validateInput([commonValidations.pfPlanIdValidation({ pfPlanService })]),
+        pfPlanController.handleAddFavoritePfPlanRoute.bind(pfPlanController),
+    );
+
+    router.delete(
+        '/:id/favorite',
+        validateInput([commonValidations.pfPlanIdValidation({ pfPlanService })]),
+        pfPlanController.handleRemoveFavoritePfPlanRoute.bind(pfPlanController),
+    );
+
+    router.get(
         '/:id',
         validateInput([commonValidations.pfPlanIdValidation({ pfPlanService })]),
         pfPlanController.handleGetPfPlanRoute.bind(pfPlanController),
