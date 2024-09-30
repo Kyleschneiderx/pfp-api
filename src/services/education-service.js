@@ -223,7 +223,7 @@ export default class EducationService {
      *
      * @param {object} filter
      * @param {string=} filter.id Education id
-     * @param {string=} filter.name Education name
+     * @param {string=} filter.title Education title
      * @param {string=} filter.statusId Education status id
      * @param {Array=} filter.sort Field and order to be use for sorting
      * @example [ [ {field}:{order} ] ]
@@ -258,7 +258,7 @@ export default class EducationService {
             order: [['id', 'DESC']],
             where: {
                 ...(filter.id && { id: filter.id }),
-                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
+                ...(filter.title && { title: { [Sequelize.Op.like]: `%${filter.title}%` } }),
                 ...(filter.statusId && { status_id: filter.statusId }),
             },
         };

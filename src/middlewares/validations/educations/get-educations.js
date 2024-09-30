@@ -6,7 +6,7 @@ export default () => [
         .trim()
         .optional()
         .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('name')
+    query('title')
         .trim()
         .optional()
         .customSanitizer((value) => (value === '' ? undefined : value)),

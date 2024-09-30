@@ -28,7 +28,7 @@ export default class EducationController {
     async handleGetEducationsRoute(req, res) {
         const list = await this.educationService.getEducations({
             id: req.query.id,
-            name: req.query.name,
+            title: req.query.title,
             statusId: req.query.status_id,
             sort: req.query.sort,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
