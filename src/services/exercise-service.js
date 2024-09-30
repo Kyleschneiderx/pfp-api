@@ -30,15 +30,13 @@ export default class ExerciseService {
                         contentType: files.photo.mimetype,
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
-                ]) ??
-                    []),
+                ]) ?? [undefined]),
                 ...((files.video && [
                     this.storage.store(files.video.name, files.video.data, EXERCISE_VIDEO_PATH, {
                         contentType: files.video.mimetype,
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
-                ]) ??
-                    []),
+                ]) ?? [undefined]),
             ]);
 
             let rejectedStore;
