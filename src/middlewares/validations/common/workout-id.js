@@ -1,7 +1,15 @@
 import { param, body } from 'express-validator';
 import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
-export default ({ workoutService, field = 'id', isBody = false, isRequired = true, isPublishedOnly = false }) => {
+export default ({
+    workoutService,
+    field = 'id',
+    isBody = false,
+    isRequired = true,
+    isPublishedOnly = false,
+    isFavorite = false,
+    isUnfavorite = false,
+}) => {
     let rule = param(field);
 
     if (isBody) rule = body(field);
@@ -26,6 +34,22 @@ export default ({ workoutService, field = 'id', isBody = false, isRequired = tru
 
             return true;
         });
+
+    if (isFavorite || isUnfavorite) {
+        rule.custom(async (value) => {
+            const isFavoriteExist = await workoutService.isFavoriteWorkoutExistById(value);
+
+            if (isFavoriteExist && isFavorite) {
+                throw new Error('Workout is already in favorite list.');
+            }
+
+            if (!isFavoriteExist && isUnfavorite) {
+                throw new Error('Workout is not yet in favorite list.');
+            }
+
+            return true;
+        });
+    }
 
     return rule;
 };

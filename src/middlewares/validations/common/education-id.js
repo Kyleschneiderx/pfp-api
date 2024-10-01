@@ -1,7 +1,15 @@
 import { param, body } from 'express-validator';
 import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
-export default ({ educationService, field = 'id', isBody = false, isRequired = true, isPublishedOnly = false }) => {
+export default ({
+    educationService,
+    field = 'id',
+    isBody = false,
+    isRequired = true,
+    isPublishedOnly = false,
+    isFavorite = false,
+    isUnfavorite = false,
+}) => {
     let rule = param(field);
 
     if (isBody) rule = body(field);
@@ -26,6 +34,22 @@ export default ({ educationService, field = 'id', isBody = false, isRequired = t
 
             return true;
         });
+
+    if (isFavorite || isUnfavorite) {
+        rule.custom(async (value) => {
+            const isFavoriteExist = await educationService.isFavoriteEducationExistById(value);
+
+            if (isFavoriteExist && isFavorite) {
+                throw new Error('Education is already in favorite list.');
+            }
+
+            if (!isFavoriteExist && isUnfavorite) {
+                throw new Error('Education is not yet in favorite list.');
+            }
+
+            return true;
+        });
+    }
 
     return rule;
 };

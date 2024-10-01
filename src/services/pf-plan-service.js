@@ -6,6 +6,7 @@ import {
     S3_OBJECT_URL,
     ADMIN_ACCOUNT_TYPE_ID,
     PUBLISHED_PF_PLAN_STATUS_ID,
+    FAVORITE_PF_PLAN_STATUS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -589,5 +590,22 @@ export default class PfPlanService {
             page_items: filter.pageItems,
             max_page: Math.ceil(count / filter.pageItems),
         };
+    }
+
+    /**
+     * Check if favorite PF plan exist using id
+     *
+     * @param {number} id PF plan id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check favorite PF plan by id
+     */
+    async isFavoritePfPlanExistById(id) {
+        try {
+            return Boolean(await this.database.models.UserFavoritePfPlans.count({ where: { pf_plan_id: id, is_favorite: FAVORITE_PF_PLAN_STATUS } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check favorite PF plan', error);
+        }
     }
 }

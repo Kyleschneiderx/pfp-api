@@ -6,6 +6,7 @@ import {
     ASSET_URL,
     S3_OBJECT_URL,
     PUBLISHED_WORKOUT_STATUS_ID,
+    FAVORITE_WORKOUT_STATUS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -556,6 +557,25 @@ export default class WorkoutService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check workout has exercises', error);
+        }
+    }
+
+    /**
+     * Check if favorite workout exist using id
+     *
+     * @param {number} id Workout id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check favorite workout by id
+     */
+    async isFavoriteWorkoutExistById(id) {
+        try {
+            return Boolean(
+                await this.database.models.UserFavoriteWorkouts.count({ where: { workout_id: id, is_favorite: FAVORITE_WORKOUT_STATUS } }),
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check favorite workout', error);
         }
     }
 }

@@ -7,6 +7,7 @@ import {
     EDUCATION_PHOTO_PATH,
     EDUCATION_MEDIA_PATH,
     PUBLISHED_EDUCATION_STATUS_ID,
+    FAVORITE_EDUCATION_STATUS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -564,5 +565,24 @@ export default class EducationService {
             page_items: filter.pageItems,
             max_page: Math.ceil(count / filter.pageItems),
         };
+    }
+
+    /**
+     * Check if favorite education exist using id
+     *
+     * @param {number} id Education id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check favorite education by id
+     */
+    async isFavoriteEducationExistById(id) {
+        try {
+            return Boolean(
+                await this.database.models.UserFavoriteEducations.count({ where: { education_id: id, is_favorite: FAVORITE_EDUCATION_STATUS } }),
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check favorite education', error);
+        }
     }
 }

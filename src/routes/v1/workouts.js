@@ -22,13 +22,13 @@ export default ({ verifyAdmin, workoutController, workoutService, exerciseServic
 
     router.post(
         '/:id/favorite',
-        validateInput([commonValidations.workoutIdValidation({ workoutService })]),
+        validateInput([commonValidations.workoutIdValidation({ workoutService, isFavorite: true })]),
         workoutController.handleAddFavoriteWorkoutRoute.bind(workoutController),
     );
 
     router.delete(
         '/:id/favorite',
-        validateInput([commonValidations.workoutIdValidation({ workoutService })]),
+        validateInput([commonValidations.workoutIdValidation({ workoutService, isUnfavorite: true })]),
         workoutController.handleRemoveFavoriteWorkoutRoute.bind(workoutController),
     );
 
