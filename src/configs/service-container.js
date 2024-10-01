@@ -82,6 +82,10 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
     }),
+    miscellaneousService: new services.MiscellaneousService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -130,6 +134,10 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         educationService: serviceContainer.educationService,
         userService: serviceContainer.userService,
+    }),
+    miscellaneousController: new controllers.MiscellaneousController({
+        logger: serviceContainer.logger,
+        miscellaneousService: serviceContainer.miscellaneousService,
     }),
 });
 

@@ -18,3 +18,4 @@ export { default as ResetPasswordRequests } from './reset-password-requests.js';
 export { default as UserFavoriteWorkouts } from './user-favorite-workouts.js';
 export { default as UserFavoriteEducations } from './user-favorite-educations.js';
 export { default as UserFavoritePfPlans } from './user-favorite-pf-plans.js';
+export { default as AppStaticContents } from './app-static-contents.js';

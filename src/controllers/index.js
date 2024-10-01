@@ -7,3 +7,4 @@ export { default as ExerciseController } from './exercise-controller.js';
 export { default as WorkoutController } from './workout-controller.js';
 export { default as PfPlanController } from './pf-plan-controller.js';
 export { default as EducationController } from './education-controller.js';
+export { default as MiscellaneousController } from './miscellaneous-controller.js';

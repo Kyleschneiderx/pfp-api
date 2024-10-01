@@ -9,6 +9,7 @@ import routeV1Exercises from './v1/exercises.js';
 import routeV1Workouts from './v1/workouts.js';
 import routeV1PfPlans from './v1/pf-plans.js';
 import routeV1Educations from './v1/educations.js';
+import routeV1Miscellaneous from './v1/miscellaneous.js';
 import routeAsset from './assets.js';
 import * as middlewares from '../middlewares/index.js';
 
@@ -36,6 +37,7 @@ export default ({
     pfPlanService,
     educationController,
     educationService,
+    miscellaneousController,
 }) => {
     const router = express.Router();
 
@@ -65,6 +67,13 @@ export default ({
         middlewares.apiLogger({
             logger: apiLogger,
             loggerService: loggerService,
+        }),
+    );
+
+    router.use(
+        '/v1/misc',
+        routeV1Miscellaneous({
+            miscellaneousController: miscellaneousController,
         }),
     );
 

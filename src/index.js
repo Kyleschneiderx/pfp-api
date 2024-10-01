@@ -64,6 +64,7 @@ app.use(
         pfPlanService: serviceContainer.pfPlanService,
         educationController: serviceContainer.educationController,
         educationService: serviceContainer.educationService,
+        miscellaneousController: serviceContainer.miscellaneousController,
     }),
 );
 
