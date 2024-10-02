@@ -12,6 +12,8 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
         userController.handleUserSignupRoute.bind(userController),
     );
 
+    router.get('/summary', [verifyAdmin], userController.handleGetUserSummaryRoute.bind(userController));
+
     router.get(
         '/:user_id',
         validateInput(commonValidations.userAccessUserIdValidation({ userService })),

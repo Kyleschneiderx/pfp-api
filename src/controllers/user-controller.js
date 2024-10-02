@@ -112,4 +112,8 @@ export default class UserController {
         });
         return res.json({ photo: user.user_profile.photo });
     }
+
+    async handleGetUserSummaryRoute(req, res) {
+        return res.json(await this.userService.getUserSummary());
+    }
 }

@@ -10,6 +10,8 @@ import {
     ASSET_URL,
     S3_OBJECT_URL,
     ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+    FREE_USER_TYPE_ID,
+    PREMIUM_USER_TYPE_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -549,6 +551,61 @@ export default class UserService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to reset user password', error);
+        }
+    }
+
+    /**
+     * Get user summary
+     *
+     * @returns {Promise<{
+     * total: number,
+     * users_per_status: Array<{ status_id: number, count: number }>,
+     * users_per_type: Array<{ type_id: number, count: number }>
+     * }>}
+     * @throws {InternalServerError} If failed to get users summary
+     */
+    async getUserSummary() {
+        try {
+            qweqwe;
+            const totalUsers = await this.database.models.Users.count({
+                where: {
+                    account_type_id: USER_ACCOUNT_TYPE_ID,
+                },
+            });
+
+            const usersPerStatusCount = await this.database.models.Users.findAll({
+                attributes: ['status_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+                group: ['status_id'],
+                where: {
+                    account_type_id: USER_ACCOUNT_TYPE_ID,
+                },
+                raw: true,
+            });
+
+            const usersPerTypeCount = await this.database.models.Users.findAll({
+                attributes: ['type_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+                group: ['type_id'],
+                where: {
+                    account_type_id: USER_ACCOUNT_TYPE_ID,
+                },
+                raw: true,
+            });
+
+            return {
+                total: totalUsers,
+                users_per_status: {
+                    active: usersPerStatusCount.find((item) => item.status_id === ACTIVE_STATUS_ID)?.count || 0,
+                    inactive: usersPerStatusCount.find((item) => item.status_id === INACTIVE_STATUS_ID)?.count || 0,
+                },
+                users_per_type: {
+                    free: usersPerTypeCount.find((item) => item.type_id === FREE_USER_TYPE_ID)?.count || 0,
+                    paid: usersPerTypeCount.find((item) => item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
+                },
+            };
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get users summary', error);
         }
     }
 }
