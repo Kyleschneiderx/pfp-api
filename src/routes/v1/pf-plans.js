@@ -26,6 +26,12 @@ export default ({ verifyAdmin, pfPlanController, pfPlanService, workoutService, 
         pfPlanController.handleRemoveFavoritePfPlanRoute.bind(pfPlanController),
     );
 
+    router.put(
+        '/:id/select',
+        validateInput([commonValidations.pfPlanIdValidation({ pfPlanService, isSelected: true })]),
+        pfPlanController.handleSelectPfPlanRoute.bind(pfPlanController),
+    );
+
     router.get(
         '/:id',
         validateInput([commonValidations.pfPlanIdValidation({ pfPlanService })]),

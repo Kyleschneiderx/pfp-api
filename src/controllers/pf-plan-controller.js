@@ -91,4 +91,23 @@ export default class PfPlanController {
             data: favorites,
         });
     }
+
+    async handleSelectPfPlanRoute(req, res) {
+        const user = await this.userService.getUser({ userId: req.auth.user_id });
+
+        const pfPlanList = await this.pfPlanService.getPfPlans({
+            id: req.params.id,
+            page: req.query.page ?? REPORT_DEFAULT_PAGE,
+            pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
+        });
+        const pfPlan = pfPlanList.data[0];
+
+        if (user.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && pfPlan.is_premium && !(pfPlan.is_premium && user.type_id === PREMIUM_USER_TYPE_ID)) {
+            throw new exceptions.Forbidden('You cannot access this content.');
+        }
+
+        await this.pfPlanService.selectPfPlan(req.params.id, req.auth.user_id);
+
+        return res.json({ msg: 'Successfully selected PF plan.' });
+    }
 }

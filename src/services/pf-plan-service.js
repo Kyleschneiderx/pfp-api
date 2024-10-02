@@ -376,6 +376,7 @@ export default class PfPlanService {
                     dailies[`day_${pfPlanDaily.day}`].contents = [
                         ...(dailies[`day_${pfPlanDaily.day}`]?.contents ?? []),
                         {
+                            id: pfPlanDaily.id,
                             workout: pfPlanDaily.dataValues.workout,
                             education: pfPlanDaily.dataValues.education,
                         },
@@ -386,6 +387,7 @@ export default class PfPlanService {
                 pfPlan = pfPlan.get({ plain: true });
 
                 pfPlan.pf_plan_dailies = Object.keys(dailies).map((key) => ({
+                    id: dailies[key].id,
                     day: Number(key.split('_')[1]),
                     contents: dailies[key].contents,
                 }));
@@ -629,6 +631,42 @@ export default class PfPlanService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check PF plan', error);
+        }
+    }
+
+    /**
+     * Select PF plan program
+     *
+     * @param {number} id PF plan id
+     * @param {number} userId User account id
+     * @returns {Promise<UserPfPlans>} UserPfPlans instance
+     * @throws {InternalServerError} If failed to select PF plan program
+     */
+    async selectPfPlan(id, userId) {
+        try {
+            return await this.database.models.UserPfPlans.create({ user_id: userId, pf_plan_id: id });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to select PF plan', error);
+        }
+    }
+
+    /**
+     * Check if PF plan is selected
+     *
+     * @param {number} id
+     * @param {number} userId
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check selected PF plan
+     */
+    async isPfPlanSelectedById(id, userId) {
+        try {
+            return Boolean(await this.database.models.UserPfPlans.count({ where: { user_id: userId, pf_plan_id: id } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check selected PF plan', error);
         }
     }
 }
