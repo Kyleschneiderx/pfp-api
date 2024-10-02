@@ -41,18 +41,12 @@ export default class PfPlanController {
     }
 
     async handleGetPfPlanRoute(req, res) {
-        const user = await this.userService.getUser({ userId: req.auth.user_id });
-
         const workout = await this.pfPlanService.getPfPlanDetails(req.params.id, {
             authenticatedUser: req.auth,
             ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
                 statusId: PUBLISHED_PF_PLAN_STATUS_ID,
             }),
         });
-
-        if (user.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && workout.is_premium && !(workout.is_premium && user.type_id === PREMIUM_USER_TYPE_ID)) {
-            throw new exceptions.Forbidden('You cannot access this content.');
-        }
 
         return res.json(workout);
     }
