@@ -215,6 +215,7 @@ export default class PfPlanService {
                 {
                     id: undefined,
                     name: undefined,
+                    is_premium: undefined,
                 },
                 this.database,
             );
