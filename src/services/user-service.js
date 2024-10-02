@@ -566,7 +566,6 @@ export default class UserService {
      */
     async getUserSummary() {
         try {
-            qweqwe;
             const totalUsers = await this.database.models.Users.count({
                 where: {
                     account_type_id: USER_ACCOUNT_TYPE_ID,
