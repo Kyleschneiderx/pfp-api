@@ -10,5 +10,9 @@ export default () => [
         .trim()
         .optional()
         .customSanitizer((value) => (value === '' ? undefined : value)),
+    query('status_id')
+        .trim()
+        .optional()
+        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
     ...commonValidation.paginationValidation(),
 ];

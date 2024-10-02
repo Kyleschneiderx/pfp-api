@@ -33,6 +33,9 @@ export default class PfPlanController {
             sort: req.query.sort,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
+            ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
+                statusId: PUBLISHED_PF_PLAN_STATUS_ID,
+            }),
         });
         return res.json(list);
     }

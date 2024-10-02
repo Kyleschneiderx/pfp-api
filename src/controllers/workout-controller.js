@@ -31,6 +31,7 @@ export default class WorkoutController {
         const list = await this.workoutService.getWorkouts({
             id: req.query.id,
             name: req.query.name,
+            statusId: req.query.status_id,
             sort: req.query.sort,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
