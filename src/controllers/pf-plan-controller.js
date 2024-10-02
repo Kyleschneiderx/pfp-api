@@ -1,13 +1,11 @@
 import {
     REPORT_DEFAULT_PAGE,
     REPORT_DEFAULT_ITEMS,
-    PREMIUM_USER_TYPE_ID,
     ADMIN_ACCOUNT_TYPE_ID,
     PUBLISHED_PF_PLAN_STATUS_ID,
     FAVORITE_PF_PLAN_STATUS,
     UNFAVORITE_PF_PLAN_STATUS,
 } from '../constants/index.js';
-import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanController {
     constructor({ pfPlanService, userService }) {
