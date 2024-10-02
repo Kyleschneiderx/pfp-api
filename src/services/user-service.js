@@ -572,18 +572,9 @@ export default class UserService {
                 },
             });
 
-            const usersPerStatusCount = await this.database.models.Users.findAll({
-                attributes: ['status_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
-                group: ['status_id'],
-                where: {
-                    account_type_id: USER_ACCOUNT_TYPE_ID,
-                },
-                raw: true,
-            });
-
-            const usersPerTypeCount = await this.database.models.Users.findAll({
-                attributes: ['type_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
-                group: ['type_id'],
+            const userSummaryCount = await this.database.models.Users.findAll({
+                attributes: ['status_id', 'type_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+                group: ['type_id', 'status_id'],
                 where: {
                     account_type_id: USER_ACCOUNT_TYPE_ID,
                 },
@@ -592,13 +583,15 @@ export default class UserService {
 
             return {
                 total: totalUsers,
-                users_per_status: {
-                    active: usersPerStatusCount.find((item) => item.status_id === ACTIVE_STATUS_ID)?.count || 0,
-                    inactive: usersPerStatusCount.find((item) => item.status_id === INACTIVE_STATUS_ID)?.count || 0,
+                free: {
+                    active: userSummaryCount.find((item) => item.status_id === ACTIVE_STATUS_ID && item.type_id === FREE_USER_TYPE_ID)?.count || 0,
+                    inactive:
+                        userSummaryCount.find((item) => item.status_id === INACTIVE_STATUS_ID && item.type_id === FREE_USER_TYPE_ID)?.count || 0,
                 },
-                users_per_type: {
-                    free: usersPerTypeCount.find((item) => item.type_id === FREE_USER_TYPE_ID)?.count || 0,
-                    paid: usersPerTypeCount.find((item) => item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
+                premium: {
+                    active: userSummaryCount.find((item) => item.status_id === ACTIVE_STATUS_ID && item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
+                    inactive:
+                        userSummaryCount.find((item) => item.status_id === INACTIVE_STATUS_ID && item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
                 },
             };
         } catch (error) {
