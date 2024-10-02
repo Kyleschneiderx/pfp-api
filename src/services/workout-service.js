@@ -269,6 +269,7 @@ export default class WorkoutService {
                     'id',
                     'name',
                     'description',
+                    'is_premium',
                     'photo',
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]

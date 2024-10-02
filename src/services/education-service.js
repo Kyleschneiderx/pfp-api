@@ -325,6 +325,7 @@ export default class EducationService {
                     'title',
                     'content',
                     'photo',
+                    'is_premium',
                     'media_url',
                     'media_upload',
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
