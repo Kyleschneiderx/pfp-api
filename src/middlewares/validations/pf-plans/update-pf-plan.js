@@ -3,7 +3,7 @@ import * as commonValidation from '../common/index.js';
 import { DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID } from '../../../constants/index.js';
 
 export default ({ workoutService, educationService, pfPlanService, selectionService, file }) => [
-    commonValidation.workoutIdValidation({ workoutService, field: 'id' }),
+    commonValidation.pfPlanIdValidation({ pfPlanService, field: 'id' }),
     body('name').trim().optional().notEmpty().withMessage('Name is required.').isString().isLength({ max: 150 }),
     body('description').trim().optional().notEmpty().isString(),
     commonValidation
