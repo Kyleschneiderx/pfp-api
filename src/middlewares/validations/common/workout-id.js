@@ -36,8 +36,8 @@ export default ({
         });
 
     if (isFavorite || isUnfavorite) {
-        rule.custom(async (value) => {
-            const isFavoriteExist = await workoutService.isFavoriteWorkoutExistById(value);
+        rule.custom(async (value, { req }) => {
+            const isFavoriteExist = await workoutService.isFavoriteWorkoutExistById(value, req.auth.user_id);
 
             if (isFavoriteExist && isFavorite) {
                 throw new Error('Workout is already in favorite list.');

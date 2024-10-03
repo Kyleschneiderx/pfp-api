@@ -569,10 +569,12 @@ export default class WorkoutService {
      * @returns {boolean}
      * @throws {InternalServerError} If failed to check favorite workout by id
      */
-    async isFavoriteWorkoutExistById(id) {
+    async isFavoriteWorkoutExistById(id, userId) {
         try {
             return Boolean(
-                await this.database.models.UserFavoriteWorkouts.count({ where: { workout_id: id, is_favorite: FAVORITE_WORKOUT_STATUS } }),
+                await this.database.models.UserFavoriteWorkouts.count({
+                    where: { workout_id: id, is_favorite: FAVORITE_WORKOUT_STATUS, user_id: userId },
+                }),
             );
         } catch (error) {
             this.logger.error(error.message, error);

@@ -23,8 +23,8 @@ export default ({ pfPlanService, field = 'id', isBody = false, isFavorite = fals
         });
 
     if (isFavorite || isUnfavorite) {
-        rule.custom(async (value) => {
-            const isFavoriteExist = await pfPlanService.isFavoritePfPlanExistById(value);
+        rule.custom(async (value, { req }) => {
+            const isFavoriteExist = await pfPlanService.isFavoritePfPlanExistById(value, req.auth.user_id);
 
             if (isFavoriteExist && isFavorite) {
                 throw new Error('PF plan is already in favorite list.');

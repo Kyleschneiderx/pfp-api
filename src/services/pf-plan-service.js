@@ -600,9 +600,13 @@ export default class PfPlanService {
      * @returns {boolean}
      * @throws {InternalServerError} If failed to check favorite PF plan by id
      */
-    async isFavoritePfPlanExistById(id) {
+    async isFavoritePfPlanExistById(id, userId) {
         try {
-            return Boolean(await this.database.models.UserFavoritePfPlans.count({ where: { pf_plan_id: id, is_favorite: FAVORITE_PF_PLAN_STATUS } }));
+            return Boolean(
+                await this.database.models.UserFavoritePfPlans.count({
+                    where: { pf_plan_id: id, is_favorite: FAVORITE_PF_PLAN_STATUS, user_id: userId },
+                }),
+            );
         } catch (error) {
             this.logger.error(error.message, error);
 
