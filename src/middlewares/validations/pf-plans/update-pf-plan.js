@@ -21,7 +21,7 @@ export default ({ workoutService, educationService, pfPlanService, selectionServ
             }
             return true;
         }),
-    ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
+    ...commonValidation.photoValidation({ field: 'photo', file: file }),
     body('dailies')
         .if(body('dailies').exists({ value: 'falsy' }))
         .customSanitizer((value) => {
