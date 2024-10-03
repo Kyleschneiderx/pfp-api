@@ -10,6 +10,9 @@ export default (sequelize, DataTypes) => {
             title: {
                 type: DataTypes.STRING(300),
             },
+            description: {
+                type: DataTypes.STRING(100),
+            },
             content: {
                 type: DataTypes.TEXT,
             },

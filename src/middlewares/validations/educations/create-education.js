@@ -35,6 +35,13 @@ export default ({ selectionService, file, educationService }) => {
 
                 return true;
             }),
+        body('description')
+            .trim()
+            .exists({ value: 'falsy' })
+            .withMessage('Description is required.')
+            .isString()
+            .isLength({ max: 60 })
+            .withMessage('Description cannot exceed 60 characters.'),
         body('content').trim().exists({ values: 'falsy' }).withMessage('Content is required.').isString(),
         commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_EDUCATION_STATUS_ID, PUBLISHED_EDUCATION_STATUS_ID] }),
         ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),

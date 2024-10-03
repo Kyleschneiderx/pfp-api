@@ -37,6 +37,14 @@ export default ({ educationService, selectionService, file }) => {
 
                 return true;
             }),
+        body('description')
+            .trim()
+            .optional()
+            .notEmpty()
+            .withMessage('Description is required.')
+            .isString()
+            .isLength({ max: 60 })
+            .withMessage('Description cannot exceed 60 characters.'),
         body('content').trim().optional().notEmpty().isString(),
         commonValidation.statusIdValidation({
             selectionService,

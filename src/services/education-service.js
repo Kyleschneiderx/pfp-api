@@ -82,6 +82,7 @@ export default class EducationService {
      * Create education
      * @param {object} data
      * @param {string} data.title Education title
+     * @param {string} data.description Education description
      * @param {string} data.content Education content
      * @param {number} data.statusId Education status id
      * @param {object} data.photo Education photo
@@ -103,6 +104,7 @@ export default class EducationService {
 
             const education = await this.database.models.Educations.create({
                 title: data.title,
+                description: data.description,
                 content: data.content,
                 media_url: data.mediaUrl,
                 media_upload: mediaStoreResponse?.path ? `${ASSET_URL}/${mediaStoreResponse?.path}` : null,
@@ -141,6 +143,7 @@ export default class EducationService {
      * @param {object} data
      * @param {number} data.id Education id
      * @param {string=} data.title Education title
+     * @param {string=} data.description Education description
      * @param {string=} data.content Education content
      * @param {object=} data.photo Education photo
      * @param {number=} data.statusId Education status id
@@ -168,6 +171,8 @@ export default class EducationService {
             if (mediaStoreResponse && education.media_upload) toRemoveFiles.push(education.media_upload.replace(ASSET_URL, S3_OBJECT_URL));
 
             education.title = data.title;
+
+            education.description = data.description;
 
             education.content = data.content;
 
@@ -323,6 +328,7 @@ export default class EducationService {
                 attributes: [
                     'id',
                     'title',
+                    'description',
                     'content',
                     'photo',
                     'media_url',
