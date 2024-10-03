@@ -574,10 +574,12 @@ export default class EducationService {
      * @returns {boolean}
      * @throws {InternalServerError} If failed to check favorite education by id
      */
-    async isFavoriteEducationExistById(id) {
+    async isFavoriteEducationExistById(id, userId) {
         try {
             return Boolean(
-                await this.database.models.UserFavoriteEducations.count({ where: { education_id: id, is_favorite: FAVORITE_EDUCATION_STATUS } }),
+                await this.database.models.UserFavoriteEducations.count({
+                    where: { education_id: id, is_favorite: FAVORITE_EDUCATION_STATUS, user_id: userId },
+                }),
             );
         } catch (error) {
             this.logger.error(error.message, error);

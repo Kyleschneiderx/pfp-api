@@ -36,8 +36,8 @@ export default ({
         });
 
     if (isFavorite || isUnfavorite) {
-        rule.custom(async (value) => {
-            const isFavoriteExist = await educationService.isFavoriteEducationExistById(value);
+        rule.custom(async (value, { req }) => {
+            const isFavoriteExist = await educationService.isFavoriteEducationExistById(value, req.auth.user_id);
 
             if (isFavoriteExist && isFavorite) {
                 throw new Error('Education is already in favorite list.');
