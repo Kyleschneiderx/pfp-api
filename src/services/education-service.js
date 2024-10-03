@@ -267,7 +267,7 @@ export default class EducationService {
                 filter.sort,
                 {
                     id: undefined,
-                    name: undefined,
+                    title: undefined,
                 },
                 this.database,
             );
