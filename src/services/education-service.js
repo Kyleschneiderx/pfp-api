@@ -587,4 +587,22 @@ export default class EducationService {
             throw new exceptions.InternalServerError('Failed to check favorite education', error);
         }
     }
+
+    /**
+     * Check if education exist using title
+     *
+     * @param {string} title Education title
+     * @param {number=} id Education id to be exempt
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check education by title
+     */
+    async isEducationTitleExist(title, id) {
+        try {
+            return Boolean(await this.database.models.Educations.count({ where: { title: title, ...(id && { id: { [Sequelize.Op.ne]: id } }) } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check education', error);
+        }
+    }
 }

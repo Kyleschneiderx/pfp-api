@@ -8,7 +8,7 @@ import {
     MAX_VIDEO_SIZE_IN_MB,
 } from '../../../constants/index.js';
 
-export default ({ selectionService, file }) => {
+export default ({ selectionService, file, educationService }) => {
     const validateMediaType = (type, extension, allowed) => {
         if (!(type.includes('image') === true || type.includes('video') === true)) {
             throw new Error('You can only link image or video file.');
@@ -22,7 +22,19 @@ export default ({ selectionService, file }) => {
     };
 
     return [
-        body('title').trim().exists({ values: 'falsy' }).withMessage('Title is required.').isString().isLength({ max: 150 }),
+        body('title')
+            .trim()
+            .exists({ values: 'falsy' })
+            .withMessage('Title is required.')
+            .isString()
+            .isLength({ max: 150 })
+            .custom(async (value) => {
+                if (await educationService.isEducationTitleExist(value)) {
+                    throw new Error('Education title already exists.');
+                }
+
+                return true;
+            }),
         body('content').trim().exists({ values: 'falsy' }).withMessage('Content is required.').isString(),
         commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_EDUCATION_STATUS_ID, PUBLISHED_EDUCATION_STATUS_ID] }),
         ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),

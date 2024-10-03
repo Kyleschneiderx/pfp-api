@@ -4,7 +4,20 @@ import { DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID } from '../../../c
 
 export default ({ workoutService, educationService, pfPlanService, selectionService, file }) => [
     commonValidation.pfPlanIdValidation({ pfPlanService, field: 'id' }),
-    body('name').trim().optional().notEmpty().withMessage('Name is required.').isString().isLength({ max: 150 }),
+    body('name')
+        .trim()
+        .optional()
+        .notEmpty()
+        .withMessage('Name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom(async (value, { req }) => {
+            if (await pfPlanService.isPfPlanNameExist(value, req.params.id)) {
+                throw new Error('PF plan name already exists.');
+            }
+
+            return true;
+        }),
     body('description').trim().optional().notEmpty().isString(),
     commonValidation
         .statusIdValidation({

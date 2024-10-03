@@ -352,4 +352,22 @@ export default class ExerciseService {
             throw new exceptions.InternalServerError('Failed to check exercise', error);
         }
     }
+
+    /**
+     * Check if exercise exist using name
+     *
+     * @param {string} name Exercise name
+     * @param {number=} id Exercise id to be exempt
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check exercise by name
+     */
+    async isExerciseNameExist(name, id) {
+        try {
+            return Boolean(await this.database.models.Exercises.count({ where: { name: name, ...(id && { id: { [Sequelize.Op.ne]: id } }) } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check exercise', error);
+        }
+    }
 }

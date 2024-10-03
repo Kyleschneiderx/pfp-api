@@ -582,4 +582,22 @@ export default class WorkoutService {
             throw new exceptions.InternalServerError('Failed to check favorite workout', error);
         }
     }
+
+    /**
+     * Check if workout exist using name
+     *
+     * @param {string} name Workout name
+     * @param {number=} id Workout id to be exempt
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check workout by name
+     */
+    async isWorkoutNameExist(name, id) {
+        try {
+            return Boolean(await this.database.models.Workouts.count({ where: { name: name, ...(id && { id: { [Sequelize.Op.ne]: id } }) } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check workout', error);
+        }
+    }
 }

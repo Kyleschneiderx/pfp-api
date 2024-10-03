@@ -613,4 +613,22 @@ export default class PfPlanService {
             throw new exceptions.InternalServerError('Failed to check favorite PF plan', error);
         }
     }
+
+    /**
+     * Check if PF plan exist using name
+     *
+     * @param {string} name PF plan name
+     * @param {number=} id PF plan id to be exempt
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check PF plan by name
+     */
+    async isPfPlanNameExist(name, id) {
+        try {
+            return Boolean(await this.database.models.PfPlans.count({ where: { name: name, ...(id && { id: { [Sequelize.Op.ne]: id } }) } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check PF plan', error);
+        }
+    }
 }

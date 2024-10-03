@@ -3,7 +3,20 @@ import * as commonValidation from '../common/index.js';
 
 export default ({ selectionService, file, exerciseService }) => [
     commonValidation.exerciseIdValidation({ exerciseService }),
-    body('name').trim().optional().notEmpty().withMessage('Name is required.').isString().isLength({ max: 150 }),
+    body('name')
+        .trim()
+        .optional()
+        .notEmpty()
+        .withMessage('Name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom(async (value, { req }) => {
+            if (await exerciseService.isExerciseNameExist(value, req.params.id)) {
+                throw new Error('Exercise name already exists.');
+            }
+
+            return true;
+        }),
     body('category_id')
         .optional()
         .notEmpty()

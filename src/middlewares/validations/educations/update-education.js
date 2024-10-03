@@ -23,7 +23,20 @@ export default ({ educationService, selectionService, file }) => {
 
     return [
         commonValidation.educationIdValidation({ educationService, field: 'id' }),
-        body('title').trim().optional().notEmpty().withMessage('Title is required.').isString().isLength({ max: 150 }),
+        body('title')
+            .trim()
+            .optional()
+            .notEmpty()
+            .withMessage('Title is required.')
+            .isString()
+            .isLength({ max: 150 })
+            .custom(async (value, { req }) => {
+                if (await educationService.isEducationTitleExist(value, req.params.id)) {
+                    throw new Error('Education title already exists.');
+                }
+
+                return true;
+            }),
         body('content').trim().optional().notEmpty().isString(),
         commonValidation.statusIdValidation({
             selectionService,

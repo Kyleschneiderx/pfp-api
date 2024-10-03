@@ -2,8 +2,20 @@ import { body } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 import { DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../../../constants/index.js';
 
-export default ({ workoutService, selectionService, file, educationService }) => [
-    body('name').trim().exists({ values: 'falsy' }).withMessage('Name is required.').isString().isLength({ max: 150 }),
+export default ({ workoutService, selectionService, file, educationService, pfPlanService }) => [
+    body('name')
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom(async (value) => {
+            if (await pfPlanService.isPfPlanNameExist(value)) {
+                throw new Error('PF plan name already exists.');
+            }
+
+            return true;
+        }),
     body('description').trim().exists({ value: 'falsy' }).isString(),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),

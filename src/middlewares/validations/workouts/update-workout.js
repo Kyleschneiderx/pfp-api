@@ -4,7 +4,20 @@ import { DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../../../c
 
 export default ({ workoutService, exerciseService, selectionService, file }) => [
     commonValidation.workoutIdValidation({ workoutService, field: 'id' }),
-    body('name').trim().optional().notEmpty().withMessage('Name is required.').isString().isLength({ max: 150 }),
+    body('name')
+        .trim()
+        .optional()
+        .notEmpty()
+        .withMessage('Name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom(async (value, { req }) => {
+            if (await workoutService.isWorkoutNameExist(value, req.params.id)) {
+                throw new Error('Workout name already exists.');
+            }
+
+            return true;
+        }),
     body('description').trim().optional().notEmpty().isString(),
     ...commonValidation.photoValidation({ field: 'photo', file: file }),
     body('is_premium').trim().optional().notEmpty().isBoolean(),
