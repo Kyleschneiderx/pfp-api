@@ -20,3 +20,6 @@ export { default as UserFavoriteEducations } from './user-favorite-educations.js
 export { default as UserFavoritePfPlans } from './user-favorite-pf-plans.js';
 export { default as AppStaticContents } from './app-static-contents.js';
 export { default as UserPfPlans } from './user-pf-plans.js';
+export { default as UserPfPlanProgress } from './user-pf-plan-progress.js';
+export { default as UserPfPlanWorkoutProgress } from './user-pf-plan-workout-progress.js';
+export { default as UserPfPlanDailyProgress } from './user-pf-plan-daily-progress.js';

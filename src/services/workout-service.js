@@ -600,4 +600,22 @@ export default class WorkoutService {
             throw new exceptions.InternalServerError('Failed to check workout', error);
         }
     }
+
+    /**
+     * Get workout exercise
+     *
+     * @param {number} workoutId Workout id
+     * @param {number} id Workout exercise id
+     * @returns {Promise<WorkoutExercises>} WorkoutExercises instance
+     * @throws {InternalServerError} If failed to get workout exercise
+     */
+    async getWorkoutExerciseById(workoutId, id) {
+        try {
+            return this.database.models.WorkoutExercises.findOne({ where: { id: id, workout_id: workoutId } });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get workout exercise', error);
+        }
+    }
 }

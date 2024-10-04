@@ -5,7 +5,9 @@ import {
     PUBLISHED_PF_PLAN_STATUS_ID,
     FAVORITE_PF_PLAN_STATUS,
     UNFAVORITE_PF_PLAN_STATUS,
+    PREMIUM_USER_TYPE_ID,
 } from '../constants/index.js';
+import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanController {
     constructor({ pfPlanService, userService }) {
@@ -109,5 +111,16 @@ export default class PfPlanController {
         await this.pfPlanService.selectPfPlan(req.params.id, req.auth.user_id);
 
         return res.json({ msg: 'Successfully selected PF plan.' });
+    }
+
+    async handleUpdatePfPlanProgressRoute(req, res) {
+        const pfPlanProgress = await this.pfPlanService.updatePfPlanProgress(req.params.id, {
+            userId: req.auth.user_id,
+            content: req.pfPlanContent,
+            workoutExercise: req.workoutExercise,
+            isSkip: req.body.is_skip,
+        });
+
+        return res.json(pfPlanProgress);
     }
 }

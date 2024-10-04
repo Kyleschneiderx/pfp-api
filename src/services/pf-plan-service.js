@@ -669,4 +669,151 @@ export default class PfPlanService {
             throw new exceptions.InternalServerError('Failed to check selected PF plan', error);
         }
     }
+
+    /**
+     * Get PF plan daily content
+     *
+     * @param {number} pfPlanId PF plan id
+     * @param {number} id PF plan daily id
+     * @returns {Promise<PfPlanDailies>} PfPlanDailies instance
+     * @throws {InternalServerError} If failed to get PF plan content
+     */
+    async getPfPlanDailyById(pfPlanId, id) {
+        try {
+            return this.database.models.PfPlanDailies.findOne({ where: { id: id, pf_plan_id: pfPlanId } });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get PF plan content', error);
+        }
+    }
+
+    /**
+     * Update PF plan progress
+     *
+     * @param {number} pfPlanId PF plan id
+     * @param {object} data
+     * @param {number} data.userId User account id
+     * @param {number} data.content PfPlanDailies instance
+     * @param {number=} data.workoutExercise WorkoutExercises instance
+     * @param {boolean=} data.isSkip Skip PF plan daily content
+     * @throws {InternalServerError} If failed to update PF plan progress
+     * @returns {Promise<void>}
+     */
+    async updatePfPlanProgress(pfPlanId, data) {
+        try {
+            const pfPlanDailyTotalContents = await this.database.models.PfPlanDailies.count({
+                where: { pf_plan_id: pfPlanId, day: data.content.day },
+            });
+
+            const userPfPlanDailyLastProgress = await this.database.models.UserPfPlanDailyProgress.findOne({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId },
+                order: [['id', 'DESC']],
+            });
+
+            let userPfPlanDailyProgress = await this.database.models.UserPfPlanDailyProgress.findOne({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.id },
+            });
+
+            let userPfPlanProgress = await this.database.models.UserPfPlanProgress.findOne({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId, day: data.content.day },
+            });
+
+            const userPfPlanLastProgress = await this.database.models.UserPfPlanProgress.findOne({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId },
+                order: [['id', 'DESC']],
+            });
+
+            const pfPlanLastDay = await this.database.models.PfPlanDailies.findOne({ where: { pf_plan_id: pfPlanId }, order: [['day', 'DESC']] });
+
+            let pfPlanDailyProgressFulfilledContent =
+                (await this.database.models.UserPfPlanDailyProgress.count({
+                    where: { user_id: data.userId, pf_plan_id: pfPlanId, is_fulfilled: true, day: data.content.day },
+                })) + 1;
+
+            let pfPlanProgressSkipped = userPfPlanDailyLastProgress?.skipped ?? 0;
+
+            let isPfPlanContentFulfilled = true;
+            if (data.isSkip) {
+                pfPlanProgressSkipped += 1;
+                isPfPlanContentFulfilled = false;
+            }
+
+            return await this.database.transaction(async (transaction) => {
+                if (data.workoutExercise !== undefined) {
+                    const totalWorkoutExercise = await this.database.models.WorkoutExercises.count({
+                        where: { workout_id: data.workoutExercise.workout_id },
+                    });
+
+                    const userPfPlanWorkoutLastProgress = await this.database.models.UserPfPlanWorkoutProgress.findOne({
+                        where: { user_id: data.userId, pf_plan_id: pfPlanId, workout_id: data.workoutExercise.workout_id },
+                        order: [['id', 'DESC']],
+                    });
+
+                    const pfPlanWorkoutProgressFulfilled = (userPfPlanWorkoutLastProgress?.fulfilled ?? 0) + 1;
+
+                    const pfPlanWorkoutProgress = await this.database.models.UserPfPlanWorkoutProgress.create(
+                        {
+                            user_id: data.userId,
+                            pf_plan_id: pfPlanId,
+                            workout_id: data.workoutExercise.workout_id,
+                            workout_exercise_id: data.workoutExercise.id,
+                            pf_plan_daily_id: data.content.id,
+                            fulfilled: pfPlanWorkoutProgressFulfilled,
+                            unfulfilled: totalWorkoutExercise - pfPlanWorkoutProgressFulfilled,
+                            total_exercise: totalWorkoutExercise,
+                        },
+                        { transaction: transaction },
+                    );
+
+                    if (pfPlanWorkoutProgress.fulfilled < pfPlanWorkoutProgress.total_exercise) {
+                        pfPlanDailyProgressFulfilledContent -= 1;
+                        isPfPlanContentFulfilled = false;
+                    }
+                }
+
+                [userPfPlanDailyProgress] = await this.database.models.UserPfPlanDailyProgress.upsert(
+                    {
+                        id: userPfPlanDailyProgress?.id,
+                        user_id: data.userId,
+                        pf_plan_id: pfPlanId,
+                        pf_plan_daily_id: data.content.id,
+                        day: data.content.day,
+                        is_skip: data.isSkip,
+                        is_fulfilled: isPfPlanContentFulfilled,
+                        total_days: pfPlanLastDay.day,
+                        fulfilled: pfPlanDailyProgressFulfilledContent,
+                        unfulfilled: pfPlanDailyTotalContents - pfPlanDailyProgressFulfilledContent,
+                        skipped: pfPlanProgressSkipped,
+                        total_contents: pfPlanDailyTotalContents,
+                    },
+                    { transaction: transaction },
+                );
+
+                const pfPlanLastProgressFulfilled = userPfPlanLastProgress?.fulfilled ?? 0;
+
+                const userPfPlanProgressFulfilled =
+                    pfPlanDailyProgressFulfilledContent < pfPlanDailyTotalContents ? pfPlanLastProgressFulfilled : pfPlanLastProgressFulfilled + 1;
+
+                [userPfPlanProgress] = await this.database.models.UserPfPlanProgress.upsert(
+                    {
+                        id: userPfPlanProgress?.id,
+                        user_id: data.userId,
+                        pf_plan_id: pfPlanId,
+                        day: data.content.day,
+                        fulfilled: userPfPlanProgressFulfilled,
+                        unfulfilled: pfPlanLastDay.day - userPfPlanProgressFulfilled,
+                        skipped: (userPfPlanLastProgress?.skipped ?? 0) + data.isSkip ? 1 : 0,
+                    },
+                    { transaction: transaction },
+                );
+
+                return userPfPlanProgress;
+            });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to update PF plan progress.', error);
+        }
+    }
 }
