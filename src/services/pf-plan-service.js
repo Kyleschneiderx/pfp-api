@@ -807,7 +807,7 @@ export default class PfPlanService {
                         day: data.content.day,
                         fulfilled: userPfPlanProgressFulfilled,
                         unfulfilled: pfPlanLastDay.day - userPfPlanProgressFulfilled,
-                        skipped: (userPfPlanLastProgress?.skipped ?? 0) + data.isSkip ? 1 : 0,
+                        skipped: pfPlanLastProgressFulfilled + data.isSkip ? 1 : 0,
                     },
                     { transaction: transaction },
                 );
