@@ -339,7 +339,7 @@ export default class WorkoutService {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
 
-            if (workout.dataValues.is_favorite) {
+            if (workout.dataValues.is_favorite !== undefined) {
                 workout.dataValues.is_favorite = Boolean(workout.dataValues.is_favorite);
             }
 

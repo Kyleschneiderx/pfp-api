@@ -379,7 +379,7 @@ export default class EducationService {
                 },
             );
 
-            if (education.dataValues.is_favorite) {
+            if (education.dataValues.is_favorite !== undefined) {
                 education.dataValues.is_favorite = Boolean(education.dataValues.is_favorite);
             }
 

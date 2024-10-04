@@ -339,6 +339,10 @@ export default class PfPlanService {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
 
+            if (pfPlan.dataValues.is_favorite !== undefined) {
+                pfPlan.dataValues.is_favorite = Boolean(pfPlan.dataValues.is_favorite);
+            }
+
             if (pfPlan.pf_plan_dailies) {
                 const dailies = {};
 
