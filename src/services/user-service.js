@@ -377,6 +377,26 @@ export default class UserService {
     }
 
     /**
+     * Check if user exist using name
+     *
+     * @param {string} name User name
+     * @param {number=} id User id to be exempt
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check user by name
+     */
+    async isUserNameExist(name, id) {
+        try {
+            return Boolean(
+                await this.database.models.UserProfiles.count({ where: { name: name, ...(id && { user_id: { [Sequelize.Op.ne]: id } }) } }),
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check user', error);
+        }
+    }
+
+    /**
      * Update user account
      * @param {object} data
      * @param {number} data.userId User account id

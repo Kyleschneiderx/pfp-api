@@ -11,7 +11,19 @@ export default ({ userService, file }) => [
                 throw new Error('Email already exist.');
             }
         }),
-    body('name').trim().exists({ values: 'falsy' }).withMessage('Name is required.').isString().isLength({ max: 150 }),
+    body('name')
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom(async (value) => {
+            if (await userService.isUserNameExist(value)) {
+                throw new Error('Name already exists.');
+            }
+
+            return true;
+        }),
     body('birthdate')
         .trim()
         .exists({ values: 'falsy' })
