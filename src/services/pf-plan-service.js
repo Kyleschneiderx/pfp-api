@@ -270,9 +270,11 @@ export default class PfPlanService {
 
             row.dataValues.user_pf_plan_progress = userPfPlanProgress;
 
-            row.dataValues.user_pf_plan_progress_percentage = Math.ceil(
-                (userPfPlanProgress?.fulfilled / (userPfPlanProgress?.fulfilled + userPfPlanProgress?.unfulfilled)) * 100,
-            );
+            if (row.user_pf_plan_progress !== undefined) {
+                row.dataValues.user_pf_plan_progress_percentage = Math.ceil(
+                    (userPfPlanProgress?.fulfilled / (userPfPlanProgress?.fulfilled + userPfPlanProgress?.unfulfilled)) * 100,
+                );
+            }
 
             return row;
         });
