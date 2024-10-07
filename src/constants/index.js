@@ -30,7 +30,7 @@ export const MAX_AUDIO_SIZE_IN_MB = 20;
 
 export const OTP_RESEND_IN_SECONDS = 120;
 
-export const OTP_EXPIRATION_IN_SECONDS = 5;
+export const OTP_EXPIRATION_IN_SECONDS = 3600;
 
 export const EMAIL_CONFIRMATION_URL = `${process.env.APP_URL}/verification/email`;
 
