@@ -49,6 +49,14 @@ module.exports = createMigration({
                 key: 'id',
             },
         },
+        pf_plan_daily_content_id: {
+            type: DataTypes.INTEGER,
+            comment: 'see pf_plan_daily_contents table',
+            references: {
+                model: 'pf_plan_daily_contents',
+                key: 'id',
+            },
+        },
         fulfilled: {
             type: DataTypes.INTEGER,
         },

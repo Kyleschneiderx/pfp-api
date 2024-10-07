@@ -23,3 +23,4 @@ export { default as UserPfPlans } from './user-pf-plans.js';
 export { default as UserPfPlanProgress } from './user-pf-plan-progress.js';
 export { default as UserPfPlanWorkoutProgress } from './user-pf-plan-workout-progress.js';
 export { default as UserPfPlanDailyProgress } from './user-pf-plan-daily-progress.js';
+export { default as PfPlanDailyContents } from './pf-plan-daily-contents.js';

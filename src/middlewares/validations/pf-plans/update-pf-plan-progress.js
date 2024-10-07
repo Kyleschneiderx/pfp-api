@@ -14,10 +14,14 @@ export default ({ workoutService, pfPlanService }) => [
         .exists({ value: 'falsy' })
         .withMessage('PF plan content id is required.')
         .custom(async (value, { req }) => {
-            const content = await pfPlanService.getPfPlanDailyById(req.params.id, value);
+            const content = await pfPlanService.getPfPlanDailyContentById(req.params.id, value);
             if (!content) {
                 throw new Error('Invalid PF plan content.');
             }
+
+            const pfPlanDaily = await pfPlanService.getPfPlanDailyById(req.params.id, content.pf_plan_daily_id);
+
+            content.day = pfPlanDaily.day;
 
             req.pfPlanContent = content;
 

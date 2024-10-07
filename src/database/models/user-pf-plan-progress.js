@@ -26,6 +26,12 @@ export default (sequelize, DataTypes) => {
             day: {
                 type: DataTypes.INTEGER,
             },
+            has_skip: {
+                type: DataTypes.BOOLEAN,
+            },
+            is_fulfilled: {
+                type: DataTypes.BOOLEAN,
+            },
             fulfilled: {
                 type: DataTypes.INTEGER,
             },

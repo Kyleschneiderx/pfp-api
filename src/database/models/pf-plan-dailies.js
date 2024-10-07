@@ -15,24 +15,11 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
+            name: {
+                type: DataTypes.STRING(200),
+            },
             day: {
                 type: DataTypes.INTEGER,
-            },
-            workout_id: {
-                type: DataTypes.INTEGER,
-                comment: 'see workouts table',
-                references: {
-                    model: 'workouts',
-                    key: 'id',
-                },
-            },
-            education_id: {
-                type: DataTypes.INTEGER,
-                comment: 'see educations table',
-                references: {
-                    model: 'educations',
-                    key: 'id',
-                },
             },
             created_at: {
                 type: DataTypes.DATE,
@@ -54,26 +41,19 @@ export default (sequelize, DataTypes) => {
                     fields: [{ name: 'pf_plan_id' }],
                 },
                 {
-                    name: 'pf_plan_dailies_pf_plan_id_workout_id_day',
+                    name: 'pf_plan_dailies_name',
                     using: 'BTREE',
-                    fields: [{ name: 'pf_plan_id' }, { name: 'workout_id' }, { name: 'day' }],
-                },
-                {
-                    name: 'pf_plan_dailies_pf_plan_id_education_id_day',
-                    using: 'BTREE',
-                    fields: [{ name: 'pf_plan_id' }, { name: 'education_id' }, { name: 'day' }],
+                    fields: [{ name: 'name' }],
                 },
             ],
         },
     );
     model.associate = () => {
-        const { PfPlanDailies, Workouts, Educations, UserPfPlanDailyProgress } = sequelize.models;
-
-        PfPlanDailies.belongsTo(Workouts, { as: 'workout', foreignKey: 'workout_id' });
-
-        PfPlanDailies.belongsTo(Educations, { as: 'education', foreignKey: 'education_id' });
+        const { PfPlanDailies, PfPlanDailyContents, UserPfPlanDailyProgress } = sequelize.models;
 
         PfPlanDailies.hasOne(UserPfPlanDailyProgress, { as: 'user_pf_plan_daily_progress', foreignKey: 'pf_plan_daily_id' });
+
+        PfPlanDailies.hasMany(PfPlanDailyContents, { as: 'pf_plan_daily_contents', foreignKey: 'pf_plan_daily_id' });
     };
     return model;
 };

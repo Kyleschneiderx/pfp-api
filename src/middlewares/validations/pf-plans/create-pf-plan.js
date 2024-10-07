@@ -40,12 +40,31 @@ export default ({ workoutService, selectionService, file, educationService, pfPl
         .withMessage('Day is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric(),
-    commonValidation.workoutIdValidation({ workoutService, isBody: true, isRequired: false, isPublishedOnly: true, field: 'dailies.*.workout_id' }),
+    body('dailies.*.name')
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Daily content name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom(async (value) => {
+            if (await pfPlanService.isPfPlanDailyNameExist(value)) {
+                throw new Error('PF plan daily content name already exists.');
+            }
+
+            return true;
+        }),
+    commonValidation.workoutIdValidation({
+        workoutService,
+        isBody: true,
+        isRequired: false,
+        isPublishedOnly: true,
+        field: 'dailies.*.contents.*.workout_id',
+    }),
     commonValidation.educationIdValidation({
         educationService,
         isBody: true,
         isRequired: false,
         isPublishedOnly: true,
-        field: 'dailies.*.education_id',
+        field: 'dailies.*.contents.*.education_id',
     }),
 ];

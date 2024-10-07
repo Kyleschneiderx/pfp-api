@@ -100,6 +100,7 @@ export default class PfPlanController {
 
         const pfPlanList = await this.pfPlanService.getPfPlans({
             id: req.params.id,
+            authenticatedUser: req.auth,
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });

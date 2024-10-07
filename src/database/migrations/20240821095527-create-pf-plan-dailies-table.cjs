@@ -17,24 +17,11 @@ module.exports = createMigration({
                 key: 'id',
             },
         },
+        name: {
+            type: DataTypes.STRING(200),
+        },
         day: {
             type: DataTypes.INTEGER,
-        },
-        workout_id: {
-            type: DataTypes.INTEGER,
-            comment: 'see workouts table',
-            references: {
-                model: 'workouts',
-                key: 'id',
-            },
-        },
-        education_id: {
-            type: DataTypes.INTEGER,
-            comment: 'see educations table',
-            references: {
-                model: 'educations',
-                key: 'id',
-            },
         },
         created_at: {
             type: DataTypes.DATE,
@@ -54,14 +41,9 @@ module.exports = createMigration({
             fields: [{ name: 'pf_plan_id' }],
         },
         {
-            name: 'pf_plan_dailies_pf_plan_id_workout_id_day',
+            name: 'pf_plan_dailies_name',
             using: 'BTREE',
-            fields: [{ name: 'pf_plan_id' }, { name: 'workout_id' }, { name: 'day' }],
-        },
-        {
-            name: 'pf_plan_dailies_pf_plan_id_education_id_day',
-            using: 'BTREE',
-            fields: [{ name: 'pf_plan_id' }, { name: 'education_id' }, { name: 'day' }],
+            fields: [{ name: 'name' }],
         },
     ],
 });
