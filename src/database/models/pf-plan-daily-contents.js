@@ -39,6 +39,9 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
+            arrangement: {
+                type: DataTypes.INTEGER,
+            },
             created_at: {
                 type: DataTypes.DATE,
             },
@@ -72,6 +75,11 @@ export default (sequelize, DataTypes) => {
                     name: 'pf_plan_daily_contents_pfplanid_pfplandailyid_educationid',
                     using: 'BTREE',
                     fields: [{ name: 'pf_plan_id' }, { name: 'pf_plan_daily_id' }, { name: 'education_id' }],
+                },
+                {
+                    name: 'pf_plan_daily_contents_arrangement',
+                    using: 'BTREE',
+                    fields: [{ name: 'arrangement' }],
                 },
             ],
         },

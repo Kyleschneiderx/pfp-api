@@ -63,16 +63,23 @@ export default class PfPlanService {
                 });
 
                 if (data.dailies) {
+                    let arrangement = 0;
+
                     await this.database.models.PfPlanDailies.bulkCreate(
                         data.dailies.map((daily) => ({
                             pf_plan_id: pfPlan.id,
                             name: daily.name,
                             day: daily.day,
-                            pf_plan_daily_contents: daily.contents.map((content) => ({
-                                pf_plan_id: pfPlan.id,
-                                workout_id: content.workout_id ?? null,
-                                education_id: content.education_id ?? null,
-                            })),
+                            pf_plan_daily_contents: daily.contents.map((content) => {
+                                arrangement += 1;
+
+                                return {
+                                    pf_plan_id: pfPlan.id,
+                                    arrangement: arrangement,
+                                    workout_id: content.workout_id ?? null,
+                                    education_id: content.education_id ?? null,
+                                };
+                            }),
                         })),
                         {
                             include: [
@@ -105,9 +112,12 @@ export default class PfPlanService {
      * @param {number=} data.statusId PF plan status id
      * @param {object=} data.photo PF plan photo
      * @param {object[]=} data.exercises PF plan exercises
+     * @param {number=} data.dailies[].daily_id PF plan daily id
      * @param {number} data.dailies[].day PF plan daily day indicator
-     * @param {number=} data.dailies[].workout_id PF plan daily content workout id
-     * @param {number=} data.dailies[].education_id PF plan daily content education id
+     * @param {number} data.dailies[].name PF plan daily name
+     * @param {number} data.dailies[].content[].content_id PF plan daily content id
+     * @param {number=} data.dailies[].content[].workout_id PF plan daily content workout id
+     * @param {number=} data.dailies[].content[].education_id PF plan daily content education id
      * @returns {Promise<PfPlans>} PF plans model instance
      * @throws {InternalServerError} If failed to update pf plan
      */
@@ -148,19 +158,81 @@ export default class PfPlanService {
             delete pfPlan.dataValues.deleted_at;
 
             if (data.dailies) {
-                await this.database.transaction(async (transaction) => {
-                    await this.database.models.PfPlanDailies.destroy({ where: { pf_plan_id: pfPlan.id }, transaction: transaction });
+                let arrangement = 0;
 
-                    await this.database.models.PfPlanDailies.bulkCreate(
-                        data.dailies.map((daily) => ({
+                const toRemoveDailiesIds = [];
+
+                const toRemoveDailyContentsIds = [];
+
+                const upcomingContentsIds = [];
+
+                const upcomingDailiesIds = [];
+
+                data.dailies.forEach((incomingDaily) => {
+                    upcomingDailiesIds.push(Number(incomingDaily.daily_id));
+
+                    incomingDaily.contents.forEach((incomingContent) => upcomingContentsIds.push(Number(incomingContent.content_id)));
+                });
+
+                const pfPlanDailies = await this.database.models.PfPlanDailies.findAll({ where: { pf_plan_id: data.id } });
+
+                const pfPlanDailyContents = await this.database.models.PfPlanDailyContents.findAll({ where: { pf_plan_id: data.id } });
+
+                pfPlanDailyContents.forEach((content) => {
+                    if (!upcomingContentsIds.includes(content.id)) {
+                        toRemoveDailyContentsIds.push(content.id);
+                    }
+                });
+
+                pfPlanDailies.forEach((daily) => {
+                    if (!upcomingDailiesIds.includes(daily.id)) {
+                        toRemoveDailiesIds.push(daily.id);
+                    }
+                });
+
+                await this.database.transaction(async (transaction) => {
+                    await this.database.models.PfPlanDailyContents.destroy({ where: { id: toRemoveDailyContentsIds } }, { transaction: transaction });
+
+                    await this.database.models.PfPlanDailies.destroy({ where: { id: toRemoveDailiesIds } }, { transaction: transaction });
+
+                    const updatePayload = data.dailies.map((daily) => ({
+                        daily: {
+                            id: daily.daily_id,
                             pf_plan_id: pfPlan.id,
                             day: daily.day,
-                            workout_id: daily.workout_id,
-                            education_id: daily.education_id,
-                        })),
-                        {
-                            transaction: transaction,
+                            name: daily.name,
                         },
+                        contents: daily.contents.map((content) => {
+                            arrangement += 1;
+
+                            return {
+                                id: content.content_id,
+                                pf_plan_id: pfPlan.id,
+                                arrangement: arrangement,
+                                workout_id: content.workout_id ?? null,
+                                education_id: content.education_id ?? null,
+                            };
+                        }),
+                    }));
+
+                    await Promise.all(
+                        updatePayload.map(async (payload) => {
+                            const [updatedPfPlanDailies] = await this.database.models.PfPlanDailies.upsert(payload.daily, {
+                                transaction: transaction,
+                            });
+
+                            await Promise.all(
+                                payload.contents.map((content) =>
+                                    this.database.models.PfPlanDailyContents.upsert(
+                                        {
+                                            ...content,
+                                            pf_plan_daily_id: updatedPfPlanDailies.id,
+                                        },
+                                        { transaction: transaction },
+                                    ),
+                                ),
+                            );
+                        }),
                     );
                 });
             }
@@ -341,6 +413,7 @@ export default class PfPlanService {
                                         'pf_plan_daily_id',
                                         'workout_id',
                                         'education_id',
+                                        'arrangement',
                                     ],
                                 },
                                 include: [
@@ -383,7 +456,12 @@ export default class PfPlanService {
                 ],
                 order: [
                     [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'day', 'ASC'],
-                    [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'id', 'ASC'],
+                    [
+                        { model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' },
+                        { model: this.database.models.PfPlanDailyContents, as: 'pf_plan_daily_contents' },
+                        'arrangement',
+                        'ASC',
+                    ],
                 ],
                 where: {
                     id: id,
@@ -1018,7 +1096,12 @@ export default class PfPlanService {
                 ],
                 order: [
                     [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'day', 'ASC'],
-                    [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'id', 'ASC'],
+                    [
+                        { model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' },
+                        { model: this.database.models.PfPlanDailyContents, as: 'pf_plan_daily_contents' },
+                        'arrangement',
+                        'ASC',
+                    ],
                 ],
                 where: {
                     id: id,
@@ -1115,6 +1198,48 @@ export default class PfPlanService {
     async isPfPlanDailyNameExist(name, id) {
         try {
             return Boolean(await this.database.models.PfPlanDailies.count({ where: { name: name, ...(id && { id: { [Sequelize.Op.ne]: id } }) } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check PF plan daily content', error);
+        }
+    }
+
+    /**
+     * Check if PF plan daily exist using id
+     *
+     * @param {number} id PF plan daily id
+     * @param {number=} pfPlanId PF plan id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check PF plan by id
+     */
+    async isPfPlanDailyExistById(id, pfPlanId) {
+        try {
+            return Boolean(
+                await this.database.models.PfPlanDailies.count({ loggging: true, where: { id: id, ...(pfPlanId && { pf_plan_id: pfPlanId }) } }),
+            );
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check PF plan daily', error);
+        }
+    }
+
+    /**
+     * Check if PF plan daily content exist using id
+     *
+     * @param {number} id PF plan daily content id
+     * @param {number=} pfPlanDailyId PF plan daily id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to check PF plan daily content by id
+     */
+    async isPfPlanDailyContentExistById(id, pfPlanDailyId) {
+        try {
+            return Boolean(
+                await this.database.models.PfPlanDailyContents.count({
+                    where: { id: id, ...(pfPlanDailyId && { pf_plan_daily_id: pfPlanDailyId }) },
+                }),
+            );
         } catch (error) {
             this.logger.error(error.message, error);
 
