@@ -90,9 +90,7 @@ export default class PfPlanController {
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });
 
-        return res.json({
-            data: favorites,
-        });
+        return res.json(favorites);
     }
 
     async handleSelectPfPlanRoute(req, res) {

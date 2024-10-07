@@ -96,8 +96,6 @@ export default class EducationController {
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });
 
-        return res.json({
-            data: favorites,
-        });
+        return res.json(favorites);
     }
 }
