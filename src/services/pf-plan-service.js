@@ -1040,7 +1040,7 @@ export default class PfPlanService {
         } catch (error) {
             this.logger.error(error.message, error);
 
-            throw new exceptions.InternalServerError('Failed to get pf plan details', error);
+            throw new exceptions.InternalServerError('Failed to get pf plan progress details', error);
         }
     }
 }
