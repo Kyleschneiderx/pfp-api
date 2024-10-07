@@ -132,6 +132,7 @@ export default ({
             verificationService: verificationService,
             autService: authService,
             password: password,
+            pfPlanService: pfPlanService,
         }),
     );
 

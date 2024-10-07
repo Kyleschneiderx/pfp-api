@@ -3,7 +3,7 @@ import * as commonValidation from '../common/index.js';
 import { USER_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
 export default ({ userService, password }) => {
-    const rules = [...commonValidation.userAccessUserIdValidation({ userService })];
+    const rules = [commonValidation.userAccessUserIdValidation({ userService })];
 
     rules.push(
         body('old_password')

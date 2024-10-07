@@ -48,18 +48,61 @@ export default ({ workoutService, educationService, pfPlanService, selectionServ
 
             return value;
         }),
+    body('dailies.*.daily_id')
+        .trim()
+        .optional()
+        .notEmpty()
+        .withMessage('PF plan daily id is required.')
+        .custom(async (value, { req }) => {
+            if (!(await pfPlanService.isPfPlanDailyExistById(value, req.params.id))) {
+                throw new Error('PF plan daily does not exists.');
+            }
+
+            return true;
+        }),
     body('dailies.*.day')
         .trim()
         .exists({ values: 'falsy' })
         .withMessage('Day is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric(),
-    commonValidation.workoutIdValidation({ workoutService, isBody: true, isRequired: false, isPublishedOnly: true, field: 'dailies.*.workout_id' }),
+    body('dailies.*.name')
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Daily content name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom(async (value, { req, pathValues }) => {
+            if (await pfPlanService.isPfPlanDailyNameExist(value, req.body.dailies[pathValues[0]].daily_id)) {
+                throw new Error('PF plan daily content name already exists.');
+            }
+
+            return true;
+        }),
+    body('dailies.*.contents.*.content_id')
+        .trim()
+        .optional()
+        .notEmpty()
+        .withMessage('PF plan daily id is required.')
+        .custom(async (value, { req, pathValues }) => {
+            if (!(await pfPlanService.isPfPlanDailyContentExistById(value, req.body.dailies[pathValues[0]].daily_id))) {
+                throw new Error('PF plan daily content does not exists.');
+            }
+
+            return true;
+        }),
+    commonValidation.workoutIdValidation({
+        workoutService,
+        isBody: true,
+        isRequired: false,
+        isPublishedOnly: true,
+        field: 'dailies.*.contents.*.workout_id',
+    }),
     commonValidation.educationIdValidation({
         educationService,
         isBody: true,
         isRequired: false,
         isPublishedOnly: true,
-        field: 'dailies.*.education_id',
+        field: 'dailies.*.contents.*.education_id',
     }),
 ];

@@ -1,7 +1,7 @@
 import { param } from 'express-validator';
 import { USER_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
-export default ({ userService }) => [
+export default ({ userService }) =>
     param('user_id')
         .exists({ values: 'falsy' })
         .withMessage('User id is required.')
@@ -14,5 +14,4 @@ export default ({ userService }) => [
             if (req.auth.account_type_id === USER_ACCOUNT_TYPE_ID && req.auth.user_id !== value) {
                 throw new Error('Invalid user.');
             }
-        }),
-];
+        });

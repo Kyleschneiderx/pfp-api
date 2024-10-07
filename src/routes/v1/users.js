@@ -3,7 +3,7 @@ import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/users/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ verifyAdmin, userController, userService, file, selectionService, verificationService, authService, password }) => {
+export default ({ verifyAdmin, userController, userService, file, selectionService, verificationService, authService, password, pfPlanService }) => {
     const router = express.Router();
 
     router.post(
@@ -16,7 +16,7 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
 
     router.get(
         '/:user_id',
-        validateInput(commonValidations.userAccessUserIdValidation({ userService })),
+        validateInput([commonValidations.userAccessUserIdValidation({ userService })]),
         userController.handleGetUserRoute.bind(userController),
     );
 
@@ -29,7 +29,7 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
     router.put(
         '/:user_id/photo',
         validateInput([
-            ...commonValidations.userAccessUserIdValidation({ userService }),
+            commonValidations.userAccessUserIdValidation({ userService }),
             ...commonValidations.photoValidation({ field: 'photo', file: file, isRequired: true }),
         ]),
         userController.handleUploadUserPhotoRoute.bind(userController),
@@ -37,7 +37,7 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
 
     router.get(
         '/:user_id/pf-plan-progress',
-        validateInput(commonValidations.userAccessUserIdValidation({ userService })),
+        validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService })),
         userController.handleGetUserPfPlanProgressRoute.bind(userController),
     );
 
