@@ -70,7 +70,7 @@ export default (sequelize, DataTypes) => {
         },
     );
     model.associate = () => {
-        const { WorkoutExercises, Statuses, Workouts, UserFavoriteWorkouts } = sequelize.models;
+        const { WorkoutExercises, Statuses, Workouts, UserFavoriteWorkouts, UserPfPlanWorkoutProgress } = sequelize.models;
 
         Workouts.hasMany(WorkoutExercises, { as: 'workout_exercises', foreignKey: 'workout_id' });
 
@@ -79,6 +79,8 @@ export default (sequelize, DataTypes) => {
         Workouts.belongsTo(Statuses, { as: 'status', foreignKey: 'status_id' });
 
         Workouts.hasMany(UserFavoriteWorkouts, { as: 'user_favorite_workouts', foreignKey: 'workout_id' });
+
+        Workouts.hasMany(UserPfPlanWorkoutProgress, { as: 'user_pf_plan_workout_progress', foreignKey: 'workout_id' });
     };
     return model;
 };

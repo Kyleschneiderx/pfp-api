@@ -35,6 +35,12 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
         userController.handleUploadUserPhotoRoute.bind(userController),
     );
 
+    router.get(
+        '/:user_id/pf-plan-progress',
+        validateInput(commonValidations.userAccessUserIdValidation({ userService })),
+        userController.handleGetUserPfPlanProgressRoute.bind(userController),
+    );
+
     router.use(verifyAdmin);
 
     router.post(

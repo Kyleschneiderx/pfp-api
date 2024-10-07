@@ -169,6 +169,7 @@ export default class PfPlanService {
      * Get list of pf plans
      *
      * @param {object} filter
+     * @param {number=} filter.authenticatedUser Authenticated user
      * @param {string=} filter.id Pf plan id
      * @param {string=} filter.name Pf plan name
      * @param {Array=} filter.sort Field and order to be use for sorting
@@ -200,6 +201,21 @@ export default class PfPlanService {
                     attributes: ['id', 'value'],
                     where: {},
                 },
+                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                    ? [
+                          {
+                              model: this.database.models.UserPfPlanProgress,
+                              as: 'user_pf_plan_progress',
+                              attributes: ['fulfilled', 'unfulfilled', 'skipped'],
+                              required: false,
+                              where: {
+                                  user_id: filter.authenticatedUser.user_id,
+                              },
+                              limit: 1,
+                              order: [['updated_at', 'DESC']],
+                          },
+                      ]
+                    : []),
             ],
             order: [['id', 'DESC']],
             where: {
@@ -237,6 +253,14 @@ export default class PfPlanService {
             row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
+
+            const userPfPlanProgress = row.user_pf_plan_progress?.[0];
+
+            row.dataValues.user_pf_plan_progress = userPfPlanProgress;
+
+            row.dataValues.user_pf_plan_progress_percentage = Math.ceil(
+                (userPfPlanProgress?.fulfilled / (userPfPlanProgress?.fulfilled + userPfPlanProgress?.unfulfilled)) * 100,
+            );
 
             return row;
         });
@@ -657,6 +681,23 @@ export default class PfPlanService {
     }
 
     /**
+     * Get selected PF plan by user id
+     *
+     * @param {number} userId User account id
+     * @returns {Promise<UserPfPlans>} UserPfPlans instance
+     * @throws {InternalServerError} If failed to get selected PF plan
+     */
+    async getSelectedPfPlanByUserId(userId) {
+        try {
+            return await this.database.models.UserPfPlans.findOne({ where: { user_id: userId } });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get selected PF plan', error);
+        }
+    }
+
+    /**
      * Check if PF plan is selected
      *
      * @param {number} id
@@ -705,7 +746,7 @@ export default class PfPlanService {
      * @returns {Promise<void>}
      */
     async updatePfPlanProgress(pfPlanId, data) {
-        const transaction = await this.database.transaction();
+        const toRollback = [];
 
         try {
             const pfPlanLastContentDay = await this.database.models.PfPlanDailies.findOne({
@@ -743,19 +784,18 @@ export default class PfPlanService {
                     }),
                 ]);
 
-                const pfPlanWorkoutProgress = await this.database.models.UserPfPlanWorkoutProgress.create(
-                    {
-                        user_id: data.userId,
-                        pf_plan_id: pfPlanId,
-                        workout_id: data.workoutExercise.workout_id,
-                        workout_exercise_id: data.workoutExercise.id,
-                        pf_plan_daily_id: data.content.id,
-                        fulfilled: Math.min(userPfPlanWorkoutFulfilledCount + 1, totalWorkoutExercise),
-                        unfulfilled: Math.max(totalWorkoutExercise - (userPfPlanWorkoutFulfilledCount + 1), 0),
-                        total_exercise: totalWorkoutExercise,
-                    },
-                    { transaction: transaction },
-                );
+                const pfPlanWorkoutProgress = await this.database.models.UserPfPlanWorkoutProgress.create({
+                    user_id: data.userId,
+                    pf_plan_id: pfPlanId,
+                    workout_id: data.workoutExercise.workout_id,
+                    workout_exercise_id: data.workoutExercise.id,
+                    pf_plan_daily_id: data.content.id,
+                    fulfilled: Math.min(userPfPlanWorkoutFulfilledCount + 1, totalWorkoutExercise),
+                    unfulfilled: Math.max(totalWorkoutExercise - (userPfPlanWorkoutFulfilledCount + 1), 0),
+                    total_exercise: totalWorkoutExercise,
+                });
+
+                toRollback.push(pfPlanWorkoutProgress);
 
                 if (pfPlanWorkoutProgress.fulfilled < pfPlanWorkoutProgress.total_exercise) {
                     pfPlanDailyProgressFulfilledContent -= 1;
@@ -775,25 +815,24 @@ export default class PfPlanService {
                 }),
             ]);
 
-            [userPfPlanDailyProgress] = await this.database.models.UserPfPlanDailyProgress.upsert(
-                {
-                    id: userPfPlanDailyProgress?.id,
-                    user_id: data.userId,
-                    pf_plan_id: pfPlanId,
-                    pf_plan_daily_id: data.content.id,
-                    day: data.content.day,
-                    is_skip: data.isSkip,
-                    is_fulfilled: Boolean(isPfPlanContentFulfilled),
-                    total_days: pfPlanLastContentDay.day,
-                    fulfilled: pfPlanDailyProgressFulfilledContent,
-                    unfulfilled: pfPlanDailyTotalContents - pfPlanDailyProgressFulfilledContent,
-                    skipped: pfPlanDailyProgressSkipped + Number(data.isSkip),
-                    total_contents: pfPlanDailyTotalContents,
-                },
-                { transaction: transaction },
-            );
+            const userPfPlanDailyProgressResult = await this.database.models.UserPfPlanDailyProgress.upsert({
+                id: userPfPlanDailyProgress?.id,
+                user_id: data.userId,
+                pf_plan_id: pfPlanId,
+                pf_plan_daily_id: data.content.id,
+                day: data.content.day,
+                is_skip: data.isSkip,
+                is_fulfilled: Boolean(isPfPlanContentFulfilled),
+                total_days: pfPlanLastContentDay.day,
+                fulfilled: pfPlanDailyProgressFulfilledContent,
+                unfulfilled: pfPlanDailyTotalContents - pfPlanDailyProgressFulfilledContent,
+                skipped: pfPlanDailyProgressSkipped + Number(data.isSkip),
+                total_contents: pfPlanDailyTotalContents,
+            });
 
-            await transaction.commit();
+            [userPfPlanDailyProgress] = userPfPlanDailyProgressResult;
+
+            if (userPfPlanDailyProgressResult[1]) toRollback.push(userPfPlanDailyProgress);
 
             const [userPfPlanFulfilled, userPfPlanSkipped] = await Promise.all([
                 this.database.models.UserPfPlanDailyProgress.count({
@@ -820,11 +859,181 @@ export default class PfPlanService {
 
             return userPfPlanProgress;
         } catch (error) {
-            if (transaction.finished === undefined) await transaction.rollback();
+            await Promise.all(toRollback.map((record) => record.destroy({ force: true })));
 
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to update PF plan progress.', error);
+        }
+    }
+
+    /**
+     * Get pf plan details including all exercises in it
+     *
+     * @param {number} id PF plan id
+     * @param {number} userId User account id
+     * @returns {Promise<PfPlans>} PfPlans instance
+     * @throws {InternalServerError} If failed to get PF plan details
+     */
+    async getPfPlanProgress(id, userId) {
+        try {
+            const userPfPlanProgress = await this.database.models.UserPfPlanProgress.findAll({ where: { pf_plan_id: id, user_id: userId } });
+
+            let pfPlan = await this.database.models.PfPlans.findOne({
+                nest: true,
+                subQuery: false,
+                attributes: ['id', 'name', 'description', 'photo', 'is_premium', 'created_at', 'updated_at'],
+                include: [
+                    {
+                        model: this.database.models.Statuses,
+                        as: 'status',
+                        attributes: ['id', 'value'],
+                        where: {},
+                    },
+                    {
+                        model: this.database.models.PfPlanDailies,
+                        as: 'pf_plan_dailies',
+                        required: false,
+                        attributes: {
+                            exclude: ['deleted_at', 'pf_plan_id', 'workout_id', 'education_id', 'created_at', 'updated_at'],
+                        },
+                        include: [
+                            {
+                                model: this.database.models.UserPfPlanDailyProgress,
+                                as: 'user_pf_plan_daily_progress',
+                                required: false,
+                                attributes: ['is_skip', 'is_fulfilled', 'fulfilled', 'unfulfilled', 'skipped'],
+                                where: {
+                                    user_id: userId,
+                                },
+                            },
+                            {
+                                model: this.database.models.Workouts,
+                                as: 'workout',
+                                required: false,
+                                attributes: {
+                                    exclude: ['deleted_at'],
+                                },
+                                include: [
+                                    {
+                                        model: this.database.models.UserPfPlanWorkoutProgress,
+                                        as: 'user_pf_plan_workout_progress',
+                                        required: false,
+                                        attributes: ['workout_exercise_id'],
+                                        where: {
+                                            user_id: userId,
+                                        },
+                                    },
+                                ],
+                                where: {},
+                            },
+                            {
+                                model: this.database.models.Educations,
+                                as: 'education',
+                                required: false,
+                                attributes: {
+                                    exclude: ['deleted_at'],
+                                },
+                                where: {},
+                            },
+                        ],
+                    },
+                ],
+                order: [
+                    [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'day', 'ASC'],
+                    [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'id', 'ASC'],
+                ],
+                where: {
+                    id: id,
+                },
+            });
+
+            pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            if (pfPlan.dataValues.is_favorite !== undefined) {
+                pfPlan.dataValues.is_favorite = Boolean(pfPlan.dataValues.is_favorite);
+            }
+
+            const dailies = {};
+
+            pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
+                if (pfPlanDaily.dataValues.workout) {
+                    pfPlanDaily.dataValues.workout.dataValues.fulfilled_workout_exercise_ids =
+                        pfPlanDaily.dataValues.workout.dataValues.user_pf_plan_workout_progress.map((progress) => progress.workout_exercise_id);
+
+                    pfPlanDaily.dataValues.workout.photo = this.helper.generateProtectedUrl(
+                        pfPlanDaily.workout?.photo,
+                        `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                        {
+                            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                        },
+                    );
+
+                    delete pfPlanDaily.dataValues.workout.dataValues.user_pf_plan_workout_progress;
+                }
+
+                if (pfPlanDaily.dataValues.education) {
+                    pfPlanDaily.dataValues.education.photo = this.helper.generateProtectedUrl(
+                        pfPlanDaily.education?.photo,
+                        `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                        {
+                            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                        },
+                    );
+
+                    pfPlanDaily.dataValues.education.media_upload = this.helper.generateProtectedUrl(
+                        pfPlanDaily.education?.media_upload,
+                        `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                        {
+                            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                        },
+                    );
+                }
+
+                dailies[`day_${pfPlanDaily.day}`] = dailies[`day_${pfPlanDaily.day}`] ?? {};
+
+                dailies[`day_${pfPlanDaily.day}`].contents = [
+                    ...(dailies[`day_${pfPlanDaily.day}`]?.contents ?? []),
+                    {
+                        id: pfPlanDaily.id,
+                        content_progress: pfPlanDaily.user_pf_plan_daily_progress
+                            ? {
+                                  is_skip: pfPlanDaily.user_pf_plan_daily_progress?.is_skip,
+                                  is_fulfilled: pfPlanDaily.user_pf_plan_daily_progress?.is_fulfilled,
+                              }
+                            : null,
+                        workout: pfPlanDaily.dataValues.workout,
+                        education: pfPlanDaily.dataValues.education,
+                    },
+                ];
+                return pfPlanDaily;
+            });
+
+            pfPlan = pfPlan.get({ plain: true });
+
+            pfPlan.pf_plan_dailies = Object.keys(dailies).map((key) => {
+                const dayProgress = userPfPlanProgress.find((progress) => progress.day === Number(key.split('_')[1]));
+                return {
+                    id: dailies[key].id,
+                    day: Number(key.split('_')[1]),
+                    day_progress: dayProgress
+                        ? {
+                              fulfilled: dayProgress?.fulfilled,
+                              unfulfilled: dayProgress?.unfulfilled,
+                              skipped: dayProgress?.skipped,
+                          }
+                        : null,
+                    contents: dailies[key].contents,
+                };
+            });
+
+            return pfPlan;
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get pf plan details', error);
         }
     }
 }

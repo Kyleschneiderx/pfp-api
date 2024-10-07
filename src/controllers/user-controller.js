@@ -1,10 +1,11 @@
 import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID } from '../constants/index.js';
 
 export default class UserController {
-    constructor({ userService, verificationService, authService }) {
+    constructor({ userService, verificationService, authService, pfPlanService }) {
         this.userService = userService;
         this.verificationService = verificationService;
         this.authService = authService;
+        this.pfPlanService = pfPlanService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -115,5 +116,13 @@ export default class UserController {
 
     async handleGetUserSummaryRoute(req, res) {
         return res.json(await this.userService.getUserSummary());
+    }
+
+    async handleGetUserPfPlanProgressRoute(req, res) {
+        const selectedPlan = await this.pfPlanService.getSelectedPfPlanByUserId(req.auth.user_id);
+
+        const progress = await this.pfPlanService.getPfPlanProgress(selectedPlan?.pf_plan_id, selectedPlan?.user_id);
+
+        return res.json(progress);
     }
 }

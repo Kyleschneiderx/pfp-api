@@ -67,11 +67,13 @@ export default (sequelize, DataTypes) => {
         },
     );
     model.associate = () => {
-        const { PfPlanDailies, Workouts, Educations } = sequelize.models;
+        const { PfPlanDailies, Workouts, Educations, UserPfPlanDailyProgress } = sequelize.models;
 
         PfPlanDailies.belongsTo(Workouts, { as: 'workout', foreignKey: 'workout_id' });
 
         PfPlanDailies.belongsTo(Educations, { as: 'education', foreignKey: 'education_id' });
+
+        PfPlanDailies.hasOne(UserPfPlanDailyProgress, { as: 'user_pf_plan_daily_progress', foreignKey: 'pf_plan_daily_id' });
     };
     return model;
 };

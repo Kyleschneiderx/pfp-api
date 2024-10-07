@@ -28,6 +28,7 @@ export default class PfPlanController {
 
     async handleGetPfPlansRoute(req, res) {
         const list = await this.pfPlanService.getPfPlans({
+            authenticatedUser: req.auth,
             id: req.query.id,
             name: req.query.name,
             sort: req.query.sort,
