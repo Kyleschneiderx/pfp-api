@@ -879,6 +879,12 @@ export default class PfPlanService {
         try {
             const userPfPlanProgress = await this.database.models.UserPfPlanProgress.findAll({ where: { pf_plan_id: id, user_id: userId } });
 
+            const userPfPlanProgressObject = {};
+
+            userPfPlanProgress.forEach((progress) => {
+                userPfPlanProgressObject[progress.day] = progress;
+            });
+
             let pfPlan = await this.database.models.PfPlans.findOne({
                 nest: true,
                 subQuery: false,
@@ -1014,10 +1020,11 @@ export default class PfPlanService {
             pfPlan = pfPlan.get({ plain: true });
 
             pfPlan.pf_plan_dailies = Object.keys(dailies).map((key) => {
-                const dayProgress = userPfPlanProgress.find((progress) => progress.day === Number(key.split('_')[1]));
+                const day = Number(key.split('_')[1]);
+                const dayProgress = userPfPlanProgressObject?.[day];
                 return {
                     id: dailies[key].id,
-                    day: Number(key.split('_')[1]),
+                    day: day,
                     day_progress: dayProgress
                         ? {
                               fulfilled: dayProgress?.fulfilled,
