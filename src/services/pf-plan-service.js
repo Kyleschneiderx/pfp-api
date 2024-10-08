@@ -76,8 +76,8 @@ export default class PfPlanService {
                                 return {
                                     pf_plan_id: pfPlan.id,
                                     arrangement: arrangement,
-                                    workout_id: content.workout_id ?? null,
-                                    education_id: content.education_id ?? null,
+                                    workout_id: content.workout_id,
+                                    education_id: content.education_id,
                                 };
                             }),
                         })),
@@ -209,8 +209,8 @@ export default class PfPlanService {
                                 id: content.content_id,
                                 pf_plan_id: pfPlan.id,
                                 arrangement: arrangement,
-                                workout_id: content.workout_id ?? null,
-                                education_id: content.education_id ?? null,
+                                workout_id: content.workout_id,
+                                education_id: content.education_id,
                             };
                         }),
                     }));
