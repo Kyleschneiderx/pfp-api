@@ -1058,6 +1058,7 @@ export default class PfPlanService {
                                         'pf_plan_daily_id',
                                         'workout_id',
                                         'education_id',
+                                        'arrangement',
                                     ],
                                 },
                                 include: [
