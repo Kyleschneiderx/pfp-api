@@ -1,3 +1,7 @@
+export const DATE_FORMAT = 'yyyy-MM-dd';
+
+export const DATETIME_FORMAT = 'yyyy-MM-dd HH:mm:ss';
+
 export const AUTH_TOKEN_EXPIRATION_IN_MINUTES = 60;
 
 export const USER_ACCOUNT_TYPE_ID = 2;
