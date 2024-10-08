@@ -1,7 +1,7 @@
 import createLogger from '../common/logger/index.js';
 import sequelize from '../common/database/sequelize.js';
 import firebase from '../common/firebase/index.js';
-import s3Client, { s3 } from '../common/aws-s3/index.js';
+import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
 import * as utils from '../utils/index.js';
@@ -23,7 +23,7 @@ const serviceContainer = {
         },
         { logger: logger },
     ),
-    storage: new utils.Storage({ driver: s3Client, logger: logger, file: utils.File, s3: s3 }),
+    storage: new utils.Storage({ driver: s3Client, logger: logger, file: utils.File, s3: s3, s3PreSigner: s3PreSigner }),
     helper: utils.Helper,
 };
 
