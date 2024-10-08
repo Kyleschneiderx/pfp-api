@@ -16,13 +16,13 @@ export default ({ verifyAdmin, educationController, educationService, selectionS
 
     router.post(
         '/:id/favorite',
-        validateInput([commonValidations.educationIdValidation({ educationService, isFavorite: true })]),
+        validateInput([validations.updateFavoriteEducationValidation({ educationService, isFavorite: true })]),
         educationController.handleAddFavoriteEducationRoute.bind(educationController),
     );
 
     router.delete(
         '/:id/favorite',
-        validateInput([commonValidations.educationIdValidation({ educationService, isUnfavorite: true })]),
+        validateInput([validations.updateFavoriteEducationValidation({ educationService, isUnfavorite: true })]),
         educationController.handleRemoveFavoriteEducationRoute.bind(educationController),
     );
 
