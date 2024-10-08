@@ -13,32 +13,34 @@ export default ({ helper }) => {
             throw new exceptions.Unauthorized('Unauthorized');
         }
 
-        const { range } = req.headers;
-        try {
-            const response = await fetch(`${S3_OBJECT_URL}/${req.params.s3_path}/${req.params.s3_file}`);
-            const contentType = response.headers.get('content-type');
-            const contentLength = response.headers.get('content-length');
+        return res.redirect(`${S3_OBJECT_URL}/${req.params.s3_path}/${req.params.s3_file}`);
 
-            if (range) {
-                const [start, end] = range.replace(/bytes=/, '').split('-');
-                const startByte = parseInt(start, 10);
-                const endByte = end ? parseInt(end, 10) : Math.min(contentLength - 1, startByte + 10 ** 12); // Default to 1MB chunk
+        // const { range } = req.headers;
+        // try {
+        //     const response = await fetch(`${S3_OBJECT_URL}/${req.params.s3_path}/${req.params.s3_file}`);
+        //     const contentType = response.headers.get('content-type');
+        //     const contentLength = response.headers.get('content-length');
 
-                res.writeHead(206, {
-                    'Content-Range': `bytes ${startByte}-${endByte}/${contentLength}`,
-                    'Accept-Ranges': 'bytes',
-                    'Content-Length': endByte - startByte + 1,
-                    'Content-Type': contentType,
-                });
-                response.body.pipe(res);
-            } else {
-                res.setHeader('Content-Type', contentType);
-                res.setHeader('Content-Length', contentLength);
-                response.body.pipe(res);
-            }
-        } catch (error) {
-            throw new exceptions.InternalServerError('File not found.', error);
-        }
+        //     if (range) {
+        //         const [start, end] = range.replace(/bytes=/, '').split('-');
+        //         const startByte = parseInt(start, 10);
+        //         const endByte = end ? parseInt(end, 10) : Math.min(contentLength - 1, startByte + 10 ** 12); // Default to 1MB chunk
+
+        //         res.writeHead(206, {
+        //             'Content-Range': `bytes ${startByte}-${endByte}/${contentLength}`,
+        //             'Accept-Ranges': 'bytes',
+        //             'Content-Length': endByte - startByte + 1,
+        //             'Content-Type': contentType,
+        //         });
+        //         response.body.pipe(res);
+        //     } else {
+        //         res.setHeader('Content-Type', contentType);
+        //         res.setHeader('Content-Length', contentLength);
+        //         response.body.pipe(res);
+        //     }
+        // } catch (error) {
+        //     throw new exceptions.InternalServerError('File not found.', error);
+        // }
     });
 
     return router;
