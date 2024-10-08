@@ -1,7 +1,7 @@
 import { param, body } from 'express-validator';
 import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
-export default ({ pfPlanService, field = 'id', isBody = false, isFavorite = false, isUnfavorite = false, isSelected = false }) => {
+export default ({ pfPlanService, field = 'id', isBody = false, isSelected = false }) => {
     let rule = param(field);
 
     if (isBody) rule = body(field);
@@ -21,22 +21,6 @@ export default ({ pfPlanService, field = 'id', isBody = false, isFavorite = fals
 
             return true;
         });
-
-    if (isFavorite || isUnfavorite) {
-        rule.custom(async (value, { req }) => {
-            const isFavoriteExist = await pfPlanService.isFavoritePfPlanExistById(value, req.auth.user_id);
-
-            if (isFavoriteExist && isFavorite) {
-                throw new Error('PF plan is already in favorite list.');
-            }
-
-            if (!isFavoriteExist && isUnfavorite) {
-                throw new Error('PF plan is not yet in favorite list.');
-            }
-
-            return true;
-        });
-    }
 
     if (isSelected) {
         rule.custom(async (value, { req }) => {

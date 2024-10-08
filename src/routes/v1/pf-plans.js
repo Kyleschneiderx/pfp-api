@@ -16,13 +16,13 @@ export default ({ verifyAdmin, pfPlanController, pfPlanService, workoutService, 
 
     router.post(
         '/:id/favorite',
-        validateInput([commonValidations.pfPlanIdValidation({ pfPlanService, isFavorite: true })]),
+        validateInput([validations.updateFavoritePfPlanValidation({ pfPlanService, isFavorite: true })]),
         pfPlanController.handleAddFavoritePfPlanRoute.bind(pfPlanController),
     );
 
     router.delete(
         '/:id/favorite',
-        validateInput([commonValidations.pfPlanIdValidation({ pfPlanService, isUnfavorite: true })]),
+        validateInput([validations.updateFavoritePfPlanValidation({ pfPlanService, isUnfavorite: true })]),
         pfPlanController.handleRemoveFavoritePfPlanRoute.bind(pfPlanController),
     );
 
