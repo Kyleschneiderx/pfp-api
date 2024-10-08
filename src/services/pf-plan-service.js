@@ -1002,14 +1002,15 @@ export default class PfPlanService {
     /**
      * Get pf plan details including all exercises in it
      *
-     * @param {number} id PF plan id
-     * @param {number} userId User account id
+     * @param {number} userPfPlan UserPfPlans model instance
      * @returns {Promise<PfPlans>} PfPlans instance
      * @throws {InternalServerError} If failed to get PF plan details
      */
-    async getPfPlanProgress(id, userId) {
+    async getPfPlanProgress(userPfPlan) {
         try {
-            const userPfPlanProgress = await this.database.models.UserPfPlanProgress.findAll({ where: { pf_plan_id: id, user_id: userId } });
+            const userPfPlanProgress = await this.database.models.UserPfPlanProgress.findAll({
+                where: { pf_plan_id: userPfPlan.id, user_id: userPfPlan.user_id },
+            });
 
             const userPfPlanProgressObject = {};
 
@@ -1042,7 +1043,7 @@ export default class PfPlanService {
                                 required: false,
                                 attributes: ['is_skip', 'is_fulfilled', 'fulfilled', 'unfulfilled', 'skipped'],
                                 where: {
-                                    user_id: userId,
+                                    user_id: userPfPlan.user_id,
                                 },
                             },
                             {
@@ -1074,7 +1075,7 @@ export default class PfPlanService {
                                                 required: false,
                                                 attributes: ['workout_exercise_id'],
                                                 where: {
-                                                    user_id: userId,
+                                                    user_id: userPfPlan.user_id,
                                                 },
                                             },
                                         ],
@@ -1104,7 +1105,7 @@ export default class PfPlanService {
                     ],
                 ],
                 where: {
-                    id: id,
+                    id: userPfPlan.pf_plan_id,
                 },
             });
 
@@ -1158,7 +1159,10 @@ export default class PfPlanService {
                               is_skip: pfPlanDaily.user_pf_plan_daily_progress?.is_skip,
                               is_fulfilled: pfPlanDaily.user_pf_plan_daily_progress?.is_fulfilled,
                           }
-                        : null;
+                        : {
+                              is_skip: true,
+                              is_fulfilled: false,
+                          };
 
                     return pfPlanDailyContent;
                 });
@@ -1170,7 +1174,10 @@ export default class PfPlanService {
                           has_skip: dayProgress?.has_skip,
                           is_fulfilled: dayProgress?.is_fulfilled,
                       }
-                    : null;
+                    : {
+                          has_skip: true,
+                          is_fulfilled: false,
+                      };
 
                 delete pfPlanDaily.dataValues.pf_plan_daily_contents;
 
@@ -1178,6 +1185,8 @@ export default class PfPlanService {
 
                 return pfPlanDaily;
             });
+
+            pfPlan.dataValues.start_at = userPfPlan.created_at;
 
             return pfPlan;
         } catch (error) {

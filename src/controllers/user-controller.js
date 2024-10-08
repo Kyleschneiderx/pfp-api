@@ -119,7 +119,7 @@ export default class UserController {
     }
 
     async handleGetUserPfPlanProgressRoute(req, res) {
-        const progress = await this.pfPlanService.getPfPlanProgress(req.selectedPlan?.pf_plan_id, req.selectedPlan?.user_id);
+        const progress = await this.pfPlanService.getPfPlanProgress(req.selectedPlan);
 
         return res.json(progress);
     }
