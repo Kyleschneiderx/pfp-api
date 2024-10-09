@@ -189,6 +189,69 @@ export default class UserService {
     }
 
     /**
+     * Retrieve user account information
+     *
+     * @param {number} userId User account id
+     * @returns {Promise<Users>} Users instance
+     * @throws {InternalServerError} If failed to get user
+     */
+    async getUserDetails(id) {
+        try {
+            const user = await this.database.models.Users.findOne({
+                nest: true,
+                subQuery: false,
+                attributes: ['id', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
+                include: [
+                    {
+                        model: this.database.models.UserProfiles,
+                        as: 'user_profile',
+                        attributes: ['name', 'birthdate', 'contact_number', 'description', 'photo'],
+                        where: {},
+                    },
+                    {
+                        model: this.database.models.AccountTypes,
+                        as: 'account_type',
+                        attributes: ['id', 'value'],
+                        where: {},
+                    },
+                    {
+                        model: this.database.models.UserTypes,
+                        as: 'user_type',
+                        attributes: ['id', 'value'],
+                        where: {},
+                    },
+                    {
+                        model: this.database.models.Statuses,
+                        as: 'status',
+                        attributes: ['id', 'value'],
+                        where: {},
+                    },
+                ],
+                order: [['id', 'DESC']],
+                where: {
+                    id: id,
+                },
+            });
+
+            user.dataValues.has_answered_survey = Boolean(await this.database.models.UserSurveyQuestionAnswers.count({ where: { user_id: id } }));
+
+            user.user_profile.photo = this.helper.generateProtectedUrl(
+                user.user_profile.photo,
+                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                {
+                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                },
+            );
+
+            return user;
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get users', error);
+        }
+    }
+
+    /**
      * Update user last login time
      * @param {number} userId User account id
      * @returns {Promise<void>}
@@ -357,6 +420,23 @@ export default class UserService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check email', error);
+        }
+    }
+
+    /**
+     * Check if user is premium
+     *
+     * @param {number} id User account id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check premium user
+     */
+    async isUserPremium(id) {
+        try {
+            return Boolean(await this.database.models.Users.count({ where: { id: id, type_id: PREMIUM_USER_TYPE_ID } }));
+        } catch (error) {
+            this.logger.error('Failed to check premium user', error);
+
+            throw new exceptions.InternalServerError('Failed to check premium user', error);
         }
     }
 

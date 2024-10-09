@@ -100,6 +100,7 @@ Object.assign(serviceContainer, {
         verificationService: serviceContainer.verificationService,
         authService: serviceContainer.authService,
         pfPlanService: serviceContainer.pfPlanService,
+        miscellaneousService: serviceContainer.miscellaneousService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,

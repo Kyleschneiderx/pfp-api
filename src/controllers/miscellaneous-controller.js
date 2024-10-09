@@ -10,4 +10,8 @@ export default class MiscellaneousController {
     async handleGetAboutAppRoute(req, res) {
         return res.json(await this.miscellaneousService.getAboutApp());
     }
+
+    async handleGetSurveyQuestionsRoute(req, res) {
+        return res.json(await this.miscellaneousService.getSurveyQuestions());
+    }
 }

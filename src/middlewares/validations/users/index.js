@@ -5,3 +5,4 @@ export { default as updateUserValidation } from './update-user.js';
 export { default as signupValidation } from './signup.js';
 export { default as changePasswordValidation } from './change-password.js';
 export { default as getUserPfPlanProgressValidation } from './get-user-pf-plan-progress.js';
+export { default as updateUserSurveyAnswerValidation } from './update-user-survey-answer.js';

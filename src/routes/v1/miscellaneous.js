@@ -7,5 +7,7 @@ export default ({ miscellaneousController }) => {
 
     router.get('/about-app', miscellaneousController.handleGetAboutAppRoute.bind(miscellaneousController));
 
+    router.get('/survey', miscellaneousController.handleGetSurveyQuestionsRoute.bind(miscellaneousController));
+
     return router;
 };

@@ -1,11 +1,13 @@
 import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID } from '../constants/index.js';
+import * as exceptions from '../exceptions/index.js';
 
 export default class UserController {
-    constructor({ userService, verificationService, authService, pfPlanService }) {
+    constructor({ userService, verificationService, authService, pfPlanService, miscellaneousService }) {
         this.userService = userService;
         this.verificationService = verificationService;
         this.authService = authService;
         this.pfPlanService = pfPlanService;
+        this.miscellaneousService = miscellaneousService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -82,13 +84,9 @@ export default class UserController {
     }
 
     async handleGetUserRoute(req, res) {
-        const user = await this.userService.getUsers({
-            userId: req.params.user_id,
-            page: REPORT_DEFAULT_PAGE,
-            pageItems: REPORT_DEFAULT_ITEMS,
-        });
+        const user = await this.userService.getUserDetails(req.params.user_id);
 
-        return res.json(user.data[0]);
+        return res.json(user);
     }
 
     async handleRemoveUserPhotoRoute(req, res) {
@@ -122,5 +120,15 @@ export default class UserController {
         const progress = await this.pfPlanService.getPfPlanProgress(req.selectedPlan);
 
         return res.json(progress);
+    }
+
+    async handleUpdateUserSurveyRoute(req, res) {
+        if (!(await this.userService.isUserPremium(req.params.user_id))) {
+            throw new exceptions.Forbidden('You cannot access this content.');
+        }
+
+        await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
+
+        return res.json({ msg: 'Survey successfully submitted' });
     }
 }

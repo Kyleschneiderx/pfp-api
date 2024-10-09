@@ -3,7 +3,18 @@ import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/users/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ verifyAdmin, userController, userService, file, selectionService, verificationService, authService, password, pfPlanService }) => {
+export default ({
+    verifyAdmin,
+    userController,
+    userService,
+    file,
+    selectionService,
+    verificationService,
+    authService,
+    password,
+    pfPlanService,
+    miscellaneousService,
+}) => {
     const router = express.Router();
 
     router.post(
@@ -39,6 +50,12 @@ export default ({ verifyAdmin, userController, userService, file, selectionServi
         '/:user_id/pf-plan-progress',
         validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService })),
         userController.handleGetUserPfPlanProgressRoute.bind(userController),
+    );
+
+    router.put(
+        '/:user_id/survey',
+        validateInput(validations.updateUserSurveyAnswerValidation({ userService, miscellaneousService })),
+        userController.handleUpdateUserSurveyRoute.bind(userController),
     );
 
     router.use(verifyAdmin);

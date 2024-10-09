@@ -38,6 +38,7 @@ export default ({
     educationController,
     educationService,
     miscellaneousController,
+    miscellaneousService,
 }) => {
     const router = express.Router();
 
@@ -67,13 +68,6 @@ export default ({
         middlewares.apiLogger({
             logger: apiLogger,
             loggerService: loggerService,
-        }),
-    );
-
-    router.use(
-        '/v1/misc',
-        routeV1Miscellaneous({
-            miscellaneousController: miscellaneousController,
         }),
     );
 
@@ -113,6 +107,13 @@ export default ({
     router.use(verifyAuth);
 
     router.use(
+        '/v1/misc',
+        routeV1Miscellaneous({
+            miscellaneousController: miscellaneousController,
+        }),
+    );
+
+    router.use(
         '/v1/selections',
         routeV1Selections({
             verifyAdmin: middlewares.verifyAdmin,
@@ -133,6 +134,7 @@ export default ({
             autService: authService,
             password: password,
             pfPlanService: pfPlanService,
+            miscellaneousService: miscellaneousService,
         }),
     );
 

@@ -24,3 +24,5 @@ export { default as UserPfPlanProgress } from './user-pf-plan-progress.js';
 export { default as UserPfPlanWorkoutProgress } from './user-pf-plan-workout-progress.js';
 export { default as UserPfPlanDailyProgress } from './user-pf-plan-daily-progress.js';
 export { default as PfPlanDailyContents } from './pf-plan-daily-contents.js';
+export { default as SurveyQuestions } from './survey-questions.js';
+export { default as UserSurveyQuestionAnswers } from './user-survey-question-answers.js';
