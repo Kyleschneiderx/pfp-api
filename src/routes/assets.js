@@ -1,8 +1,8 @@
 import express from 'express';
-import { ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
+import { S3_OBJECT_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
-export default ({ helper, storage }) => {
+export default ({ helper }) => {
     const router = express.Router();
 
     router.get('/:s3_path/:secret/:s3_file', async (req, res) => {
@@ -12,12 +12,7 @@ export default ({ helper, storage }) => {
             throw new exceptions.Unauthorized('Unauthorized');
         }
 
-        const signer = await storage.getS3SignedUrl(`${req.params.s3_path}/${req.params.s3_file}`, {
-            expiresIn: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES * 60,
-            bucket: process.env.S3_BUCKET_NAME,
-        });
-
-        return res.redirect(signer);
+        return res.redirect(`${S3_OBJECT_URL}/${req.params.s3_path}/${req.params.s3_file}`);
     });
 
     return router;

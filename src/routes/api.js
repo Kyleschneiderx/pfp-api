@@ -38,7 +38,6 @@ export default ({
     educationController,
     educationService,
     miscellaneousController,
-    storage,
 }) => {
     const router = express.Router();
 
@@ -62,7 +61,7 @@ export default ({
         }),
     );
 
-    router.use('/assets', routeAsset({ helper: helper, storage: storage }));
+    router.use('/assets', routeAsset({ helper: helper }));
 
     router.use(
         middlewares.apiLogger({
