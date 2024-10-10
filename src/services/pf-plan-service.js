@@ -1162,10 +1162,7 @@ export default class PfPlanService {
                               is_skip: pfPlanDaily.user_pf_plan_daily_progress?.is_skip,
                               is_fulfilled: pfPlanDaily.user_pf_plan_daily_progress?.is_fulfilled,
                           }
-                        : {
-                              is_skip: true,
-                              is_fulfilled: false,
-                          };
+                        : null;
 
                     return pfPlanDailyContent;
                 });
@@ -1177,10 +1174,7 @@ export default class PfPlanService {
                           has_skip: dayProgress?.has_skip,
                           is_fulfilled: dayProgress?.is_fulfilled,
                       }
-                    : {
-                          has_skip: true,
-                          is_fulfilled: false,
-                      };
+                    : null;
 
                 delete pfPlanDaily.dataValues.pf_plan_daily_contents;
 
