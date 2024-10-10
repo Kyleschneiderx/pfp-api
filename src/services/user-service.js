@@ -380,6 +380,8 @@ export default class UserService {
                 return user;
             });
 
+            await this.notificationService.removeUserNotifications(userInfo.id);
+
             this.notificationService.createNotification({ userId: userInfo.id, descriptionId: NOTIFICATIONS.WELCOME });
 
             return userInfo;

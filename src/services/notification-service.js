@@ -66,6 +66,11 @@ export default class NotificationService {
      * @throws {NotFoundError} If no records found
      */
     async getNotifications(filter) {
+        const lastNotificationIndicator = await this.database.models.UserRemovedNotificationIndicators.findOne({
+            where: { user_id: filter.userId },
+            order: [['id', 'DESC']],
+        });
+
         const options = {
             nest: true,
             subQuery: false,
@@ -104,6 +109,9 @@ export default class NotificationService {
                         user_id: null,
                     },
                 ],
+                id: {
+                    [Sequelize.Op.gt]: lastNotificationIndicator?.notification_id ?? 0,
+                },
             },
         };
 
@@ -151,5 +159,33 @@ export default class NotificationService {
             page_items: filter.pageItems,
             max_page: Math.ceil(count / filter.pageItems),
         };
+    }
+
+    /**
+     * Remove user notifications
+     *
+     * @param {number} userId User account id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to remove notifications
+     */
+    async removeUserNotifications(userId) {
+        try {
+            const lastNotification = await this.database.models.Notifications.findOne({ order: [['id', 'DESC']] });
+
+            await this.database.models.UserRemovedNotificationIndicators.create({
+                user_id: userId,
+                notification_id: lastNotification.id,
+            });
+
+            await this.database.models.Notifications.destroy({
+                where: {
+                    user_id: userId,
+                },
+            });
+        } catch (error) {
+            this.logger.error('Failed to remove notifications.', error);
+
+            throw new exceptions.InternalServerError('Failed to remove notifications', error);
+        }
     }
 }

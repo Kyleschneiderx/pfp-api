@@ -11,5 +11,7 @@ export default ({ notificationController }) => {
         notificationController.handleGetNotificationsRoute.bind(notificationController),
     );
 
+    router.delete('/', notificationController.handleRemoveNotificationRoute.bind(notificationController));
+
     return router;
 };
