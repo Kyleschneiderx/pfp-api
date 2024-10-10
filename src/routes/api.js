@@ -10,6 +10,7 @@ import routeV1Workouts from './v1/workouts.js';
 import routeV1PfPlans from './v1/pf-plans.js';
 import routeV1Educations from './v1/educations.js';
 import routeV1Miscellaneous from './v1/miscellaneous.js';
+import routeV1Notifications from './v1/notifications.js';
 import routeAsset from './assets.js';
 import * as middlewares from '../middlewares/index.js';
 
@@ -39,6 +40,7 @@ export default ({
     educationService,
     miscellaneousController,
     miscellaneousService,
+    notificationController,
 }) => {
     const router = express.Router();
 
@@ -182,6 +184,13 @@ export default ({
             educationService: educationService,
             selectionService: selectionService,
             file: file,
+        }),
+    );
+
+    router.use(
+        '/v1/notifications',
+        routeV1Notifications({
+            notificationController: notificationController,
         }),
     );
 

@@ -58,5 +58,10 @@ export default (sequelize, DataTypes) => {
             ],
         },
     );
+    model.associate = () => {
+        const { Notifications, NotificationDescriptions } = sequelize.models;
+
+        Notifications.belongsTo(NotificationDescriptions, { as: 'notification_description', foreignKey: 'description_id' });
+    };
     return model;
 };

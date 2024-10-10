@@ -36,6 +36,7 @@ Object.assign(serviceContainer, {
     notificationService: new services.NotificationService({
         logger: serviceContainer.logger,
         database: serviceContainer.database,
+        helper: serviceContainer.helper,
         pushNotification: serviceContainer.pushNotification,
     }),
 });
@@ -155,6 +156,10 @@ Object.assign(serviceContainer, {
     miscellaneousController: new controllers.MiscellaneousController({
         logger: serviceContainer.logger,
         miscellaneousService: serviceContainer.miscellaneousService,
+    }),
+    notificationController: new controllers.NotificationController({
+        logger: serviceContainer.logger,
+        notificationService: serviceContainer.notificationService,
     }),
 });
 

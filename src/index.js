@@ -66,6 +66,7 @@ app.use(
         educationService: serviceContainer.educationService,
         miscellaneousController: serviceContainer.miscellaneousController,
         miscellaneousService: serviceContainer.miscellaneousService,
+        notificationController: serviceContainer.notificationController,
     }),
 );
 
