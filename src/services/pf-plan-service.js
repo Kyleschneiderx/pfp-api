@@ -768,6 +768,8 @@ export default class PfPlanService {
      */
     async selectPfPlan(id, userId) {
         try {
+            await this.database.models.UserPfPlans.destroy({ where: { user_id: userId } });
+
             return await this.database.models.UserPfPlans.create({ user_id: userId, pf_plan_id: id });
         } catch (error) {
             this.logger.error(error.message, error);
