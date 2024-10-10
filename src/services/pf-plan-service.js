@@ -167,7 +167,7 @@ export default class PfPlanService {
                 const upcomingContentsIds = [];
 
                 const upcomingDailiesIds = [];
-
+                console.log(data.dailies.length);
                 data.dailies.forEach((incomingDaily) => {
                     upcomingDailiesIds.push(Number(incomingDaily.daily_id));
 
@@ -1011,7 +1011,7 @@ export default class PfPlanService {
     async getPfPlanProgress(userPfPlan) {
         try {
             const userPfPlanProgress = await this.database.models.UserPfPlanProgress.findAll({
-                where: { pf_plan_id: userPfPlan.id, user_id: userPfPlan.user_id },
+                where: { pf_plan_id: userPfPlan.pf_plan_id, user_id: userPfPlan.user_id },
             });
 
             const userPfPlanProgressObject = {};
