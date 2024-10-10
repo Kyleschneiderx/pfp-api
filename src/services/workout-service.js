@@ -7,15 +7,18 @@ import {
     S3_OBJECT_URL,
     PUBLISHED_WORKOUT_STATUS_ID,
     FAVORITE_WORKOUT_STATUS,
+    NOTIFICATIONS,
+    DRAFT_WORKOUT_STATUS_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutService {
-    constructor({ logger, database, helper, storage }) {
+    constructor({ logger, database, helper, storage, notificationService }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
         this.storage = storage;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -75,6 +78,14 @@ export default class WorkoutService {
                     );
                 }
 
+                if (workout.status_id === PUBLISHED_WORKOUT_STATUS_ID) {
+                    this.notificationService.createNotification({
+                        userId: undefined,
+                        descriptionId: NOTIFICATIONS.NEW_WORKOUT,
+                        reference: JSON.stringify({ name: workout.name }),
+                    });
+                }
+
                 return workout;
             });
         } catch (error) {
@@ -112,6 +123,8 @@ export default class WorkoutService {
             }
 
             const workout = await this.database.models.Workouts.findOne({ where: { id: data.id } });
+
+            const oldStatus = workout.status_id;
 
             const oldPhoto = workout.photo;
 
@@ -155,6 +168,14 @@ export default class WorkoutService {
                             transaction: transaction,
                         },
                     );
+                });
+            }
+
+            if (oldStatus === DRAFT_WORKOUT_STATUS_ID) {
+                this.notificationService.createNotification({
+                    userId: undefined,
+                    descriptionId: NOTIFICATIONS.NEW_WORKOUT,
+                    reference: JSON.stringify({ name: workout.name }),
                 });
             }
 

@@ -8,15 +8,18 @@ import {
     EDUCATION_MEDIA_PATH,
     PUBLISHED_EDUCATION_STATUS_ID,
     FAVORITE_EDUCATION_STATUS,
+    NOTIFICATIONS,
+    DRAFT_EDUCATION_STATUS_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class EducationService {
-    constructor({ logger, database, helper, storage }) {
+    constructor({ logger, database, helper, storage, notificationService }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
         this.storage = storage;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -124,6 +127,14 @@ export default class EducationService {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
             });
 
+            if (education.status_id === PUBLISHED_EDUCATION_STATUS_ID) {
+                this.notificationService.createNotification({
+                    userId: undefined,
+                    descriptionId: NOTIFICATIONS.NEW_EDUCATION,
+                    reference: JSON.stringify({ title: education.title }),
+                });
+            }
+
             return education;
         } catch (error) {
             if (s3UploadResponse?.uploadedFilePaths) {
@@ -161,6 +172,8 @@ export default class EducationService {
                 photo: data.photo,
                 media: data.mediaUpload,
             });
+
+            const oldStatus = education.status_id;
 
             const { photo: photoStoreResponse, media: mediaStoreResponse } = s3UploadResponse;
 
@@ -207,6 +220,14 @@ export default class EducationService {
             }
 
             delete education.dataValues.deleted_at;
+
+            if (oldStatus === DRAFT_EDUCATION_STATUS_ID) {
+                this.notificationService.createNotification({
+                    userId: undefined,
+                    descriptionId: NOTIFICATIONS.NEW_EDUCATION,
+                    reference: JSON.stringify({ title: education.title }),
+                });
+            }
 
             return education;
         } catch (error) {

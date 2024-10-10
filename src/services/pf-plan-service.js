@@ -7,15 +7,18 @@ import {
     ADMIN_ACCOUNT_TYPE_ID,
     PUBLISHED_PF_PLAN_STATUS_ID,
     FAVORITE_PF_PLAN_STATUS,
+    NOTIFICATIONS,
+    DRAFT_PF_PLAN_STATUS_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanService {
-    constructor({ logger, database, helper, storage }) {
+    constructor({ logger, database, helper, storage, notificationService }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
         this.storage = storage;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -46,7 +49,7 @@ export default class PfPlanService {
                 });
             }
 
-            return await this.database.transaction(async (transaction) => {
+            const pfPlanInfo = await this.database.transaction(async (transaction) => {
                 const pfPlan = await this.database.models.PfPlans.create(
                     {
                         name: data.name,
@@ -95,6 +98,16 @@ export default class PfPlanService {
 
                 return pfPlan;
             });
+
+            if (pfPlanInfo.status_id === PUBLISHED_PF_PLAN_STATUS_ID) {
+                this.notificationService.createNotification({
+                    userId: undefined,
+                    descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
+                    reference: JSON.stringify({ name: pfPlanInfo.name }),
+                });
+            }
+
+            return pfPlanInfo;
         } catch (error) {
             this.logger.error('Failed to create PF plan.', error);
 
@@ -132,6 +145,8 @@ export default class PfPlanService {
             }
 
             const pfPlan = await this.database.models.PfPlans.findOne({ where: { id: data.id } });
+
+            const oldStatus = pfPlan.status_id;
 
             const oldPhoto = pfPlan.photo;
 
@@ -234,6 +249,14 @@ export default class PfPlanService {
                             );
                         }),
                     );
+                });
+            }
+
+            if (oldStatus === DRAFT_PF_PLAN_STATUS_ID) {
+                this.notificationService.createNotification({
+                    userId: undefined,
+                    descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
+                    reference: JSON.stringify({ name: pfPlan.name }),
                 });
             }
 

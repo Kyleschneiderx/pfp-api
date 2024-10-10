@@ -2,15 +2,16 @@ import {
     REPORT_DEFAULT_PAGE,
     REPORT_DEFAULT_ITEMS,
     ADMIN_ACCOUNT_TYPE_ID,
-    PUBLISHED_WORKOUT_STATUS_ID,
     FAVORITE_EDUCATION_STATUS,
     UNFAVORITE_EDUCATION_STATUS,
+    PUBLISHED_EDUCATION_STATUS_ID,
 } from '../constants/index.js';
 
 export default class EducationController {
-    constructor({ educationService, userService }) {
+    constructor({ educationService, userService, notificationService }) {
         this.educationService = educationService;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     async handleCreateEducationRoute(req, res) {
@@ -23,6 +24,7 @@ export default class EducationController {
             photo: req?.files?.photo,
             statusId: req.body.status_id,
         });
+
         return res.status(201).json(education);
     }
 
@@ -35,7 +37,7 @@ export default class EducationController {
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
             ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
-                statusId: PUBLISHED_WORKOUT_STATUS_ID,
+                statusId: PUBLISHED_EDUCATION_STATUS_ID,
             }),
         });
         return res.json(list);
@@ -45,7 +47,7 @@ export default class EducationController {
         const education = await this.educationService.getEducationDetails(req.params.id, {
             authenticatedUser: req.auth,
             ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
-                statusId: PUBLISHED_WORKOUT_STATUS_ID,
+                statusId: PUBLISHED_EDUCATION_STATUS_ID,
             }),
         });
 
@@ -69,6 +71,7 @@ export default class EducationController {
             photo: req?.files?.photo,
             statusId: req.body.status_id,
         });
+
         return res.json(education);
     }
 

@@ -97,3 +97,11 @@ export const UNFAVORITE_EDUCATION_STATUS = false;
 export const FAVORITE_PF_PLAN_STATUS = true;
 
 export const UNFAVORITE_PF_PLAN_STATUS = false;
+
+export const NOTIFICATIONS = {
+    WELCOME: 1,
+    ACCOUNT_INACTIVE: 2,
+    NEW_WORKOUT: 3,
+    NEW_EDUCATION: 4,
+    NEW_PF_PLAN: 5,
+};

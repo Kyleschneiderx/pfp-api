@@ -12,17 +12,19 @@ import {
     ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
     FREE_USER_TYPE_ID,
     PREMIUM_USER_TYPE_ID,
+    NOTIFICATIONS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
-    constructor({ logger, database, password, storage, file, helper }) {
+    constructor({ logger, database, password, storage, file, helper, notificationService }) {
         this.database = database;
         this.logger = logger;
         this.password = password;
         this.storage = storage;
         this.file = file;
         this.helper = helper;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -377,6 +379,8 @@ export default class UserService {
 
                 return user;
             });
+
+            this.notificationService.createNotification({ userId: userInfo.id, descriptionId: NOTIFICATIONS.WELCOME });
 
             return userInfo;
         } catch (error) {
