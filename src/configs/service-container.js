@@ -1,6 +1,7 @@
 import createLogger from '../common/logger/index.js';
 import sequelize from '../common/database/sequelize.js';
 import firebase from '../common/firebase/index.js';
+import pushNotification from '../common/push-notification/index.js';
 import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
@@ -17,6 +18,7 @@ const serviceContainer = {
     password: utils.Password,
     file: utils.File,
     firebase: firebase,
+    pushNotification: pushNotification,
     smtp: new utils.Smtp(
         {
             [process.env.SMTP_TYPE]: configSmtp[process.env.SMTP_TYPE],
@@ -31,6 +33,11 @@ Object.assign(serviceContainer, {
     selectionService: new services.SelectionService({ database: serviceContainer.database, logger: serviceContainer.logger }),
     loggerService: new services.LoggerService({ logger: serviceContainer.logger, database: serviceContainer.database }),
     emailService: new services.EmailService({ logger: serviceContainer.logger, smtp: serviceContainer.smtp, file: serviceContainer.file }),
+    notificationService: new services.NotificationService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        pushNotification: serviceContainer.pushNotification,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -41,6 +48,7 @@ Object.assign(serviceContainer, {
         storage: serviceContainer.storage,
         file: serviceContainer.file,
         helper: serviceContainer.helper,
+        notificationService: serviceContainer.notificationService,
     }),
     authService: new services.AuthService({
         database: serviceContainer.database,
@@ -69,18 +77,21 @@ Object.assign(serviceContainer, {
         database: serviceContainer.database,
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
+        notificationService: serviceContainer.notificationService,
     }),
     pfPlanService: new services.PfPlanService({
         logger: serviceContainer.logger,
         database: serviceContainer.database,
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
+        notificationService: serviceContainer.notificationService,
     }),
     educationService: new services.EducationService({
         logger: serviceContainer.logger,
         database: serviceContainer.database,
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
+        notificationService: serviceContainer.notificationService,
     }),
     miscellaneousService: new services.MiscellaneousService({
         logger: serviceContainer.logger,
@@ -101,6 +112,7 @@ Object.assign(serviceContainer, {
         authService: serviceContainer.authService,
         pfPlanService: serviceContainer.pfPlanService,
         miscellaneousService: serviceContainer.miscellaneousService,
+        notificationService: serviceContainer.notificationService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,
@@ -126,16 +138,19 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         workoutService: serviceContainer.workoutService,
         userService: serviceContainer.userService,
+        notificationService: serviceContainer.notificationService,
     }),
     pfPlanController: new controllers.PfPlanController({
         logger: serviceContainer.logger,
         pfPlanService: serviceContainer.pfPlanService,
         userService: serviceContainer.userService,
+        notificationService: serviceContainer.notificationService,
     }),
     educationController: new controllers.EducationController({
         logger: serviceContainer.logger,
         educationService: serviceContainer.educationService,
         userService: serviceContainer.userService,
+        notificationService: serviceContainer.notificationService,
     }),
     miscellaneousController: new controllers.MiscellaneousController({
         logger: serviceContainer.logger,

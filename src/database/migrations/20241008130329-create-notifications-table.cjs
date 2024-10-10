@@ -25,6 +25,9 @@ module.exports = createMigration({
                 key: 'id',
             },
         },
+        reference: {
+            type: DataTypes.TEXT,
+        },
         created_at: {
             type: DataTypes.DATE,
         },

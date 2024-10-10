@@ -29,7 +29,7 @@ module.exports = createMigration({
         {
             name: 'notification_descriptions_type_id',
             using: 'BTREE',
-            fields: [{ name: 'user_id' }],
+            fields: [{ name: 'type_id' }],
         },
     ],
 });

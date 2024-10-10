@@ -23,6 +23,9 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
+            reference: {
+                type: DataTypes.TEXT,
+            },
             created_at: {
                 type: DataTypes.DATE,
             },
@@ -35,7 +38,6 @@ export default (sequelize, DataTypes) => {
         },
         {
             sequelize,
-            timestamps: false,
             tableName: 'notifications',
             indexes: [
                 {
