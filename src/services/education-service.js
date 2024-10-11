@@ -632,4 +632,21 @@ export default class EducationService {
             throw new exceptions.InternalServerError('Failed to check education', error);
         }
     }
+
+    /**
+     * Check if education is associated with PF plan
+     *
+     * @param {number} id Education id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check education association with PF plan
+     */
+    async isEducationAssociatedWithPfPlan(id) {
+        try {
+            return Boolean(await this.database.models.PfPlanDailyContents.count({ where: { education_id: id } }));
+        } catch (error) {
+            this.logger.error('Failed to check education association with PF plan', error);
+
+            throw new exceptions.InternalServerError('Failed to check education association with PF plan', error);
+        }
+    }
 }
