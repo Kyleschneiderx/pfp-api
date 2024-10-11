@@ -1040,6 +1040,13 @@ export default class PfPlanService {
                 where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, unfulfilled: 0 },
             });
 
+            const userPfPlanDailyWithSkip = await this.database.models.UserPfPlanDailyProgress.findAll({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId, is_skip: true },
+                group: ['pf_plan_id', 'day'],
+            });
+
+            console.log(userPfPlanDailyWithSkip);
+
             [userPfPlanProgress] = await this.database.models.UserPfPlanProgress.upsert({
                 id: userPfPlanProgress?.id,
                 user_id: data.userId,
@@ -1049,7 +1056,7 @@ export default class PfPlanService {
                 is_fulfilled: Boolean(userPfPlanDailyFulfilled),
                 fulfilled: userPfPlanFulfilled,
                 unfulfilled: pfPlanLastContentDay.day - userPfPlanFulfilled,
-                skipped: userPfPlanSkipped,
+                skipped: userPfPlanDailyWithSkip.length,
             });
 
             return userPfPlanProgress;
