@@ -639,4 +639,21 @@ export default class WorkoutService {
             throw new exceptions.InternalServerError('Failed to get workout exercise', error);
         }
     }
+
+    /**
+     * Check if workout is associated with PF plan
+     *
+     * @param {number} id Workout id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check workout association with PF plan
+     */
+    async isWorkoutAssociatedWithPfPlan(id) {
+        try {
+            return Boolean(await this.database.models.PfPlanDailyContents.count({ where: { workout_id: id } }));
+        } catch (error) {
+            this.logger.error('Failed to check workout association with PF plan', error);
+
+            throw new exceptions.InternalServerError('Failed to check workout association with PF plan', error);
+        }
+    }
 }

@@ -48,7 +48,7 @@ export default ({ verifyAdmin, workoutController, workoutService, exerciseServic
 
     router.delete(
         '/:id',
-        validateInput([commonValidations.workoutIdValidation({ workoutService })]),
+        validateInput(validations.removeWorkoutValidation({ workoutService })),
         workoutController.handleRemoveWorkoutRoute.bind(workoutController),
     );
 
