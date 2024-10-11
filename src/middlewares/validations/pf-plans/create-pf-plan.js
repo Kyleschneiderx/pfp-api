@@ -53,6 +53,16 @@ export default ({ workoutService, selectionService, file, educationService, pfPl
 
             return true;
         }),
+    body('dailies.*.contents')
+        .exists({ value: 'falsy' })
+        .withMessage('Daily contents is required.')
+        .isArray({ min: 1 })
+        .withMessage('Daily contents should not be empty.'),
+    body('dailies.*.contents.*').custom((value) => {
+        if (value.workout_id === undefined && value.education_id === undefined) throw new Error('Either workout or education is required');
+
+        return true;
+    }),
     commonValidation.workoutIdValidation({
         workoutService,
         isBody: true,

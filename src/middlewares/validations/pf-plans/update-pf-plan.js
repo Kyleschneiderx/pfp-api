@@ -79,6 +79,16 @@ export default ({ workoutService, educationService, pfPlanService, selectionServ
 
             return true;
         }),
+    body('dailies.*.contents')
+        .exists({ value: 'falsy' })
+        .withMessage('Daily contents is required.')
+        .isArray({ min: 1 })
+        .withMessage('Daily contents should not be empty.'),
+    body('dailies.*.contents.*').custom((value) => {
+        if (value.workout_id === undefined && value.education_id === undefined) throw new Error('Either workout or education is required');
+
+        return true;
+    }),
     body('dailies.*.contents.*.content_id')
         .trim()
         .optional()
