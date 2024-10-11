@@ -1088,23 +1088,21 @@ export default class PfPlanService {
                                 },
                                 include: [
                                     {
+                                        model: this.database.models.UserPfPlanWorkoutProgress,
+                                        as: 'user_pf_plan_workout_progress',
+                                        required: false,
+                                        attributes: ['workout_exercise_id'],
+                                        where: {
+                                            user_id: userPfPlan.user_id,
+                                        },
+                                    },
+                                    {
                                         model: this.database.models.Workouts,
                                         as: 'workout',
                                         required: false,
                                         attributes: {
                                             exclude: ['deleted_at'],
                                         },
-                                        include: [
-                                            {
-                                                model: this.database.models.UserPfPlanWorkoutProgress,
-                                                as: 'user_pf_plan_workout_progress',
-                                                required: false,
-                                                attributes: ['workout_exercise_id'],
-                                                where: {
-                                                    user_id: userPfPlan.user_id,
-                                                },
-                                            },
-                                        ],
                                         where: {},
                                     },
                                     {
@@ -1147,9 +1145,7 @@ export default class PfPlanService {
                 pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
                     if (pfPlanDailyContent.dataValues.workout) {
                         pfPlanDailyContent.dataValues.workout.dataValues.fulfilled_workout_exercise_ids =
-                            pfPlanDailyContent.dataValues.workout.dataValues.user_pf_plan_workout_progress.map(
-                                (progress) => progress.workout_exercise_id,
-                            );
+                            pfPlanDailyContent.dataValues.user_pf_plan_workout_progress.map((progress) => progress.workout_exercise_id);
 
                         pfPlanDailyContent.dataValues.workout.photo = this.helper.generateProtectedUrl(
                             pfPlanDailyContent.workout?.photo,
@@ -1158,9 +1154,9 @@ export default class PfPlanService {
                                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
                             },
                         );
-
-                        delete pfPlanDailyContent.dataValues.workout.dataValues.user_pf_plan_workout_progress;
                     }
+
+                    delete pfPlanDailyContent.dataValues.user_pf_plan_workout_progress;
 
                     if (pfPlanDailyContent.dataValues.education) {
                         pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
