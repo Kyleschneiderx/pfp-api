@@ -45,8 +45,6 @@ export default class Helper {
     }
 
     static replacer = (string, replaceObj) => {
-        console.log(string);
-        console.log(replaceObj);
         if (typeof replaceObj === 'object') {
             Object.keys(replaceObj).forEach((key) => {
                 string = string.replace(new RegExp(`{${key}}`, 'g'), replaceObj[key]);
