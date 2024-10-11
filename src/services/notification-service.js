@@ -23,8 +23,6 @@ export default class NotificationService {
                         where: { ...(notification.user_id && { user_id: notification.user_id }) },
                     });
 
-                    console.log(userDeviceTokens);
-
                     const notificationDescription = await this.database.models.NotificationDescriptions.findOne({
                         where: { id: notification.description_id },
                     });
@@ -39,20 +37,33 @@ export default class NotificationService {
                     }
 
                     if (userDeviceTokens.length) {
-                        this.pushNotification.send(
-                            {
-                                data: notification.reference,
-                                notification: {
-                                    title: notificationDescription.title,
-                                    body: notificationDescription.description,
-                                },
-                                token: userDeviceTokens.map((deviceToken) => deviceToken.token),
-                            },
-                            true,
+                        const pushNotificationResult = await Promise.allSettled(
+                            userDeviceTokens.map(async (deviceToken) =>
+                                this.pushNotification.send(
+                                    {
+                                        data: notification.reference,
+                                        notification: {
+                                            title: notificationDescription.title,
+                                            body: notificationDescription.description,
+                                        },
+                                        token: deviceToken.token,
+                                    },
+                                    true,
+                                ),
+                            ),
                         );
+                        const deviceTokenToRemove = pushNotificationResult
+                            .map((pushResult, index) => {
+                                if (pushResult.status === 'rejected') return userDeviceTokens[index].id;
+
+                                return [];
+                            })
+                            .flat();
+
+                        await this.database.models.UserDeviceTokens.destroy({ where: { id: deviceTokenToRemove } });
                     }
 
-                    return false;
+                    return notification;
                 }),
             );
         } catch (error) {
