@@ -24,7 +24,7 @@ export default ({ verifyAdmin, exerciseController, exerciseService, selectionSer
 
     router.delete(
         '/:id',
-        validateInput([commonValidations.exerciseIdValidation({ exerciseService })]),
+        validateInput(validations.removeExerciseValidation({ exerciseService })),
         exerciseController.handleRemoveExerciseRoute.bind(exerciseController),
     );
 
