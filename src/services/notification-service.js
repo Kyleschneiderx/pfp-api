@@ -188,4 +188,33 @@ export default class NotificationService {
             throw new exceptions.InternalServerError('Failed to remove notifications', error);
         }
     }
+
+    /**
+     * Add user device token
+     *
+     * @param {number} userId User account id
+     * @param {string} deviceToken Device token
+     * @returns {Promise<UserDeviceTokens>}
+     * @throws {InternalServerError} If failed to add device token
+     */
+    async addUserDeviceToken(userId, deviceToken) {
+        try {
+            const [userDeviceToken] = await this.database.models.UserDeviceTokens.findOrCreate({
+                where: {
+                    user_id: userId,
+                    token: deviceToken,
+                },
+                defaults: {
+                    user_id: userId,
+                    token: deviceToken,
+                },
+            });
+
+            return userDeviceToken;
+        } catch (error) {
+            this.logger.error('Failed to add device token.', error);
+
+            throw new exceptions.InternalServerError('Failed to add device token', error);
+        }
+    }
 }

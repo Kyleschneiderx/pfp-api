@@ -1,13 +1,18 @@
 export default class AuthController {
-    constructor({ authService, userService }) {
+    constructor({ authService, userService, notificationService }) {
         this.authService = authService;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     async handleLoginRoute(req, res) {
         const token = this.authService.generateSession(req.user);
 
         await this.userService.updateUserLastLogin(req.user.id);
+
+        if (req.body.device_token !== undefined) {
+            await this.notificationService.addUserDeviceToken(req.user.id, req.body.device_token);
+        }
 
         delete req.user.dataValues.password;
         delete req.user.dataValues.google_id;

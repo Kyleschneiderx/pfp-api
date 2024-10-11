@@ -105,6 +105,7 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         userService: serviceContainer.userService,
         authService: serviceContainer.authService,
+        notificationService: serviceContainer.notificationService,
     }),
     userController: new controllers.UserController({
         logger: serviceContainer.logger,

@@ -30,3 +30,4 @@ export { default as Notifications } from './notifications.js';
 export { default as NotificationTypes } from './notification-types.js';
 export { default as NotificationDescriptions } from './notification-descriptions.js';
 export { default as UserRemovedNotificationIndicators } from './user-removed-notification-indicators.js';
+export { default as UserDeviceTokens } from './user-device-tokens.js';
