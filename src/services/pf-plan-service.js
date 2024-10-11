@@ -1045,8 +1045,6 @@ export default class PfPlanService {
                 group: ['pf_plan_id', 'day'],
             });
 
-            console.log(userPfPlanDailyWithSkip);
-
             [userPfPlanProgress] = await this.database.models.UserPfPlanProgress.upsert({
                 id: userPfPlanProgress?.id,
                 user_id: data.userId,
