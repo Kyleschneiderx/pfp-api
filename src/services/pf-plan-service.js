@@ -298,9 +298,18 @@ export default class PfPlanService {
             subQuery: false,
             limit: filter.pageItems,
             offset: filter.page * filter.pageItems - filter.pageItems,
-            attributes: {
-                exclude: ['deleted_at', 'status_id'],
-            },
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'photo',
+                'is_premium',
+                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                    ? [[Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected']]
+                    : []),
+                'created_at',
+                'updated_at',
+            ],
             include: [
                 {
                     model: this.database.models.Statuses,
@@ -320,6 +329,15 @@ export default class PfPlanService {
                               },
                               limit: 1,
                               order: [['updated_at', 'DESC']],
+                          },
+                          {
+                              model: this.database.models.UserPfPlans,
+                              as: 'user_pf_plan',
+                              attributes: [],
+                              required: false,
+                              where: {
+                                  user_id: filter?.authenticatedUser?.user_id,
+                              },
                           },
                       ]
                     : []),
@@ -371,6 +389,10 @@ export default class PfPlanService {
                 );
             }
 
+            if (row.dataValues.is_selected !== undefined) {
+                row.dataValues.is_selected = Boolean(row.dataValues.is_selected);
+            }
+
             return row;
         });
 
@@ -404,7 +426,10 @@ export default class PfPlanService {
                     'photo',
                     'is_premium',
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
-                        ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
+                        ? [
+                              [Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite'],
+                              [Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected'],
+                          ]
                         : []),
                     'created_at',
                     'updated_at',
@@ -474,6 +499,15 @@ export default class PfPlanService {
                                       user_id: filter.authenticatedUser.user_id,
                                   },
                               },
+                              {
+                                  model: this.database.models.UserPfPlans,
+                                  as: 'user_pf_plan',
+                                  attributes: [],
+                                  required: false,
+                                  where: {
+                                      user_id: filter?.authenticatedUser?.user_id,
+                                  },
+                              },
                           ]
                         : []),
                 ],
@@ -498,6 +532,10 @@ export default class PfPlanService {
 
             if (pfPlan.dataValues.is_favorite !== undefined) {
                 pfPlan.dataValues.is_favorite = Boolean(pfPlan.dataValues.is_favorite);
+            }
+
+            if (pfPlan.dataValues.is_selected !== undefined) {
+                pfPlan.dataValues.is_selected = Boolean(pfPlan.dataValues.is_selected);
             }
 
             if (pfPlan.pf_plan_dailies) {

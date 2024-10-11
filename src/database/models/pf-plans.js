@@ -70,7 +70,7 @@ export default (sequelize, DataTypes) => {
         },
     );
     model.associate = () => {
-        const { PfPlanDailies, Statuses, PfPlans, UserFavoritePfPlans, UserPfPlanProgress } = sequelize.models;
+        const { PfPlanDailies, Statuses, PfPlans, UserFavoritePfPlans, UserPfPlanProgress, UserPfPlans } = sequelize.models;
 
         PfPlans.hasMany(PfPlanDailies, { as: 'pf_plan_dailies', foreignKey: 'pf_plan_id' });
 
@@ -79,6 +79,8 @@ export default (sequelize, DataTypes) => {
         PfPlans.hasMany(UserFavoritePfPlans, { as: 'user_favorite_pf_plans', foreignKey: 'pf_plan_id' });
 
         PfPlans.hasMany(UserPfPlanProgress, { as: 'user_pf_plan_progress', foreignKey: 'pf_plan_id' });
+
+        PfPlans.hasMany(UserPfPlans, { as: 'user_pf_plan', foreignKey: 'pf_plan_id' });
     };
     return model;
 };
