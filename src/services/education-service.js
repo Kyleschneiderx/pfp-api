@@ -131,7 +131,7 @@ export default class EducationService {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_EDUCATION,
-                    reference: JSON.stringify({ title: education.title }),
+                    reference: JSON.stringify({ id: education.id, title: education.title }),
                 });
             }
 
@@ -225,7 +225,7 @@ export default class EducationService {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_EDUCATION,
-                    reference: JSON.stringify({ title: education.title }),
+                    reference: JSON.stringify({ id: education.id, title: education.title }),
                 });
             }
 
