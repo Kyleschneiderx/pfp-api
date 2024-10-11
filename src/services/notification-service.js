@@ -12,10 +12,52 @@ export default class NotificationService {
     /**
      * Send push notification to device
      *
-     * @param {*} notification
+     * @param {Notifications[]} notification Notifications instance
+     * @returns {Promise<void>} void
      */
-    async sendPushNotification(notification) {
-        console.log('sendPushNotification', notification);
+    async sendPushNotification(notifications) {
+        try {
+            await Promise.all(
+                notifications.map(async (notification) => {
+                    const userDeviceTokens = await this.database.models.UserDeviceTokens.findAll({
+                        where: { ...(notification.user_id && { user_id: notification.user_id }) },
+                    });
+
+                    console.log(userDeviceTokens);
+
+                    const notificationDescription = await this.database.models.NotificationDescriptions.findOne({
+                        where: { id: notification.description_id },
+                    });
+
+                    if (notification.reference) {
+                        notification.dataValues.reference = JSON.parse(notification.dataValues.reference);
+
+                        notificationDescription.dataValues.description = this.helper.replacer(
+                            notificationDescription.dataValues.description,
+                            notification.dataValues.reference,
+                        );
+                    }
+
+                    if (userDeviceTokens.length) {
+                        this.pushNotification.send(
+                            {
+                                data: notification.reference,
+                                notification: {
+                                    title: notificationDescription.title,
+                                    body: notificationDescription.description,
+                                },
+                                token: userDeviceTokens.map((deviceToken) => deviceToken.token),
+                            },
+                            true,
+                        );
+                    }
+
+                    return false;
+                }),
+            );
+        } catch (error) {
+            this.logger.error('Failed to send push notification', error);
+        }
     }
 
     /**
