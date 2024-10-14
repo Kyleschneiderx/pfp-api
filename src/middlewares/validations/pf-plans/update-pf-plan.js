@@ -2,7 +2,7 @@ import { body } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 import { DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID } from '../../../constants/index.js';
 
-export default ({ workoutService, educationService, pfPlanService, selectionService, file }) => [
+export default ({ exerciseService, educationService, pfPlanService, selectionService, file }) => [
     commonValidation.pfPlanIdValidation({ pfPlanService, field: 'id' }),
     body('name')
         .trim()
@@ -87,6 +87,12 @@ export default ({ workoutService, educationService, pfPlanService, selectionServ
     body('dailies.*.contents.*').custom((value) => {
         if (value.workout_id === undefined && value.education_id === undefined) throw new Error('Either workout or education is required');
 
+        if (value.exercise_id !== undefined) {
+            if (value.sets === undefined) throw new Error('Number of sets is required.');
+            if (value.reps === undefined) throw new Error('Number of reps is required.');
+            if (value.hold === undefined) throw new Error('Number of hold is required.');
+        }
+
         return true;
     }),
     body('dailies.*.contents.*.content_id')
@@ -101,12 +107,11 @@ export default ({ workoutService, educationService, pfPlanService, selectionServ
 
             return true;
         }),
-    commonValidation.workoutIdValidation({
-        workoutService,
+    commonValidation.exerciseIdValidation({
+        exerciseService,
         isBody: true,
         isRequired: false,
-        isPublishedOnly: true,
-        field: 'dailies.*.contents.*.workout_id',
+        field: 'dailies.*.contents.*.exercise_id',
     }),
     commonValidation.educationIdValidation({
         educationService,

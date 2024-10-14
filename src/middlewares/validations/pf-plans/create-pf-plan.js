@@ -61,6 +61,12 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
     body('dailies.*.contents.*').custom((value) => {
         if (value.exercise_id === undefined && value.education_id === undefined) throw new Error('Either exercise or education is required');
 
+        if (value.exercise_id !== undefined) {
+            if (value.sets === undefined) throw new Error('Number of sets is required.');
+            if (value.reps === undefined) throw new Error('Number of reps is required.');
+            if (value.hold === undefined) throw new Error('Number of hold is required.');
+        }
+
         return true;
     }),
     commonValidation.exerciseIdValidation({

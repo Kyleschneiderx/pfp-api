@@ -81,6 +81,9 @@ export default class PfPlanService {
                                     pf_plan_id: pfPlan.id,
                                     arrangement: arrangement,
                                     exercise_id: content.exercise_id,
+                                    sets: content.sets,
+                                    reps: content.reps,
+                                    hold: content.hold,
                                     education_id: content.education_id,
                                 };
                             }),
@@ -226,6 +229,9 @@ export default class PfPlanService {
                                 pf_plan_id: pfPlan.id,
                                 arrangement: arrangement,
                                 exercise_id: content.exercise_id,
+                                sets: content.sets,
+                                reps: content.reps,
+                                hold: content.hold,
                                 education_id: content.education_id,
                             };
                         }),
@@ -382,7 +388,7 @@ export default class PfPlanService {
 
             const userPfPlanProgress = row.user_pf_plan_progress?.[0];
 
-            row.dataValues.user_pf_plan_progress = userPfPlanProgress;
+            delete row.dataValues.user_pf_plan_progress;
 
             if (row.user_pf_plan_progress !== undefined) {
                 row.dataValues.user_pf_plan_progress_percentage = Math.ceil(
@@ -411,7 +417,7 @@ export default class PfPlanService {
      * @param {number} id PF plan id
      * @param {object} filter
      * @param {number=} filter.statusId Workout status id
-     * @param {number=} filter.authenticatedUser Authenticated user
+     * @param {object=} filter.authenticatedUser Authenticated user
      * @returns {Promise<PfPlans>} PfPlans instance
      * @throws {InternalServerError} If failed to get PF plan details
      */
@@ -471,7 +477,7 @@ export default class PfPlanService {
                                         as: 'exercise',
                                         required: false,
                                         attributes: {
-                                            exclude: ['deleted_at'],
+                                            exclude: ['deleted_at', 'reps', 'sets', 'hold'],
                                         },
                                         where: {},
                                     },
@@ -491,6 +497,17 @@ export default class PfPlanService {
                     },
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [
+                              {
+                                  model: this.database.models.UserPfPlanProgress,
+                                  as: 'user_pf_plan_progress',
+                                  attributes: ['fulfilled', 'unfulfilled', 'skipped'],
+                                  required: false,
+                                  where: {
+                                      user_id: filter.authenticatedUser.user_id,
+                                  },
+                                  limit: 1,
+                                  order: [['updated_at', 'DESC']],
+                              },
                               {
                                   model: this.database.models.UserFavoritePfPlans,
                                   as: 'user_favorite_pf_plans',
@@ -539,10 +556,26 @@ export default class PfPlanService {
                 pfPlan.dataValues.is_selected = Boolean(pfPlan.dataValues.is_selected);
             }
 
+            const userPfPlanProgress = pfPlan.user_pf_plan_progress?.[0];
+
+            delete pfPlan.dataValues.user_pf_plan_progress;
+
+            if (userPfPlanProgress !== undefined) {
+                pfPlan.dataValues.user_pf_plan_progress_percentage = Math.ceil(
+                    (userPfPlanProgress?.fulfilled / (userPfPlanProgress?.fulfilled + userPfPlanProgress?.unfulfilled)) * 100,
+                );
+            }
+
             if (pfPlan.pf_plan_dailies) {
                 pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
                     pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
                         if (pfPlanDailyContent.dataValues.exercise) {
+                            pfPlanDailyContent.dataValues.exercise.sets = pfPlanDailyContent.sets;
+
+                            pfPlanDailyContent.dataValues.exercise.reps = pfPlanDailyContent.reps;
+
+                            pfPlanDailyContent.dataValues.exercise.hold = pfPlanDailyContent.hold;
+
                             pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
                                 pfPlanDailyContent.exercise?.photo,
                                 `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
@@ -559,6 +592,12 @@ export default class PfPlanService {
                                 },
                             );
                         }
+
+                        delete pfPlanDailyContent.dataValues.sets;
+
+                        delete pfPlanDailyContent.dataValues.reps;
+
+                        delete pfPlanDailyContent.dataValues.hold;
 
                         if (pfPlanDailyContent.dataValues.education) {
                             pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
@@ -1095,7 +1134,7 @@ export default class PfPlanService {
                                         as: 'exercise',
                                         required: false,
                                         attributes: {
-                                            exclude: ['deleted_at'],
+                                            exclude: ['deleted_at', 'sets', 'reps', 'hold'],
                                         },
                                         where: {},
                                     },
@@ -1135,6 +1174,19 @@ export default class PfPlanService {
                 pfPlan.dataValues.is_favorite = Boolean(pfPlan.dataValues.is_favorite);
             }
 
+            pfPlan.dataValues.user_pf_plan_progress_percentage = null;
+
+            const userLatestPfPlanProgress = await this.database.models.UserPfPlanProgress.findOne({
+                where: { pf_plan_id: userPfPlan.pf_plan_id, user_id: userPfPlan.user_id },
+                order: [['updated_at', 'DESC']],
+            });
+
+            if (userLatestPfPlanProgress !== undefined) {
+                pfPlan.dataValues.user_pf_plan_progress_percentage = Math.ceil(
+                    (userLatestPfPlanProgress?.fulfilled / (userLatestPfPlanProgress?.fulfilled + userLatestPfPlanProgress?.unfulfilled)) * 100,
+                );
+            }
+
             pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
                 const defaultContentProgress =
                     pfPlanDaily.day <= dayDifference
@@ -1146,6 +1198,12 @@ export default class PfPlanService {
 
                 pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
                     if (pfPlanDailyContent.dataValues.exercise) {
+                        pfPlanDailyContent.dataValues.exercise.sets = pfPlanDailyContent.sets;
+
+                        pfPlanDailyContent.dataValues.exercise.reps = pfPlanDailyContent.reps;
+
+                        pfPlanDailyContent.dataValues.exercise.hold = pfPlanDailyContent.hold;
+
                         pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
                             pfPlanDailyContent.exercise?.photo,
                             `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
@@ -1162,6 +1220,12 @@ export default class PfPlanService {
                             },
                         );
                     }
+
+                    delete pfPlanDailyContent.dataValues.sets;
+
+                    delete pfPlanDailyContent.dataValues.reps;
+
+                    delete pfPlanDailyContent.dataValues.hold;
 
                     if (pfPlanDailyContent.dataValues.education) {
                         pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(

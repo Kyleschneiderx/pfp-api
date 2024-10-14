@@ -31,6 +31,16 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
+            sets: {
+                type: DataTypes.INTEGER,
+            },
+            reps: {
+                type: DataTypes.INTEGER,
+            },
+            hold: {
+                comment: 'in seconds',
+                type: DataTypes.INTEGER,
+            },
             education_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see educations table',
