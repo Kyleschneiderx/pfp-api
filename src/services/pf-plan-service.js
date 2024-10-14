@@ -23,6 +23,69 @@ export default class PfPlanService {
     }
 
     /**
+     * Compute PF plan progress percentage
+     *
+     * @param {number} fulfilled Number of fulfilled days
+     * @param {number} unfulfilled Number of unfulfilled days
+     * @returns
+     */
+    _computePfPlanProgressPercentage(fulfilled, unfulfilled) {
+        if (fulfilled === undefined && unfulfilled === undefined) return 0;
+
+        return Math.ceil((fulfilled / (fulfilled + unfulfilled)) * 100);
+    }
+
+    /**
+     * Extract PF plan default content progress
+     *
+     * @param {number} contentDay PF plan content day
+     * @param {number} elapsedDays Elapsed time from start to current date
+     * @param {object=} dailyProgress User daily progress
+     * @returns {object}
+     */
+    _extractPfPlanDefaultContentProgress(contentDay, elapsedDays, dailyProgress) {
+        console.log(contentDay, elapsedDays);
+        const defaultContentProgress =
+            elapsedDays < contentDay
+                ? null
+                : {
+                      is_skip: false,
+                      is_fulfilled: false,
+                  };
+        return dailyProgress
+            ? {
+                  is_skip: dailyProgress?.is_skip,
+                  is_fulfilled: dailyProgress?.is_fulfilled,
+              }
+            : defaultContentProgress;
+    }
+
+    /**
+     * Extract PF plan default daily progress
+     *
+     * @param {number} contentDay PF plan content day
+     * @param {number} elapsedDays Elapsed time from start to current date
+     * @param {object=} dailyProgress User daily progress
+     * @returns {object}
+     */
+    _extractPfPlanDefaultDailyProgress(contentDay, elapsedDays, dailyProgress) {
+        const defaultDayProgress =
+            elapsedDays < contentDay
+                ? null
+                : {
+                      has_skip: false,
+                      is_fulfilled: false,
+                  };
+
+        return dailyProgress
+            ? {
+                  has_skip: dailyProgress?.has_skip,
+                  is_fulfilled: dailyProgress?.is_fulfilled,
+              }
+            : defaultDayProgress;
+    }
+
+    /**
      * Create PF plan
      *
      * @param {object} data
@@ -390,11 +453,10 @@ export default class PfPlanService {
 
             delete row.dataValues.user_pf_plan_progress;
 
-            if (row.user_pf_plan_progress !== undefined) {
-                row.dataValues.user_pf_plan_progress_percentage = Math.ceil(
-                    (userPfPlanProgress?.fulfilled / (userPfPlanProgress?.fulfilled + userPfPlanProgress?.unfulfilled)) * 100,
-                );
-            }
+            row.dataValues.user_pf_plan_progress_percentage = this._computePfPlanProgressPercentage(
+                userPfPlanProgress?.fulfilled,
+                userPfPlanProgress?.unfulfilled,
+            );
 
             if (row.dataValues.is_selected !== undefined) {
                 row.dataValues.is_selected = Boolean(row.dataValues.is_selected);
@@ -560,11 +622,10 @@ export default class PfPlanService {
 
             delete pfPlan.dataValues.user_pf_plan_progress;
 
-            if (userPfPlanProgress !== undefined) {
-                pfPlan.dataValues.user_pf_plan_progress_percentage = Math.ceil(
-                    (userPfPlanProgress?.fulfilled / (userPfPlanProgress?.fulfilled + userPfPlanProgress?.unfulfilled)) * 100,
-                );
-            }
+            pfPlan.dataValues.user_pf_plan_progress_percentage = this._computePfPlanProgressPercentage(
+                userPfPlanProgress?.fulfilled,
+                userPfPlanProgress?.unfulfilled,
+            );
 
             if (pfPlan.pf_plan_dailies) {
                 pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
@@ -1181,21 +1242,12 @@ export default class PfPlanService {
                 order: [['updated_at', 'DESC']],
             });
 
-            if (userLatestPfPlanProgress !== undefined) {
-                pfPlan.dataValues.user_pf_plan_progress_percentage = Math.ceil(
-                    (userLatestPfPlanProgress?.fulfilled / (userLatestPfPlanProgress?.fulfilled + userLatestPfPlanProgress?.unfulfilled)) * 100,
-                );
-            }
+            pfPlan.dataValues.user_pf_plan_progress_percentage = this._computePfPlanProgressPercentage(
+                userLatestPfPlanProgress?.fulfilled,
+                userLatestPfPlanProgress?.unfulfilled,
+            );
 
             pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
-                const defaultContentProgress =
-                    pfPlanDaily.day <= dayDifference
-                        ? null
-                        : {
-                              is_skip: false,
-                              is_fulfilled: false,
-                          };
-
                 pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
                     if (pfPlanDailyContent.dataValues.exercise) {
                         pfPlanDailyContent.dataValues.exercise.sets = pfPlanDailyContent.sets;
@@ -1245,32 +1297,18 @@ export default class PfPlanService {
                         );
                     }
 
-                    pfPlanDailyContent.dataValues.content_progress = pfPlanDaily.user_pf_plan_daily_progress
-                        ? {
-                              is_skip: pfPlanDaily.user_pf_plan_daily_progress?.is_skip,
-                              is_fulfilled: pfPlanDaily.user_pf_plan_daily_progress?.is_fulfilled,
-                          }
-                        : defaultContentProgress;
+                    pfPlanDailyContent.dataValues.content_progress = this._extractPfPlanDefaultContentProgress(
+                        pfPlanDaily.day,
+                        dayDifference,
+                        pfPlanDaily.user_pf_plan_daily_progress,
+                    );
 
                     return pfPlanDailyContent;
                 });
 
                 const dayProgress = userPfPlanProgressObject?.[pfPlanDaily.day];
 
-                const defaultDayProgress =
-                    pfPlanDaily.day <= dayDifference
-                        ? null
-                        : {
-                              has_skip: false,
-                              is_fulfilled: false,
-                          };
-
-                pfPlanDaily.dataValues.day_progress = dayProgress
-                    ? {
-                          has_skip: dayProgress?.has_skip,
-                          is_fulfilled: dayProgress?.is_fulfilled,
-                      }
-                    : defaultDayProgress;
+                pfPlanDaily.dataValues.day_progress = this._extractPfPlanDefaultDailyProgress(pfPlanDaily.day, dayDifference, dayProgress);
 
                 delete pfPlanDaily.dataValues.pf_plan_daily_contents;
 
