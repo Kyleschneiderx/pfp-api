@@ -169,7 +169,7 @@ export default ({
             verifyAdmin: middlewares.verifyAdmin,
             pfPlanController: pfPlanController,
             pfPlanService: pfPlanService,
-            workoutService: workoutService,
+            exerciseService: exerciseService,
             selectionService: selectionService,
             file: file,
             educationService: educationService,

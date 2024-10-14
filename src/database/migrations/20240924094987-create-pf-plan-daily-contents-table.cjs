@@ -25,11 +25,11 @@ module.exports = createMigration({
                 key: 'id',
             },
         },
-        workout_id: {
+        exercise_id: {
             type: DataTypes.INTEGER,
-            comment: 'see workouts table',
+            comment: 'see exercises table',
             references: {
-                model: 'workouts',
+                model: 'exercises',
                 key: 'id',
             },
         },
@@ -64,9 +64,9 @@ module.exports = createMigration({
             fields: [{ name: 'pf_plan_daily_id' }],
         },
         {
-            name: 'pf_plan_daily_contents_pfplanid_pfplandailyid_workoutid',
+            name: 'pf_plan_daily_contents_pfplanid_pfplandailyid_exerciseid',
             using: 'BTREE',
-            fields: [{ name: 'pf_plan_id' }, { name: 'pf_plan_daily_id' }, { name: 'workout_id' }],
+            fields: [{ name: 'pf_plan_id' }, { name: 'pf_plan_daily_id' }, { name: 'exercise_id' }],
         },
         {
             name: 'pf_plan_daily_contents_pfplanid_pfplandailyid_educationid',

@@ -23,11 +23,11 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
-            workout_id: {
+            exercise_id: {
                 type: DataTypes.INTEGER,
-                comment: 'see workouts table',
+                comment: 'see exercises table',
                 references: {
-                    model: 'workouts',
+                    model: 'exercises',
                     key: 'id',
                 },
             },
@@ -67,9 +67,9 @@ export default (sequelize, DataTypes) => {
                     fields: [{ name: 'pf_plan_daily_id' }],
                 },
                 {
-                    name: 'pf_plan_daily_contents_pfplanid_pfplandailyid_workoutid',
+                    name: 'pf_plan_daily_contents_pfplanid_pfplandailyid_exerciseid',
                     using: 'BTREE',
-                    fields: [{ name: 'pf_plan_id' }, { name: 'pf_plan_daily_id' }, { name: 'workout_id' }],
+                    fields: [{ name: 'pf_plan_id' }, { name: 'pf_plan_daily_id' }, { name: 'exercise_id' }],
                 },
                 {
                     name: 'pf_plan_daily_contents_pfplanid_pfplandailyid_educationid',
@@ -85,11 +85,11 @@ export default (sequelize, DataTypes) => {
         },
     );
     model.associate = () => {
-        const { PfPlanDailyContents, PfPlanDailies, Workouts, Educations, UserPfPlanWorkoutProgress } = sequelize.models;
+        const { PfPlanDailyContents, PfPlanDailies, Exercises, Educations, UserPfPlanWorkoutProgress } = sequelize.models;
 
         PfPlanDailyContents.belongsTo(PfPlanDailies, { as: 'pf_plan_dailies', foreignKey: 'pf_plan_daily_id' });
 
-        PfPlanDailyContents.belongsTo(Workouts, { as: 'workout', foreignKey: 'workout_id' });
+        PfPlanDailyContents.belongsTo(Exercises, { as: 'exercise', foreignKey: 'exercise_id' });
 
         PfPlanDailyContents.belongsTo(Educations, { as: 'education', foreignKey: 'education_id' });
 

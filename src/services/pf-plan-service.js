@@ -33,7 +33,7 @@ export default class PfPlanService {
      * @param {number} data.dailies[].day PF plan daily day indicator
      * @param {number} data.dailies[].name PF plan daily name
      * @param {object[]} data.dailies[].content
-     * @param {number=} data.dailies[].content[].workout_id PF plan daily content workout id
+     * @param {number=} data.dailies[].content[].exercise_id PF plan daily content exercise id
      * @param {number=} data.dailies[].content[].education_id PF plan daily content education id
      * @returns {Promise<PfPlans>} PfPlans instance
      * @throws {InternalServerError} If failed to create PF plan
@@ -79,7 +79,7 @@ export default class PfPlanService {
                                 return {
                                     pf_plan_id: pfPlan.id,
                                     arrangement: arrangement,
-                                    workout_id: content.workout_id,
+                                    exercise_id: content.exercise_id,
                                     education_id: content.education_id,
                                 };
                             }),
@@ -182,7 +182,7 @@ export default class PfPlanService {
                 const upcomingContentsIds = [];
 
                 const upcomingDailiesIds = [];
-                console.log(data.dailies.length);
+
                 data.dailies.forEach((incomingDaily) => {
                     upcomingDailiesIds.push(Number(incomingDaily.daily_id));
 
@@ -224,7 +224,7 @@ export default class PfPlanService {
                                 id: content.content_id,
                                 pf_plan_id: pfPlan.id,
                                 arrangement: arrangement,
-                                workout_id: content.workout_id,
+                                exercise_id: content.exercise_id,
                                 education_id: content.education_id,
                             };
                         }),
@@ -459,15 +459,15 @@ export default class PfPlanService {
                                         'updated_at',
                                         'pf_plan_id',
                                         'pf_plan_daily_id',
-                                        'workout_id',
+                                        'exercise_id',
                                         'education_id',
                                         'arrangement',
                                     ],
                                 },
                                 include: [
                                     {
-                                        model: this.database.models.Workouts,
-                                        as: 'workout',
+                                        model: this.database.models.Exercises,
+                                        as: 'exercise',
                                         required: false,
                                         attributes: {
                                             exclude: ['deleted_at'],
@@ -541,9 +541,17 @@ export default class PfPlanService {
             if (pfPlan.pf_plan_dailies) {
                 pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
                     pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
-                        if (pfPlanDailyContent.dataValues.workout) {
-                            pfPlanDailyContent.dataValues.workout.photo = this.helper.generateProtectedUrl(
-                                pfPlanDailyContent.workout?.photo,
+                        if (pfPlanDailyContent.dataValues.exercise) {
+                            pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
+                                pfPlanDailyContent.exercise?.photo,
+                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                                {
+                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                                },
+                            );
+
+                            pfPlanDailyContent.dataValues.exercise.video = this.helper.generateProtectedUrl(
+                                pfPlanDailyContent.exercise?.video,
                                 `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
                                 {
                                     expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,

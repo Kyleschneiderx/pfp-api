@@ -2,7 +2,7 @@ import { body } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 import { DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../../../constants/index.js';
 
-export default ({ workoutService, selectionService, file, educationService, pfPlanService }) => [
+export default ({ exerciseService, selectionService, file, educationService, pfPlanService }) => [
     body('name')
         .trim()
         .exists({ values: 'falsy' })
@@ -59,16 +59,15 @@ export default ({ workoutService, selectionService, file, educationService, pfPl
         .isArray({ min: 1 })
         .withMessage('Daily contents should not be empty.'),
     body('dailies.*.contents.*').custom((value) => {
-        if (value.workout_id === undefined && value.education_id === undefined) throw new Error('Either workout or education is required');
+        if (value.exercise_id === undefined && value.education_id === undefined) throw new Error('Either exercise or education is required');
 
         return true;
     }),
-    commonValidation.workoutIdValidation({
-        workoutService,
+    commonValidation.exerciseIdValidation({
+        exerciseService,
         isBody: true,
         isRequired: false,
-        isPublishedOnly: true,
-        field: 'dailies.*.contents.*.workout_id',
+        field: 'dailies.*.contents.*.exercise_id',
     }),
     commonValidation.educationIdValidation({
         educationService,
