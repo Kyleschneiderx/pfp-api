@@ -28,6 +28,9 @@ module.exports = createMigration({
         day: {
             type: DataTypes.INTEGER,
         },
+        total_days: {
+            type: DataTypes.INTEGER,
+        },
         has_skip: {
             type: DataTypes.BOOLEAN,
         },

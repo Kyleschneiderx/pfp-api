@@ -50,9 +50,6 @@ module.exports = createMigration({
         is_fulfilled: {
             type: DataTypes.BOOLEAN,
         },
-        total_days: {
-            type: DataTypes.INTEGER,
-        },
         fulfilled: {
             type: DataTypes.INTEGER,
         },
@@ -101,6 +98,11 @@ module.exports = createMigration({
             name: 'user_pf_plan_daily_progress_5',
             using: 'BTREE',
             fields: [{ name: 'user_id' }, { name: 'pf_plan_id' }, { name: 'pf_plan_daily_id' }, { name: 'is_fulfilled' }],
+        },
+        {
+            name: 'user_pf_plan_daily_progress_6',
+            using: 'BTREE',
+            fields: [{ name: 'user_id' }, { name: 'pf_plan_id' }, { name: 'pf_plan_daily_id' }, { name: 'is_skip' }],
         },
     ],
 });

@@ -1,7 +1,7 @@
 import { body } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 
-export default ({ workoutService, pfPlanService }) => [
+export default ({ pfPlanService }) => [
     commonValidation.pfPlanIdValidation({ pfPlanService, field: 'id' }).custom(async (value, { req }) => {
         if (!(await pfPlanService.isPfPlanSelectedById(value, req.auth.user_id))) {
             throw new Error('Invalid PF plan.');
@@ -39,27 +39,5 @@ export default ({ workoutService, pfPlanService }) => [
             }
 
             return false;
-        }),
-    body('workout_exercise_id')
-        .trim()
-        .if(body('is_skip').equals(String(false)))
-        .if(
-            body('content_id').custom((value, { req }) => {
-                if (req.pfPlanContent.workout_id === undefined || req.pfPlanContent.workout_id === null) throw new Error();
-
-                return true;
-            }),
-        )
-        .notEmpty()
-        .withMessage('PF plan workout exercise id is required.')
-        .custom(async (value, { req }) => {
-            const workoutExercise = await workoutService.getWorkoutExerciseById(req.pfPlanContent.workout_id, value);
-            if (!workoutExercise) {
-                throw new Error('Invalid workout exercise.');
-            }
-
-            req.workoutExercise = workoutExercise;
-
-            return true;
         }),
 ];

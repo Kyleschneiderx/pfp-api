@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import * as dateFns from 'date-fns';
 import {
     ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
     PFPLAN_PHOTO_PATH,
@@ -934,12 +935,17 @@ export default class PfPlanService {
         const toRollback = [];
 
         try {
-            const pfPlanLastContentDay = await this.database.models.PfPlanDailies.findOne({
-                where: { pf_plan_id: pfPlanId },
-                order: [['day', 'DESC']],
-            });
+            const [pfPlanLastContentDay, pfPlanDailyTotalContents] = await Promise.all([
+                this.database.models.PfPlanDailies.findOne({
+                    where: { pf_plan_id: pfPlanId },
+                    order: [['day', 'DESC']],
+                }),
+                this.database.models.PfPlanDailyContents.count({
+                    where: { pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id },
+                }),
+            ]);
 
-            let [userPfPlanDailyProgress, userPfPlanProgress, pfPlanDailyProgressFulfilledContent] = await Promise.all([
+            let [userPfPlanDailyProgress, userPfPlanProgress, totalUserPfPlanDailyFulfilled] = await Promise.all([
                 this.database.models.UserPfPlanDailyProgress.findOne({
                     where: {
                         user_id: data.userId,
@@ -953,59 +959,11 @@ export default class PfPlanService {
                     where: { user_id: data.userId, pf_plan_id: pfPlanId, day: data.content.day },
                 }),
                 this.database.models.UserPfPlanDailyProgress.count({
-                    where: { user_id: data.userId, pf_plan_id: pfPlanId, is_fulfilled: true, day: data.content.day },
+                    where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_fulfilled: true },
                 }),
             ]);
 
-            pfPlanDailyProgressFulfilledContent += 1;
-
-            if (data.isSkip) {
-                pfPlanDailyProgressFulfilledContent -= 1;
-            }
-
-            let isPfPlanContentFulfilled = 1 - Number(data.isSkip);
-
-            if (data.workoutExercise !== undefined) {
-                const [totalWorkoutExercise, userPfPlanWorkoutFulfilledCount] = await Promise.all([
-                    this.database.models.WorkoutExercises.count({
-                        where: { workout_id: data.workoutExercise.workout_id },
-                    }),
-                    this.database.models.UserPfPlanWorkoutProgress.count({
-                        where: { user_id: data.userId, pf_plan_id: pfPlanId, workout_id: data.workoutExercise.workout_id },
-                    }),
-                ]);
-
-                const pfPlanWorkoutProgress = await this.database.models.UserPfPlanWorkoutProgress.create({
-                    user_id: data.userId,
-                    pf_plan_id: pfPlanId,
-                    workout_id: data.workoutExercise.workout_id,
-                    workout_exercise_id: data.workoutExercise.id,
-                    pf_plan_daily_id: data.content.pf_plan_daily_id,
-                    pf_plan_daily_content_id: data.content.id,
-                    fulfilled: Math.min(userPfPlanWorkoutFulfilledCount + 1, totalWorkoutExercise),
-                    unfulfilled: Math.max(totalWorkoutExercise - (userPfPlanWorkoutFulfilledCount + 1), 0),
-                    total_exercise: totalWorkoutExercise,
-                });
-
-                toRollback.push(pfPlanWorkoutProgress);
-
-                if (pfPlanWorkoutProgress.fulfilled < pfPlanWorkoutProgress.total_exercise) {
-                    pfPlanDailyProgressFulfilledContent -= 1;
-                }
-
-                isPfPlanContentFulfilled = await this.database.models.UserPfPlanWorkoutProgress.count({
-                    where: { user_id: data.userId, pf_plan_id: pfPlanId, workout_id: data.workoutExercise.workout_id, unfulfilled: 0 },
-                });
-            }
-
-            const [pfPlanDailyProgressSkipped, pfPlanDailyTotalContents] = await Promise.all([
-                this.database.models.UserPfPlanDailyProgress.count({
-                    where: { user_id: data.userId, pf_plan_id: pfPlanId, day: data.content.day },
-                }),
-                this.database.models.PfPlanDailyContents.count({
-                    where: { pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id },
-                }),
-            ]);
+            totalUserPfPlanDailyFulfilled += Number(!data.isSkip);
 
             const userPfPlanDailyProgressResult = await this.database.models.UserPfPlanDailyProgress.upsert({
                 id: userPfPlanDailyProgress?.id,
@@ -1015,11 +973,9 @@ export default class PfPlanService {
                 pf_plan_daily_content_id: data.content.id,
                 day: data.content.day,
                 is_skip: data.isSkip,
-                is_fulfilled: Boolean(isPfPlanContentFulfilled),
-                total_days: pfPlanLastContentDay.day,
-                fulfilled: pfPlanDailyProgressFulfilledContent,
-                unfulfilled: pfPlanDailyTotalContents - pfPlanDailyProgressFulfilledContent,
-                skipped: pfPlanDailyProgressSkipped + Number(data.isSkip),
+                is_fulfilled: !data.isSkip,
+                fulfilled: totalUserPfPlanDailyFulfilled,
+                unfulfilled: Math.max(pfPlanDailyTotalContents - totalUserPfPlanDailyFulfilled, 0),
                 total_contents: pfPlanDailyTotalContents,
             });
 
@@ -1027,25 +983,14 @@ export default class PfPlanService {
 
             if (userPfPlanDailyProgressResult[1]) toRollback.push(userPfPlanDailyProgress);
 
-            const [userPfPlanFulfilled, userPfPlanSkipped] = await Promise.all([
-                this.database.models.UserPfPlanDailyProgress.count({
-                    where: { user_id: data.userId, pf_plan_id: pfPlanId, unfulfilled: 0 },
-                }),
-                this.database.models.UserPfPlanDailyProgress.count({
-                    where: { user_id: data.userId, pf_plan_id: pfPlanId, is_skip: true },
-                }),
-            ]);
-
-            userPfPlanDailyProgress.skipped = userPfPlanSkipped;
-
-            await userPfPlanDailyProgress.save();
-
-            const userPfPlanDailySkip = await this.database.models.UserPfPlanDailyProgress.count({
+            userPfPlanDailyProgress.skipped = await this.database.models.UserPfPlanDailyProgress.count({
                 where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_skip: true },
             });
 
-            const userPfPlanDailyFulfilled = await this.database.models.UserPfPlanDailyProgress.count({
-                where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, unfulfilled: 0 },
+            await userPfPlanDailyProgress.save();
+
+            const totalUserPfPlanFulfilled = await this.database.models.UserPfPlanDailyProgress.count({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId, unfulfilled: 0 },
             });
 
             const userPfPlanDailyWithSkip = await this.database.models.UserPfPlanDailyProgress.findAll({
@@ -1058,10 +1003,11 @@ export default class PfPlanService {
                 user_id: data.userId,
                 pf_plan_id: pfPlanId,
                 day: data.content.day,
-                has_skip: Boolean(userPfPlanDailySkip),
-                is_fulfilled: Boolean(userPfPlanDailyFulfilled),
-                fulfilled: userPfPlanFulfilled,
-                unfulfilled: pfPlanLastContentDay.day - userPfPlanFulfilled,
+                total_days: pfPlanLastContentDay.day,
+                has_skip: Boolean(userPfPlanDailyProgress.skipped),
+                is_fulfilled: !userPfPlanDailyProgress.unfulfilled,
+                fulfilled: totalUserPfPlanFulfilled,
+                unfulfilled: pfPlanLastContentDay.day - totalUserPfPlanFulfilled,
                 skipped: userPfPlanDailyWithSkip.length,
             });
 
@@ -1093,6 +1039,12 @@ export default class PfPlanService {
             userPfPlanProgress.forEach((progress) => {
                 userPfPlanProgressObject[progress.day] = progress;
             });
+
+            const startPlan = userPfPlan.created_at;
+
+            const currentDate = new Date();
+
+            const dayDifference = dateFns.differenceInDays(currentDate, startPlan);
 
             const pfPlan = await this.database.models.PfPlans.findOne({
                 nest: true,
@@ -1132,24 +1084,15 @@ export default class PfPlanService {
                                         'updated_at',
                                         'pf_plan_id',
                                         'pf_plan_daily_id',
-                                        'workout_id',
+                                        'exercise_id',
                                         'education_id',
                                         'arrangement',
                                     ],
                                 },
                                 include: [
                                     {
-                                        model: this.database.models.UserPfPlanWorkoutProgress,
-                                        as: 'user_pf_plan_workout_progress',
-                                        required: false,
-                                        attributes: ['workout_exercise_id'],
-                                        where: {
-                                            user_id: userPfPlan.user_id,
-                                        },
-                                    },
-                                    {
-                                        model: this.database.models.Workouts,
-                                        as: 'workout',
+                                        model: this.database.models.Exercises,
+                                        as: 'exercise',
                                         required: false,
                                         attributes: {
                                             exclude: ['deleted_at'],
@@ -1193,21 +1136,32 @@ export default class PfPlanService {
             }
 
             pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
-                pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
-                    if (pfPlanDailyContent.dataValues.workout) {
-                        pfPlanDailyContent.dataValues.workout.dataValues.fulfilled_workout_exercise_ids =
-                            pfPlanDailyContent.dataValues.user_pf_plan_workout_progress.map((progress) => progress.workout_exercise_id);
+                const defaultContentProgress =
+                    pfPlanDaily.day <= dayDifference
+                        ? null
+                        : {
+                              is_skip: false,
+                              is_fulfilled: false,
+                          };
 
-                        pfPlanDailyContent.dataValues.workout.photo = this.helper.generateProtectedUrl(
-                            pfPlanDailyContent.workout?.photo,
+                pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
+                    if (pfPlanDailyContent.dataValues.exercise) {
+                        pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
+                            pfPlanDailyContent.exercise?.photo,
+                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                            {
+                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                            },
+                        );
+
+                        pfPlanDailyContent.dataValues.exercise.video = this.helper.generateProtectedUrl(
+                            pfPlanDailyContent.exercise?.video,
                             `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
                             {
                                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
                             },
                         );
                     }
-
-                    delete pfPlanDailyContent.dataValues.user_pf_plan_workout_progress;
 
                     if (pfPlanDailyContent.dataValues.education) {
                         pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
@@ -1232,25 +1186,27 @@ export default class PfPlanService {
                               is_skip: pfPlanDaily.user_pf_plan_daily_progress?.is_skip,
                               is_fulfilled: pfPlanDaily.user_pf_plan_daily_progress?.is_fulfilled,
                           }
-                        : {
-                              is_skip: false,
-                              is_fulfilled: false,
-                          };
+                        : defaultContentProgress;
 
                     return pfPlanDailyContent;
                 });
 
                 const dayProgress = userPfPlanProgressObject?.[pfPlanDaily.day];
 
+                const defaultDayProgress =
+                    pfPlanDaily.day <= dayDifference
+                        ? null
+                        : {
+                              has_skip: false,
+                              is_fulfilled: false,
+                          };
+
                 pfPlanDaily.dataValues.day_progress = dayProgress
                     ? {
                           has_skip: dayProgress?.has_skip,
                           is_fulfilled: dayProgress?.is_fulfilled,
                       }
-                    : {
-                          has_skip: false,
-                          is_fulfilled: false,
-                      };
+                    : defaultDayProgress;
 
                 delete pfPlanDaily.dataValues.pf_plan_daily_contents;
 
@@ -1259,7 +1215,7 @@ export default class PfPlanService {
                 return pfPlanDaily;
             });
 
-            pfPlan.dataValues.start_at = userPfPlan.created_at;
+            pfPlan.dataValues.start_at = startPlan;
 
             return pfPlan;
         } catch (error) {
