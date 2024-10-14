@@ -2,12 +2,13 @@ import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_S
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserController {
-    constructor({ userService, verificationService, authService, pfPlanService, miscellaneousService }) {
+    constructor({ userService, verificationService, authService, pfPlanService, miscellaneousService, notificationService }) {
         this.userService = userService;
         this.verificationService = verificationService;
         this.authService = authService;
         this.pfPlanService = pfPlanService;
         this.miscellaneousService = miscellaneousService;
+        this.notificationService = notificationService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -23,6 +24,10 @@ export default class UserController {
             statusId: ACTIVE_STATUS_ID,
             verified_at: new Date(),
         });
+
+        if (req.body.device_token !== undefined) {
+            await this.notificationService.addUserDeviceToken(req.user.id, req.body.device_token);
+        }
 
         const token = this.authService.generateSession(user);
 

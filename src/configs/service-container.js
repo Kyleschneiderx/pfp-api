@@ -140,19 +140,16 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         workoutService: serviceContainer.workoutService,
         userService: serviceContainer.userService,
-        notificationService: serviceContainer.notificationService,
     }),
     pfPlanController: new controllers.PfPlanController({
         logger: serviceContainer.logger,
         pfPlanService: serviceContainer.pfPlanService,
         userService: serviceContainer.userService,
-        notificationService: serviceContainer.notificationService,
     }),
     educationController: new controllers.EducationController({
         logger: serviceContainer.logger,
         educationService: serviceContainer.educationService,
         userService: serviceContainer.userService,
-        notificationService: serviceContainer.notificationService,
     }),
     miscellaneousController: new controllers.MiscellaneousController({
         logger: serviceContainer.logger,
