@@ -6,6 +6,10 @@ export default ({ exerciseService }) => [
             throw new Error('Exercise is associated with workout');
         }
 
+        if (await exerciseService.isExerciseAssociatedWithPfPlan(value)) {
+            throw new Error('Exercise is associated with PF plan');
+        }
+
         return true;
     }),
 ];

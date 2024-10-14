@@ -387,4 +387,21 @@ export default class ExerciseService {
             throw new exceptions.InternalServerError('Failed to check exercise association with workout', error);
         }
     }
+
+    /**
+     * Check if exercise is associated with PF plan
+     *
+     * @param {number} id Exercise id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check exercise association with PF plan
+     */
+    async isExerciseAssociatedWithPfPlan(id) {
+        try {
+            return Boolean(await this.database.models.PfPlanDailyContents.count({ where: { exercise_id: id } }));
+        } catch (error) {
+            this.logger.error('Failed to check exercise association with PF plan', error);
+
+            throw new exceptions.InternalServerError('Failed to check exercise association with PF plan', error);
+        }
+    }
 }
