@@ -756,7 +756,9 @@ export default class UserService {
                     where: {
                         status_id: ACTIVE_STATUS_ID,
                         last_login_at: {
-                            [Sequelize.Op.lt]: dateFns.format(dateFns.sub(new Date(), { days: INACTIVE_ACCOUNT_PERIOD_IN_DAYS }), DATE_FORMAT),
+                            [Sequelize.Op.lt]: new Date(
+                                dateFns.format(dateFns.sub(new Date(), { days: INACTIVE_ACCOUNT_PERIOD_IN_DAYS }), DATE_FORMAT),
+                            ),
                         },
                     },
                 },
