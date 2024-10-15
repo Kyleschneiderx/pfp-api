@@ -61,8 +61,6 @@ export default ({ userService, password, isAdmin, authService }) => [
 
             const googleId = decodedToken.firebase.identities['google.com'][0];
 
-            console.log(googleId);
-
             req.user = await userService.getUser({
                 googleId: googleId,
                 accountTypeId: constants.USER_ACCOUNT_TYPE_ID,
