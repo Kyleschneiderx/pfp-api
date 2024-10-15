@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import * as dateFns from 'date-fns';
 import {
     USER_ACCOUNT_TYPE_ID,
     ACTIVE_STATUS_ID,
@@ -13,6 +14,8 @@ import {
     FREE_USER_TYPE_ID,
     PREMIUM_USER_TYPE_ID,
     NOTIFICATIONS,
+    INACTIVE_ACCOUNT_PERIOD_IN_DAYS,
+    DATE_FORMAT,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -736,6 +739,32 @@ export default class UserService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check apple id', error);
+        }
+    }
+
+    /**
+     * Deactivate non active accounts
+     *
+     * @returns {Promise<void>}
+     * @throws {InternalServerError} If failed to deactivate inactive accounts
+     */
+    async deactivateInactiveAccounts() {
+        try {
+            await this.database.models.Users.update(
+                { status_id: INACTIVE_STATUS_ID },
+                {
+                    where: {
+                        status_id: ACTIVE_STATUS_ID,
+                        last_login_at: {
+                            [Sequelize.Op.lt]: dateFns.format(dateFns.sub(new Date(), { days: INACTIVE_ACCOUNT_PERIOD_IN_DAYS }), DATE_FORMAT),
+                        },
+                    },
+                },
+            );
+        } catch (error) {
+            this.logger.error('', error);
+
+            throw new exceptions.InternalServerError('Failed to reset user password', error);
         }
     }
 }

@@ -105,3 +105,5 @@ export const NOTIFICATIONS = {
     NEW_EDUCATION: 4,
     NEW_PF_PLAN: 5,
 };
+
+export const INACTIVE_ACCOUNT_PERIOD_IN_DAYS = 30;

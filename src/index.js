@@ -10,6 +10,7 @@ import compression from 'compression';
 import errorHandler from './middlewares/error-handler.js';
 import apiRoute from './routes/api.js';
 import serviceContainer from './configs/service-container.js';
+import tasks from './tasks/index.js';
 
 global.__dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -77,5 +78,9 @@ app.get('/', (req, res) => {
 });
 
 app.listen(process.env.APP_PORT, () => {
+    serviceContainer.scheduler.run(
+        tasks({ logger: serviceContainer.logger, userService: serviceContainer.userService, pfPlanService: serviceContainer.pfPlanService }),
+    );
+
     serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}`);
 });
