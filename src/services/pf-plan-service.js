@@ -98,6 +98,9 @@ export default class PfPlanService {
      * @param {number} data.dailies[].name PF plan daily name
      * @param {object[]} data.dailies[].content
      * @param {number=} data.dailies[].content[].exercise_id PF plan daily content exercise id
+     * @param {number=} data.dailies[].content[].sets PF plan daily content exercise sets
+     * @param {number=} data.dailies[].content[].reps PF plan daily content exercise reps
+     * @param {number=} data.dailies[].content[].hold PF plan daily content exercise hold
      * @param {number=} data.dailies[].content[].education_id PF plan daily content education id
      * @returns {Promise<PfPlans>} PfPlans instance
      * @throws {InternalServerError} If failed to create PF plan
@@ -196,7 +199,10 @@ export default class PfPlanService {
      * @param {number} data.dailies[].day PF plan daily day indicator
      * @param {number} data.dailies[].name PF plan daily name
      * @param {number} data.dailies[].content[].content_id PF plan daily content id
-     * @param {number=} data.dailies[].content[].workout_id PF plan daily content workout id
+     * @param {number=} data.dailies[].content[].exercise_id PF plan daily content workout id
+     * @param {number=} data.dailies[].content[].sets PF plan daily content exercise sets
+     * @param {number=} data.dailies[].content[].reps PF plan daily content exercise reps
+     * @param {number=} data.dailies[].content[].hold PF plan daily content exercise hold
      * @param {number=} data.dailies[].content[].education_id PF plan daily content education id
      * @returns {Promise<PfPlans>} PF plans model instance
      * @throws {InternalServerError} If failed to update pf plan
