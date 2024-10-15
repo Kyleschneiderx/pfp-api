@@ -10,6 +10,8 @@ import {
     FAVORITE_PF_PLAN_STATUS,
     NOTIFICATIONS,
     DRAFT_PF_PLAN_STATUS_ID,
+    PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS,
+    DATE_FORMAT,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -1391,5 +1393,48 @@ export default class PfPlanService {
 
             throw new exceptions.InternalServerError('Failed to check PF plan daily content', error);
         }
+    }
+
+    async resetPfPlanProgressElapsedRetentionPeriod() {
+        const userPfPlans = await this.database.models.UserPfPlans.findAll({
+            attributes: {
+                exclude: [],
+            },
+            where: {
+                id: {
+                    [Sequelize.Op.in]: Sequelize.literal(
+                        `(${this.database.dialect.queryGenerator
+                            .selectQuery('user_pf_plans', {
+                                attributes: [[Sequelize.fn('Max', Sequelize.col('id')), 'id']],
+                                group: ['user_id', 'pf_plan_id'],
+                            })
+                            .slice(0, -1)})`,
+                    ),
+                },
+                created_at: {
+                    [Sequelize.Op.lt]: new Date(
+                        dateFns.format(dateFns.sub(new Date(), { days: PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS }), DATE_FORMAT),
+                    ),
+                },
+                reset_at: null,
+            },
+            paranoid: false,
+        });
+
+        if (userPfPlans.length === 0) return;
+
+        await Promise.all(
+            userPfPlans.map(async (userPfPlan) => {
+                await this.database.models.UserPfPlanProgress.destroy({ where: { user_id: userPfPlan.user_id, pf_plan_id: userPfPlan.pf_plan_id } });
+
+                await this.database.models.UserPfPlanDailyProgress.destroy({
+                    where: { user_id: userPfPlan.user_id, pf_plan_id: userPfPlan.pf_plan_id },
+                });
+
+                userPfPlan.reset_at = new Date();
+
+                await userPfPlan.save();
+            }),
+        );
     }
 }
