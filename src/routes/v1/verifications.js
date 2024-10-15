@@ -26,5 +26,11 @@ export default ({ verificationController, verificationService, authService, user
         userController.handleVerifyEmailExist.bind(verificationController),
     );
 
+    router.get(
+        '/exist/sso/:token',
+        validateInput([validations.ssoExistValidation({ userService, authService })]),
+        userController.handleVerifySsoExist.bind(verificationController),
+    );
+
     return router;
 };

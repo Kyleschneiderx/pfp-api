@@ -706,4 +706,36 @@ export default class UserService {
             throw new exceptions.InternalServerError('Failed to get users summary', error);
         }
     }
+
+    /**
+     * Check if google id exist
+     *
+     * @param {string} googleId Google account id
+     * @returns {Promise<boolean>}
+     */
+    async isGoogleIdExist(googleId) {
+        try {
+            return Boolean(await this.database.models.Users.count({ where: { google_id: googleId } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check google id', error);
+        }
+    }
+
+    /**
+     * Check if apple id exist
+     *
+     * @param {string} appleId Apple account id
+     * @returns {Promise<boolean>}
+     */
+    async isAppleIdExist(appleId) {
+        try {
+            return Boolean(await this.database.models.Users.count({ where: { apple_id: appleId } }));
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to check apple id', error);
+        }
+    }
 }

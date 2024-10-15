@@ -136,4 +136,8 @@ export default class UserController {
 
         return res.json({ msg: 'Survey successfully submitted' });
     }
+
+    async handleVerifySsoExist(req, res) {
+        return res.status(204).send();
+    }
 }
