@@ -1,7 +1,6 @@
 import createLogger from '../common/logger/index.js';
 import sequelize from '../common/database/sequelize.js';
 import firebase from '../common/firebase/index.js';
-import pushNotification from '../common/push-notification/index.js';
 import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
@@ -17,8 +16,8 @@ const serviceContainer = {
     jwt: utils.Jwt,
     password: utils.Password,
     file: utils.File,
-    firebase: firebase,
-    pushNotification: pushNotification,
+    ssoAuthentication: firebase.auth(),
+    pushNotification: firebase.messaging(),
     smtp: new utils.Smtp(
         {
             [process.env.SMTP_TYPE]: configSmtp[process.env.SMTP_TYPE],
@@ -57,7 +56,7 @@ Object.assign(serviceContainer, {
         jwt: serviceContainer.jwt,
         password: serviceContainer.password,
         userService: serviceContainer.userService,
-        firebase: serviceContainer.firebase,
+        ssoAuthentication: serviceContainer.ssoAuthentication,
     }),
     verificationService: new services.VerificationService({
         logger: serviceContainer.logger,

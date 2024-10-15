@@ -49,11 +49,11 @@ export default ({ userService, password, isAdmin, authService }) => [
         .isString()
         .custom(async (value, { req }) => {
             const decodedToken = await authService.verifySocialMediaIdToken(value);
-            if (decodedToken?.firebase?.identities?.google.com === undefined) {
+            if (decodedToken?.firebase?.identities?.['google.com'] === undefined) {
                 throw new Error('Invalid google token.');
             }
 
-            const googleId = decodedToken.firebase.identities.google.com[0];
+            const googleId = decodedToken.firebase.identities['google.com'][0];
 
             req.user = await userService.getUser({
                 googleId: googleId,
@@ -74,11 +74,11 @@ export default ({ userService, password, isAdmin, authService }) => [
         .isString()
         .custom(async (value, { req }) => {
             const decodedToken = await authService.verifySocialMediaIdToken(value);
-            if (decodedToken?.firebase?.identities?.apple.com === undefined) {
+            if (decodedToken?.firebase?.identities?.['apple.com'] === undefined) {
                 throw new Error('Invalid apple token.');
             }
 
-            const appleId = decodedToken.firebase.identities.apple.com[0];
+            const appleId = decodedToken.firebase.identities['apple.com'][0];
 
             req.user = await userService.getUser({
                 appleId: appleId,

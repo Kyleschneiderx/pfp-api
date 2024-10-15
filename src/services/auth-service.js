@@ -8,11 +8,11 @@ import {
 } from '../constants/index.js';
 
 export default class AuthService {
-    constructor({ logger, database, jwt, firebase }) {
+    constructor({ logger, database, jwt, ssoAuthentication }) {
         this.database = database;
         this.logger = logger;
         this.jwt = jwt;
-        this.firebase = firebase;
+        this.ssoAuthentication = ssoAuthentication;
     }
 
     /**
@@ -186,7 +186,7 @@ export default class AuthService {
      */
     async verifySocialMediaIdToken(idToken) {
         try {
-            return await this.firebase.verifyIdToken(idToken);
+            return await this.ssoAuthentication.verifyIdToken(idToken);
         } catch (error) {
             this.logger.error('Failed to verify id token.', error);
 
