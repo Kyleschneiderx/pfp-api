@@ -762,9 +762,9 @@ export default class UserService {
                 },
             );
         } catch (error) {
-            this.logger.error('', error);
+            this.logger.error('Failed to deactivate inactive accounts', error);
 
-            throw new exceptions.InternalServerError('Failed to reset user password', error);
+            throw new exceptions.InternalServerError('Failed to deactivate inactive accounts', error);
         }
     }
 }
