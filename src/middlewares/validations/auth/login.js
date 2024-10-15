@@ -48,12 +48,20 @@ export default ({ userService, password, isAdmin, authService }) => [
         .withMessage('Google token is required.')
         .isString()
         .custom(async (value, { req }) => {
-            const decodedToken = await authService.verifySocialMediaIdToken(value);
+            let decodedToken;
+            try {
+                decodedToken = await authService.verifySocialMediaIdToken(value);
+            } catch (error) {
+                throw new Error('Invalid google token.');
+            }
+
             if (decodedToken?.firebase?.identities?.['google.com'] === undefined) {
                 throw new Error('Invalid google token.');
             }
 
             const googleId = decodedToken.firebase.identities['google.com'][0];
+
+            console.log(googleId);
 
             req.user = await userService.getUser({
                 googleId: googleId,
@@ -73,7 +81,13 @@ export default ({ userService, password, isAdmin, authService }) => [
         .withMessage('Apple token is required.')
         .isString()
         .custom(async (value, { req }) => {
-            const decodedToken = await authService.verifySocialMediaIdToken(value);
+            let decodedToken;
+            try {
+                decodedToken = await authService.verifySocialMediaIdToken(value);
+            } catch (error) {
+                throw new Error('Invalid apple token.');
+            }
+
             if (decodedToken?.firebase?.identities?.['apple.com'] === undefined) {
                 throw new Error('Invalid apple token.');
             }
