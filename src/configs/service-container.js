@@ -26,6 +26,7 @@ const serviceContainer = {
     ),
     storage: new utils.Storage({ driver: s3Client, logger: logger, file: utils.File, s3: s3, s3PreSigner: s3PreSigner }),
     helper: utils.Helper,
+    scheduler: new utils.Scheduler({ logger: logger }),
 };
 
 Object.assign(serviceContainer, {
