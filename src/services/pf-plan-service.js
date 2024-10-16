@@ -175,7 +175,7 @@ export default class PfPlanService {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
-                    reference: JSON.stringify({ id: pfPlanInfo.id, name: pfPlanInfo.name }),
+                    reference: JSON.stringify({ id: String(pfPlanInfo.id), name: pfPlanInfo.name }),
                 });
             }
 
@@ -334,7 +334,7 @@ export default class PfPlanService {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
-                    reference: JSON.stringify({ id: pfPlan.id, name: pfPlan.name }),
+                    reference: JSON.stringify({ id: String(pfPlan.id), name: pfPlan.name }),
                 });
             }
 

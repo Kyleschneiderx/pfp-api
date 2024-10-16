@@ -82,7 +82,7 @@ export default class WorkoutService {
                     this.notificationService.createNotification({
                         userId: undefined,
                         descriptionId: NOTIFICATIONS.NEW_WORKOUT,
-                        reference: JSON.stringify({ id: workout.id, name: workout.name }),
+                        reference: JSON.stringify({ id: String(workout.id), name: workout.name }),
                     });
                 }
 
@@ -175,7 +175,7 @@ export default class WorkoutService {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_WORKOUT,
-                    reference: JSON.stringify({ id: workout.id, name: workout.name }),
+                    reference: JSON.stringify({ id: String(workout.id), name: workout.name }),
                 });
             }
 
