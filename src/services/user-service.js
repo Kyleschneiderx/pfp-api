@@ -754,6 +754,7 @@ export default class UserService {
                 { status_id: INACTIVE_STATUS_ID },
                 {
                     where: {
+                        account_type_id: USER_ACCOUNT_TYPE_ID,
                         status_id: ACTIVE_STATUS_ID,
                         last_login_at: {
                             [Sequelize.Op.lt]: new Date(
