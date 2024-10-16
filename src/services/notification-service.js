@@ -39,19 +39,17 @@ export default class NotificationService {
                     if (userDeviceTokens.length) {
                         const pushNotificationResult = await Promise.allSettled(
                             userDeviceTokens.map(async (deviceToken) =>
-                                this.pushNotification.send(
-                                    {
-                                        data: notification.reference,
-                                        notification: {
-                                            title: notificationDescription.title,
-                                            body: notificationDescription.description,
-                                        },
-                                        token: deviceToken.token,
+                                this.pushNotification.send({
+                                    data: notification.reference,
+                                    notification: {
+                                        title: notificationDescription.title,
+                                        body: notificationDescription.description,
                                     },
-                                    true,
-                                ),
+                                    token: deviceToken.token,
+                                }),
                             ),
                         );
+
                         const deviceTokenToRemove = pushNotificationResult
                             .map((pushResult, index) => {
                                 if (pushResult.status === 'rejected') return userDeviceTokens[index].id;
