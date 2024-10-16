@@ -251,6 +251,8 @@ export default class NotificationService {
      * @throws {InternalServerError} If failed to add device token
      */
     async addUserDeviceToken(userId, deviceToken) {
+        if (deviceToken === null || deviceToken === '') return null;
+
         try {
             const [userDeviceToken] = await this.database.models.UserDeviceTokens.findOrCreate({
                 where: {
