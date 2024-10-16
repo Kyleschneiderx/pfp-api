@@ -3,7 +3,7 @@ export default ({ logger, pfPlanService }) => {
 
     return {
         name: name,
-        schedule: '*/5 * * * * *',
+        schedule: '0 0 * * *',
         process: async () => {
             logger.info(`Starting task [${name}]`);
             try {
