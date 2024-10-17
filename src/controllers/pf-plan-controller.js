@@ -19,6 +19,7 @@ export default class PfPlanController {
         const pfPlan = await this.pfPlanService.createPfPlan({
             name: req.body.name,
             description: req.body.description,
+            content: req.body.content,
             statusId: req.body.status_id,
             photo: req?.files?.photo,
             dailies: req.body.dailies,
@@ -63,6 +64,7 @@ export default class PfPlanController {
             id: req.params.id,
             name: req.body.name,
             description: req.body.description,
+            content: req.body.content,
             statusId: req.body.status_id,
             photo: req?.files?.photo,
             dailies: req.body.dailies,

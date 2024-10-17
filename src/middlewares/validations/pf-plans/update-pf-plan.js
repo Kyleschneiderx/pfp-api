@@ -19,6 +19,7 @@ export default ({ exerciseService, educationService, pfPlanService, selectionSer
             return true;
         }),
     body('description').trim().optional().notEmpty().isString(),
+    body('content').trim().optional().notEmpty().isString(),
     commonValidation
         .statusIdValidation({
             selectionService,

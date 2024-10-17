@@ -17,6 +17,7 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
             return true;
         }),
     body('description').trim().exists({ value: 'falsy' }).isString(),
+    body('content').trim().exists({ value: 'falsy' }).isString(),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     body('dailies')

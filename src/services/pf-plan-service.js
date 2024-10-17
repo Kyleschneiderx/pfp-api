@@ -93,6 +93,7 @@ export default class PfPlanService {
      * @param {object} data
      * @param {string} data.name PF plan name
      * @param {string} data.description PF plan description
+     * @param {string} data.content PF plan content
      * @param {number} data.statusId PF plan status id
      * @param {object} data.photo PF plan photo
      * @param {object[]=} data.dailies PF plan daily content
@@ -123,6 +124,7 @@ export default class PfPlanService {
                     {
                         name: data.name,
                         description: data.description,
+                        content: data.content,
                         photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
                         is_premium: true,
                         status_id: data.statusId,
@@ -194,6 +196,7 @@ export default class PfPlanService {
      * @param {number} data.id PF plan id
      * @param {string=} data.name PF plan name
      * @param {string=} data.description PF plan description
+     * @param {string} data.content PF plan content
      * @param {number=} data.statusId PF plan status id
      * @param {object=} data.photo PF plan photo
      * @param {object[]=} data.exercises PF plan exercises
@@ -228,6 +231,8 @@ export default class PfPlanService {
             pfPlan.name = data.name;
 
             pfPlan.description = data.description;
+
+            pfPlan.content = data.content;
 
             pfPlan.photo = storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : undefined;
 
@@ -380,6 +385,7 @@ export default class PfPlanService {
                 'id',
                 'name',
                 'description',
+                'content',
                 'photo',
                 'is_premium',
                 ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
@@ -500,6 +506,7 @@ export default class PfPlanService {
                     'id',
                     'name',
                     'description',
+                    'content',
                     'photo',
                     'is_premium',
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
@@ -1157,7 +1164,7 @@ export default class PfPlanService {
             const pfPlan = await this.database.models.PfPlans.findOne({
                 nest: true,
                 subQuery: false,
-                attributes: ['id', 'name', 'description', 'photo', 'is_premium', 'created_at', 'updated_at'],
+                attributes: ['id', 'name', 'description', 'content', 'photo', 'is_premium', 'created_at', 'updated_at'],
                 include: [
                     {
                         model: this.database.models.Statuses,

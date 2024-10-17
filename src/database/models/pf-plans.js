@@ -13,6 +13,9 @@ export default (sequelize, DataTypes) => {
             description: {
                 type: DataTypes.TEXT,
             },
+            content: {
+                type: DataTypes.TEXT,
+            },
             photo: {
                 type: DataTypes.STRING(300),
             },
