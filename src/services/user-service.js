@@ -163,7 +163,7 @@ export default class UserService {
             const hasIdSort = filter.sort.find((field) => field[0] === 'id');
 
             if (hasLastLoginSort !== undefined && hasIdSort === undefined) {
-                filter.sort.push(['id', 'DESC']);
+                filter.sort.push(['id', hasLastLoginSort[1]]);
             }
 
             options.order = this.helper.parseSortList(
