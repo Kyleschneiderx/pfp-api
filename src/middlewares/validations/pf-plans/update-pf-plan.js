@@ -74,7 +74,7 @@ export default ({ exerciseService, educationService, pfPlanService, selectionSer
         .isString()
         .isLength({ max: 150 })
         .custom(async (value, { req, pathValues }) => {
-            if (await pfPlanService.isPfPlanDailyNameExist(value, req.body.dailies[pathValues[0]].daily_id)) {
+            if (await pfPlanService.isPfPlanDailyNameExist(value, req.body.dailies[pathValues[0]].daily_id, req.params.id)) {
                 throw new Error('PF plan daily content name already exists.');
             }
 
@@ -86,7 +86,7 @@ export default ({ exerciseService, educationService, pfPlanService, selectionSer
         .isArray({ min: 1 })
         .withMessage('Daily contents should not be empty.'),
     body('dailies.*.contents.*').custom((value) => {
-        if (value.workout_id === undefined && value.education_id === undefined) throw new Error('Either workout or education is required');
+        if (value.exercise_id === undefined && value.education_id === undefined) throw new Error('Either exercise or education is required');
 
         if (value.exercise_id !== undefined) {
             if (value.sets === undefined) throw new Error('Number of sets is required.');

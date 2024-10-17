@@ -1347,12 +1347,17 @@ export default class PfPlanService {
      *
      * @param {string} name PF plan daily name
      * @param {number=} id PF plan daily id to be exempt
+     * @param {number=} pfPlanId PF plan id
      * @returns {boolean}
      * @throws {InternalServerError} If failed to check PF plan by name
      */
-    async isPfPlanDailyNameExist(name, id) {
+    async isPfPlanDailyNameExist(name, id, pfPlanId) {
         try {
-            return Boolean(await this.database.models.PfPlanDailies.count({ where: { name: name, ...(id && { id: { [Sequelize.Op.ne]: id } }) } }));
+            return Boolean(
+                await this.database.models.PfPlanDailies.count({
+                    where: { name: name, pf_plan_id: pfPlanId, ...(id && { id: { [Sequelize.Op.ne]: id } }) },
+                }),
+            );
         } catch (error) {
             this.logger.error(error.message, error);
 

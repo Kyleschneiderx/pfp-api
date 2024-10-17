@@ -1,6 +1,6 @@
 import { body } from 'express-validator';
 import * as commonValidation from '../common/index.js';
-import { DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID } from '../../../constants/index.js';
+import { DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID } from '../../../constants/index.js';
 
 export default ({ exerciseService, selectionService, file, educationService, pfPlanService }) => [
     body('name')
@@ -18,7 +18,7 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
         }),
     body('description').trim().exists({ value: 'falsy' }).isString(),
     body('content').trim().exists({ value: 'falsy' }).isString(),
-    commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
+    commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     body('dailies')
         .customSanitizer((value) => {
@@ -32,7 +32,7 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
 
             return value;
         })
-        .if(body('status_id').equals(String(PUBLISHED_WORKOUT_STATUS_ID)))
+        .if(body('status_id').equals(String(PUBLISHED_PF_PLAN_STATUS_ID)))
         .exists({ value: 'falsy' })
         .withMessage('Daily contents are required.'),
     body('dailies.*.day')
@@ -41,19 +41,7 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
         .withMessage('Day is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric(),
-    body('dailies.*.name')
-        .trim()
-        .exists({ values: 'falsy' })
-        .withMessage('Daily content name is required.')
-        .isString()
-        .isLength({ max: 150 })
-        .custom(async (value) => {
-            if (await pfPlanService.isPfPlanDailyNameExist(value)) {
-                throw new Error('PF plan daily content name already exists.');
-            }
-
-            return true;
-        }),
+    body('dailies.*.name').trim().exists({ values: 'falsy' }).withMessage('Daily content name is required.').isString().isLength({ max: 150 }),
     body('dailies.*.contents')
         .exists({ value: 'falsy' })
         .withMessage('Daily contents is required.')
