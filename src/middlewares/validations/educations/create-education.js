@@ -8,7 +8,7 @@ import {
     MAX_VIDEO_SIZE_IN_MB,
 } from '../../../constants/index.js';
 
-export default ({ selectionService, file, educationService }) => {
+export default ({ selectionService, file, educationService, pfPlanService }) => {
     const validateMediaType = (type, extension, allowed) => {
         if (!(type.includes('image') === true || type.includes('video') === true)) {
             throw new Error('You can only link image or video file.');
@@ -78,5 +78,6 @@ export default ({ selectionService, file, educationService }) => {
 
             return true;
         }),
+        commonValidation.pfPlanIdValidation({ pfPlanService, field: 'reference_pf_plan_id', isBody: true, isRequired: false }),
     ];
 };

@@ -88,6 +88,7 @@ export default class EducationService {
      * @param {string} data.description Education description
      * @param {string} data.content Education content
      * @param {number} data.statusId Education status id
+     * @param {number=} data.referencePfPlanId Education reference PF plan id
      * @param {object} data.photo Education photo
      * @param {object} data.mediaUrl Education media URL. Video/Image
      * @param {object} data.mediaUpload Education media upload. Video/Image
@@ -109,6 +110,7 @@ export default class EducationService {
                 title: data.title,
                 description: data.description,
                 content: data.content,
+                reference_pf_plan_id: data.referencePfPlanId,
                 media_url: data.mediaUrl,
                 media_upload: mediaStoreResponse?.path ? `${ASSET_URL}/${mediaStoreResponse?.path}` : null,
                 photo: photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : null,
@@ -158,6 +160,7 @@ export default class EducationService {
      * @param {string=} data.content Education content
      * @param {object=} data.photo Education photo
      * @param {number=} data.statusId Education status id
+     * @param {number=} data.referencePfPlanId Education reference PF plan id
      * @param {object=} data.mediaUrl Education media URL. Video/Image
      * @param {object=} data.mediaUpload Education media upload. Video/Image
      * @returns {Promise<Educations>} Educations model instance
@@ -188,6 +191,8 @@ export default class EducationService {
             education.description = data.description;
 
             education.content = data.content;
+
+            education.reference_pf_plan_id = data.referencePfPlanId;
 
             education.photo = photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : undefined;
 

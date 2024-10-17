@@ -25,6 +25,14 @@ export default (sequelize, DataTypes) => {
             media_upload: {
                 type: DataTypes.STRING(300),
             },
+            reference_pf_plan_id: {
+                type: DataTypes.INTEGER,
+                comment: 'see pf_plans table',
+                references: {
+                    model: 'pf_plans',
+                    key: 'id',
+                },
+            },
             status_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see statuses table',

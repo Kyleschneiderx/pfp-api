@@ -3,7 +3,7 @@ import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/educations/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ verifyAdmin, educationController, educationService, selectionService, file }) => {
+export default ({ verifyAdmin, educationController, educationService, selectionService, file, pfPlanService }) => {
     const router = express.Router();
 
     router.get('/', validateInput(validations.getEducationsValidation()), educationController.handleGetEducationsRoute.bind(educationController));
@@ -36,13 +36,13 @@ export default ({ verifyAdmin, educationController, educationService, selectionS
 
     router.post(
         '/',
-        validateInput(validations.createEducationValidation({ educationService, selectionService, file })),
+        validateInput(validations.createEducationValidation({ educationService, selectionService, file, pfPlanService })),
         educationController.handleCreateEducationRoute.bind(educationController),
     );
 
     router.put(
         '/:id',
-        validateInput(validations.updateEducationValidation({ educationService, selectionService, file })),
+        validateInput(validations.updateEducationValidation({ educationService, selectionService, file, pfPlanService })),
         educationController.handleUpdateEducationRoute.bind(educationController),
     );
 

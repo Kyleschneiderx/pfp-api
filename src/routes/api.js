@@ -184,6 +184,7 @@ export default ({
             educationService: educationService,
             selectionService: selectionService,
             file: file,
+            pfPlanService: pfPlanService,
         }),
     );
 

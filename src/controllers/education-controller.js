@@ -23,6 +23,7 @@ export default class EducationController {
             mediaUpload: req?.files?.media_upload,
             photo: req?.files?.photo,
             statusId: req.body.status_id,
+            referencePfPlanId: req.body.reference_pf_plan_id,
         });
 
         return res.status(201).json(education);
@@ -70,6 +71,7 @@ export default class EducationController {
             mediaUpload: req?.files?.media_upload,
             photo: req?.files?.photo,
             statusId: req.body.status_id,
+            referencePfPlanId: req.body.reference_pf_plan_id,
         });
 
         return res.json(education);
