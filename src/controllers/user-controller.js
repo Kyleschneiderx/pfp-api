@@ -118,7 +118,11 @@ export default class UserController {
     }
 
     async handleGetUserSummaryRoute(req, res) {
-        return res.json(await this.userService.getUserSummary());
+        return res.json(
+            await this.userService.getUserSummary({
+                period: req.query.period,
+            }),
+        );
     }
 
     async handleGetUserPfPlanProgressRoute(req, res) {

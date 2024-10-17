@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
 import * as dateFns from 'date-fns';
+import * as dateFnsUtc from '@date-fns/utc';
 import {
     USER_ACCOUNT_TYPE_ID,
     ACTIVE_STATUS_ID,
@@ -16,6 +17,14 @@ import {
     NOTIFICATIONS,
     INACTIVE_ACCOUNT_PERIOD_IN_DAYS,
     DATE_FORMAT,
+    MONTHLY_RANGE_PERIOD,
+    WEEKLY_RANGE_PERIOD,
+    WEEKLY_PERIOD,
+    WEEKLY_PERIOD_UNIT,
+    MONTHLY_PERIOD_UNIT,
+    MONTHLY_PERIOD_LABEL_FORMAT,
+    WEEKLY_PERIOD_LABEL_FORMAT,
+    MONTHLY_PERIOD,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -666,42 +675,93 @@ export default class UserService {
     /**
      * Get user summary
      *
-     * @returns {Promise<{
-     * total: number,
-     * users_per_status: Array<{ status_id: number, count: number }>,
-     * users_per_type: Array<{ type_id: number, count: number }>
-     * }>}
+     * @param {object} filter
+     * @param {string=} filter.period Weekly/Monthly
+     * @returns {Promise<{}>}
      * @throws {InternalServerError} If failed to get users summary
      */
-    async getUserSummary() {
+    async getUserSummary(filter) {
         try {
-            const totalUsers = await this.database.models.Users.count({
-                where: {
-                    account_type_id: USER_ACCOUNT_TYPE_ID,
-                },
+            let periodUnit = MONTHLY_PERIOD_UNIT;
+
+            let periodRange = MONTHLY_RANGE_PERIOD;
+
+            let periodLabelFormat = MONTHLY_PERIOD_LABEL_FORMAT;
+
+            if (filter.period === WEEKLY_PERIOD) {
+                periodUnit = WEEKLY_PERIOD_UNIT;
+
+                periodRange = WEEKLY_RANGE_PERIOD;
+
+                periodLabelFormat = WEEKLY_PERIOD_LABEL_FORMAT;
+            }
+
+            const endDate = new Date(dateFns.format(new Date(), DATE_FORMAT));
+
+            const startDate = new Date(dateFns.format(dateFns.sub(endDate, { [periodUnit]: periodRange }), DATE_FORMAT));
+
+            const summaryDate = [];
+
+            for (let loopDate = startDate; loopDate <= endDate; loopDate = dateFns.add(loopDate, { [periodUnit]: 1 })) {
+                let reformatLoopDate = loopDate;
+
+                if (filter.period !== WEEKLY_PERIOD) {
+                    reformatLoopDate = dateFns.startOfMonth(loopDate);
+                }
+
+                summaryDate.push({
+                    start: dateFns.format(reformatLoopDate, DATE_FORMAT),
+                    end: dateFns.format(filter.period !== WEEKLY_PERIOD ? dateFns.endOfMonth(reformatLoopDate) : reformatLoopDate, DATE_FORMAT),
+                });
+            }
+
+            const summary = {};
+
+            const summaryDateData = await Promise.all(
+                summaryDate.map(async (date) =>
+                    this.database.models.Users.findAll({
+                        attributes: ['type_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+                        group: ['type_id'],
+                        where: {
+                            account_type_id: USER_ACCOUNT_TYPE_ID,
+                            created_at: {
+                                [Sequelize.Op.gte]: dateFns.startOfDay(new dateFnsUtc.UTCDate(date.start)),
+                                [Sequelize.Op.lte]: dateFns.endOfDay(new dateFnsUtc.UTCDate(date.end)),
+                            },
+                        },
+                        raw: true,
+                    }),
+                ),
+            );
+
+            summaryDateData.forEach((dateData, index) => {
+                summary[dateFns.format(summaryDate[index].start, periodLabelFormat)] = {
+                    free: dateData.find((item) => item.type_id === FREE_USER_TYPE_ID)?.count || 0,
+                    premium: dateData.find((item) => item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
+                };
             });
 
-            const userSummaryCount = await this.database.models.Users.findAll({
-                attributes: ['status_id', 'type_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
-                group: ['type_id', 'status_id'],
+            const uniqueSignupData = await this.database.models.Users.findAll({
+                attributes: ['type_id', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+                group: ['type_id'],
                 where: {
                     account_type_id: USER_ACCOUNT_TYPE_ID,
+                    created_at: {
+                        [Sequelize.Op.gte]: dateFns.startOfDay(new dateFnsUtc.UTCDate()),
+                        [Sequelize.Op.lte]: dateFns.endOfDay(new dateFnsUtc.UTCDate()),
+                    },
                 },
                 raw: true,
             });
 
+            const uniqueSignup = {
+                free: uniqueSignupData.find((item) => item.type_id === FREE_USER_TYPE_ID)?.count || 0,
+                premium: uniqueSignupData.find((item) => item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
+            };
+
             return {
-                total: totalUsers,
-                free: {
-                    active: userSummaryCount.find((item) => item.status_id === ACTIVE_STATUS_ID && item.type_id === FREE_USER_TYPE_ID)?.count || 0,
-                    inactive:
-                        userSummaryCount.find((item) => item.status_id === INACTIVE_STATUS_ID && item.type_id === FREE_USER_TYPE_ID)?.count || 0,
-                },
-                premium: {
-                    active: userSummaryCount.find((item) => item.status_id === ACTIVE_STATUS_ID && item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
-                    inactive:
-                        userSummaryCount.find((item) => item.status_id === INACTIVE_STATUS_ID && item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
-                },
+                periodic_summary: summary,
+                unique_signups: uniqueSignup,
             };
         } catch (error) {
             this.logger.error(error.message, error);

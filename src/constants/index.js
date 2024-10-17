@@ -2,6 +2,24 @@ export const DATE_FORMAT = 'yyyy-MM-dd';
 
 export const DATETIME_FORMAT = 'yyyy-MM-dd HH:mm:ss';
 
+export const DATE_YEAR_MONTH_FORMAT = 'yyyy-MM';
+
+export const MONTHLY_PERIOD = 'monthly';
+
+export const WEEKLY_PERIOD = 'weekly';
+
+export const MONTHLY_PERIOD_UNIT = 'months';
+
+export const WEEKLY_PERIOD_UNIT = 'days';
+
+export const MONTHLY_PERIOD_LABEL_FORMAT = 'MMM';
+
+export const WEEKLY_PERIOD_LABEL_FORMAT = 'MMM dd';
+
+export const MONTHLY_RANGE_PERIOD = 11;
+
+export const WEEKLY_RANGE_PERIOD = 6;
+
 export const AUTH_TOKEN_EXPIRATION_IN_MINUTES = 60;
 
 export const USER_ACCOUNT_TYPE_ID = 2;
