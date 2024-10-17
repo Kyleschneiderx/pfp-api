@@ -24,7 +24,6 @@ import {
     MONTHLY_PERIOD_UNIT,
     MONTHLY_PERIOD_LABEL_FORMAT,
     WEEKLY_PERIOD_LABEL_FORMAT,
-    MONTHLY_PERIOD,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 

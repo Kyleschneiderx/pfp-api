@@ -1,4 +1,4 @@
-import { param, body, check } from 'express-validator';
+import { param, body } from 'express-validator';
 import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
 export default ({ pfPlanService, field = 'id', isRequired = true, isBody = false, isSelected = false }) => {
