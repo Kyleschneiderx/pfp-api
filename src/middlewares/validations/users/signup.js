@@ -29,7 +29,6 @@ export default ({ userService, file, verificationService, authService }) => [
             let payload;
             try {
                 payload = await authService.verifySocialMediaIdToken(value);
-
                 [req.body.google_id] = payload.firebase.identities['google.com'];
             } catch (error) {
                 throw new Error('Unable to verify token.', { cause: error });

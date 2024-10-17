@@ -26,7 +26,7 @@ export default class UserController {
         });
 
         if (req.body.device_token !== undefined) {
-            await this.notificationService.addUserDeviceToken(req.user.id, req.body.device_token);
+            await this.notificationService.addUserDeviceToken(user.id, req.body.device_token);
         }
 
         const token = this.authService.generateSession(user);
