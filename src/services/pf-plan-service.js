@@ -1040,8 +1040,8 @@ export default class PfPlanService {
      * @param {number} pfPlanId PF plan id
      * @param {object} data
      * @param {number} data.userId User account id
-     * @param {number} data.content PfPlanDailies instance
-     * @param {number=} data.workoutExercise WorkoutExercises instance
+     * @param {PfPlanDailies} data.pfPlanDaily PfPlanDailies instance
+     * @param {PfPlanDailyContents} data.content PfPlanDailyContents instance
      * @param {boolean=} data.isSkip Skip PF plan daily content
      * @throws {InternalServerError} If failed to update PF plan progress
      * @returns {Promise<void>}
@@ -1050,59 +1050,66 @@ export default class PfPlanService {
         const toRollback = [];
 
         try {
-            const [pfPlanLastContentDay, pfPlanDailyTotalContents] = await Promise.all([
-                this.database.models.PfPlanDailies.findOne({
-                    where: { pf_plan_id: pfPlanId },
-                    order: [['day', 'DESC']],
-                }),
-                this.database.models.PfPlanDailyContents.count({
-                    where: { pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id },
-                }),
-            ]);
-
-            let [userPfPlanDailyProgress, userPfPlanProgress, totalUserPfPlanDailyFulfilled] = await Promise.all([
-                this.database.models.UserPfPlanDailyProgress.findOne({
-                    where: {
-                        user_id: data.userId,
-                        pf_plan_id: pfPlanId,
-                        day: data.content.day,
-                        pf_plan_daily_id: data.content.pf_plan_daily_id,
-                        pf_plan_daily_content_id: data.content.id,
-                    },
-                }),
-                this.database.models.UserPfPlanProgress.findOne({
-                    where: { user_id: data.userId, pf_plan_id: pfPlanId, day: data.content.day },
-                }),
-                this.database.models.UserPfPlanDailyProgress.count({
-                    where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_fulfilled: true },
-                }),
-            ]);
-
-            totalUserPfPlanDailyFulfilled += Number(!data.isSkip);
-
-            const userPfPlanDailyProgressResult = await this.database.models.UserPfPlanDailyProgress.upsert({
-                id: userPfPlanDailyProgress?.id,
-                user_id: data.userId,
-                pf_plan_id: pfPlanId,
-                pf_plan_daily_id: data.content.pf_plan_daily_id,
-                pf_plan_daily_content_id: data.content.id,
-                day: data.content.day,
-                is_skip: data.isSkip,
-                is_fulfilled: !data.isSkip,
-                fulfilled: totalUserPfPlanDailyFulfilled,
-                unfulfilled: Math.max(pfPlanDailyTotalContents - totalUserPfPlanDailyFulfilled, 0),
-                total_contents: pfPlanDailyTotalContents,
+            const pfPlanLastContentDay = await this.database.models.PfPlanDailies.findOne({
+                where: { pf_plan_id: pfPlanId },
+                order: [['day', 'DESC']],
             });
 
-            [userPfPlanDailyProgress] = userPfPlanDailyProgressResult;
-
-            if (userPfPlanDailyProgressResult[1]) toRollback.push(userPfPlanDailyProgress);
-
-            userPfPlanDailyProgress.skipped = await this.database.models.UserPfPlanDailyProgress.count({
-                where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_skip: true },
+            let userPfPlanProgress = await this.database.models.UserPfPlanProgress.findOne({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId, day: data.pfPlanDaily.day },
             });
 
-            await userPfPlanDailyProgress.save();
+            let userPfPlanDailyProgress = null;
+
+            let totalUserPfPlanDailyFulfilled = null;
+
+            let pfPlanDailyTotalContents = null;
+
+            if (data.content !== undefined) {
+                [userPfPlanDailyProgress, totalUserPfPlanDailyFulfilled, pfPlanDailyTotalContents] = await Promise.all([
+                    this.database.models.UserPfPlanDailyProgress.findOne({
+                        where: {
+                            user_id: data.userId,
+                            pf_plan_id: pfPlanId,
+                            day: data.pfPlanDaily.day,
+                            pf_plan_daily_id: data.content.pf_plan_daily_id,
+                            pf_plan_daily_content_id: data.content.id,
+                        },
+                    }),
+                    this.database.models.UserPfPlanDailyProgress.count({
+                        where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_fulfilled: true },
+                    }),
+                    this.database.models.PfPlanDailyContents.count({
+                        where: { pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id },
+                    }),
+                ]);
+
+                totalUserPfPlanDailyFulfilled += Number(!data.isSkip);
+
+                const userPfPlanDailyProgressResult = await this.database.models.UserPfPlanDailyProgress.upsert({
+                    id: userPfPlanDailyProgress?.id,
+                    user_id: data.userId,
+                    pf_plan_id: pfPlanId,
+                    pf_plan_daily_id: data.content.pf_plan_daily_id,
+                    pf_plan_daily_content_id: data.content.id,
+                    day: data.pfPlanDaily.day,
+                    is_skip: data.isSkip,
+                    is_fulfilled: !data.isSkip,
+                    fulfilled: totalUserPfPlanDailyFulfilled,
+                    unfulfilled: Math.max(pfPlanDailyTotalContents - totalUserPfPlanDailyFulfilled, 0),
+                    total_contents: pfPlanDailyTotalContents,
+                });
+
+                [userPfPlanDailyProgress] = userPfPlanDailyProgressResult;
+
+                if (userPfPlanDailyProgressResult[1]) toRollback.push(userPfPlanDailyProgress);
+
+                userPfPlanDailyProgress.skipped = await this.database.models.UserPfPlanDailyProgress.count({
+                    where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_skip: true },
+                });
+
+                await userPfPlanDailyProgress.save();
+            }
 
             const totalUserPfPlanFulfilled = await this.database.models.UserPfPlanDailyProgress.count({
                 where: { user_id: data.userId, pf_plan_id: pfPlanId, unfulfilled: 0 },
@@ -1117,10 +1124,10 @@ export default class PfPlanService {
                 id: userPfPlanProgress?.id,
                 user_id: data.userId,
                 pf_plan_id: pfPlanId,
-                day: data.content.day,
+                day: data.pfPlanDaily.day,
                 total_days: pfPlanLastContentDay.day,
-                has_skip: Boolean(userPfPlanDailyProgress.skipped),
-                is_fulfilled: !userPfPlanDailyProgress.unfulfilled,
+                has_skip: userPfPlanDailyProgress ? Boolean(userPfPlanDailyProgress.skipped) : true,
+                is_fulfilled: userPfPlanDailyProgress ? !userPfPlanDailyProgress.unfulfilled : false,
                 fulfilled: totalUserPfPlanFulfilled,
                 unfulfilled: pfPlanLastContentDay.day - totalUserPfPlanFulfilled,
                 skipped: userPfPlanDailyWithSkip.length,

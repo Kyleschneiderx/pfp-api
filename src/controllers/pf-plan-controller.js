@@ -119,7 +119,7 @@ export default class PfPlanController {
         const pfPlanProgress = await this.pfPlanService.updatePfPlanProgress(req.params.id, {
             userId: req.auth.user_id,
             content: req.pfPlanContent,
-            workoutExercise: req.workoutExercise,
+            pfPlanDaily: req.pfPlanDaily,
             isSkip: req.body.is_skip,
         });
 
