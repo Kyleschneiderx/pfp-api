@@ -22,6 +22,7 @@
     "@aws-sdk/client-s3": "^3.645.0",
     "@aws-sdk/client-ses": "^3.645.0",
     "@aws-sdk/s3-request-presigner": "^3.666.0",
+    "@date-fns/utc": "^2.1.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
