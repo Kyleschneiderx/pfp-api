@@ -948,16 +948,26 @@ export default class PfPlanService {
      *
      * @param {number} id PF plan id
      * @param {number} userId User account id
+     * @param {object} data
+     * @param {boolean=} data.isStartOver Start over the PF plan progress
      * @returns {Promise<UserPfPlans>} UserPfPlans instance
      * @throws {InternalServerError} If failed to select PF plan program
      */
-    async selectPfPlan(id, userId) {
+    async selectPfPlan(id, userId, data) {
         try {
-            await this.database.models.UserPfPlans.destroy({ where: { user_id: userId } });
+            return await this.database.transaction(async (transaction) => {
+                await this.database.models.UserPfPlans.destroy({ where: { user_id: userId } }, { transaction });
 
-            return await this.database.models.UserPfPlans.create({ user_id: userId, pf_plan_id: id });
+                if (data.isStartOver) {
+                    await this.database.models.UserPfPlanDailyProgress.destroy({ where: { user_id: userId, pf_plan_id: id } }, { transaction });
+
+                    await this.database.models.UserPfPlanProgress.destroy({ where: { user_id: userId, pf_plan_id: id } }, { transaction });
+                }
+
+                return this.database.models.UserPfPlans.create({ user_id: userId, pf_plan_id: id }, { transaction });
+            });
         } catch (error) {
-            this.logger.error(error.message, error);
+            this.logger.error('Failed to select PF plan', error);
 
             throw new exceptions.InternalServerError('Failed to select PF plan', error);
         }

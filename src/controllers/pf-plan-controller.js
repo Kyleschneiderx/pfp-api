@@ -110,7 +110,7 @@ export default class PfPlanController {
             throw new exceptions.Forbidden('You cannot access this content.');
         }
 
-        await this.pfPlanService.selectPfPlan(req.params.id, req.auth.user_id);
+        await this.pfPlanService.selectPfPlan(req.params.id, req.auth.user_id, { isStartOver: req.body.is_start_over ?? false });
 
         return res.json({ msg: 'Successfully selected PF plan.' });
     }

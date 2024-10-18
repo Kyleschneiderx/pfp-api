@@ -28,7 +28,7 @@ export default ({ verifyAdmin, pfPlanController, pfPlanService, exerciseService,
 
     router.put(
         '/:id/select',
-        validateInput([commonValidations.pfPlanIdValidation({ pfPlanService, isSelected: true })]),
+        validateInput(validations.selectPfPlanValidation({ pfPlanService })),
         pfPlanController.handleSelectPfPlanRoute.bind(pfPlanController),
     );
 

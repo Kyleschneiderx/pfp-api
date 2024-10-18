@@ -1,7 +1,7 @@
 import { param, body } from 'express-validator';
 import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
-export default ({ pfPlanService, field = 'id', isRequired = true, isBody = false, isSelected = false }) => {
+export default ({ pfPlanService, field = 'id', isRequired = true, isBody = false }) => {
     let rule = param(field);
 
     if (isBody) rule = body(field);
@@ -28,18 +28,6 @@ export default ({ pfPlanService, field = 'id', isRequired = true, isBody = false
 
         return true;
     });
-
-    if (isSelected) {
-        rule.custom(async (value, { req }) => {
-            const isPfPlanSelected = await pfPlanService.isPfPlanSelectedById(value, req.auth.user_id);
-
-            if (isPfPlanSelected) {
-                throw new Error('PF plan is already selected.');
-            }
-
-            return true;
-        });
-    }
 
     return rule;
 };
