@@ -23,8 +23,12 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
-            answer: {
+            yes_no: {
                 type: DataTypes.TEXT,
+            },
+            if_yes_how_much_bother: {
+                type: DataTypes.TEXT,
+                comment: 'If yes, how much does it bother you?',
             },
             created_at: {
                 type: DataTypes.DATE,

@@ -16,5 +16,11 @@ export default ({ userService, miscellaneousService }) => [
 
             return true;
         }),
-    body('answers.*.answer').trim().exists({ value: 'falsy' }).withMessage('Survey answer is required.'),
+    body('answers.*.yes_no').trim().exists({ value: 'falsy' }).withMessage('Answer for yes or no is required.'),
+    body('answers.*.if_yes_how_much_bother')
+        .trim()
+        .if(body('answers.*.yes_no').equals('yes'))
+        .exists({ value: 'falsy' })
+        .custom((value) => value)
+        .withMessage('Answer for if yes, how much does it bother you? is required.'),
 ];

@@ -68,6 +68,16 @@ export default class MiscellaneousService {
         }
     }
 
+    /**
+     * Update user survey answer
+     *
+     * @param {number} userId User account id
+     * @param {object} answers
+     * @param {number} answers.question_id Survey question id
+     * @param {string} answers.yes_no Answer for the yes or no question
+     * @param {string=} answers.if_yes_how_much_bother Answer for the if yes, how much does it bother you? question
+     * @returns {Promise<void>}
+     */
     async updateUserSurveyAnswer(userId, answers) {
         try {
             const recordedAnswersResult = await this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } });
@@ -86,7 +96,8 @@ export default class MiscellaneousService {
                                 id: recordedAnswers[answer.question_id]?.id,
                                 user_id: userId,
                                 question_id: answer.question_id,
-                                answer: answer.answer,
+                                yes_no: answer.yes_no,
+                                if_yes_how_much_bother: answer.if_yes_how_much_bother,
                             },
                             {
                                 transaction: transaction,
