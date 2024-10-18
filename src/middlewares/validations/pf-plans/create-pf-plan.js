@@ -41,7 +41,21 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
         .withMessage('Day is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric(),
-    body('dailies.*.name').trim().exists({ values: 'falsy' }).withMessage('Daily content name is required.').isString().isLength({ max: 150 }),
+    body('dailies.*.name')
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Daily content name is required.')
+        .isString()
+        .isLength({ max: 150 })
+        .custom((value, { req, pathValues }) => {
+            const duplicate = req.body.dailies.find((daily, index) => index !== Number(pathValues[0]) && daily.name === value);
+
+            if (duplicate !== undefined) {
+                throw Error('Duplicate PF plan daily content name.');
+            }
+
+            return true;
+        }),
     body('dailies.*.contents')
         .exists({ value: 'falsy' })
         .withMessage('Daily contents is required.')
