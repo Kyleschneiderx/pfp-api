@@ -46,7 +46,6 @@ export default class PfPlanService {
      * @returns {object}
      */
     _extractPfPlanDefaultContentProgress(contentDay, elapsedDays, dailyProgress) {
-        console.log(contentDay, elapsedDays);
         const defaultContentProgress =
             elapsedDays < contentDay
                 ? null
@@ -1176,7 +1175,7 @@ export default class PfPlanService {
 
             const currentDate = new Date();
 
-            const dayDifference = dateFns.differenceInDays(currentDate, startPlan);
+            const dayDifference = dateFns.differenceInDays(dateFns.format(currentDate, DATE_FORMAT), dateFns.format(startPlan, DATE_FORMAT));
 
             const pfPlan = await this.database.models.PfPlans.findOne({
                 nest: true,
@@ -1424,6 +1423,11 @@ export default class PfPlanService {
         }
     }
 
+    /**
+     * Reset all paused PF plans progress that is passed retention period
+     *
+     * @returns {Promise<void>}
+     */
     async resetPfPlanProgressElapsedRetentionPeriod() {
         const userPfPlans = await this.database.models.UserPfPlans.findAll({
             attributes: {
