@@ -683,29 +683,38 @@ export default class UserService {
      * Get user summary
      *
      * @param {object} filter
-     * @param {string=} filter.period Weekly/Monthly
-     * @returns {Promise<{}>}
+     * @param {string=} filter.dateFrom Start date
+     * @param {string=} filter.dateTo End date
+     * @returns {Promise<{
+     * periodic_summary: {
+     *   [key: string]: {
+     *      free: number,
+     *      premium: number
+     *  }
+     * },
+     * unique_signups: {
+     *  free: number,
+     *  premium: number
+     *
+     * }
+     * }>}
      * @throws {InternalServerError} If failed to get users summary
      */
     async getUserSummary(filter) {
         try {
             let periodUnit = MONTHLY_PERIOD_UNIT;
 
-            let periodRange = MONTHLY_RANGE_PERIOD;
-
             let periodLabelFormat = MONTHLY_PERIOD_LABEL_FORMAT;
 
             if (filter.period === WEEKLY_PERIOD) {
                 periodUnit = WEEKLY_PERIOD_UNIT;
 
-                periodRange = WEEKLY_RANGE_PERIOD;
-
                 periodLabelFormat = WEEKLY_PERIOD_LABEL_FORMAT;
             }
 
-            const endDate = new Date(dateFns.format(new Date(), DATE_FORMAT));
+            const endDate = new Date(dateFns.format(filter.dateTo, DATE_FORMAT));
 
-            const startDate = new Date(dateFns.format(dateFns.sub(endDate, { [periodUnit]: periodRange }), DATE_FORMAT));
+            const startDate = new Date(dateFns.format(filter.dateFrom, DATE_FORMAT));
 
             const summaryDate = [];
 

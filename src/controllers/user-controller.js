@@ -121,6 +121,8 @@ export default class UserController {
         return res.json(
             await this.userService.getUserSummary({
                 period: req.query.period,
+                dateFrom: req.query.date_from,
+                dateTo: req.query.date_to,
             }),
         );
     }
