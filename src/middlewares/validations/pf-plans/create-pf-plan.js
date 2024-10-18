@@ -48,7 +48,9 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
         .isString()
         .isLength({ max: 150 })
         .custom((value, { req, pathValues }) => {
-            const duplicate = req.body.dailies.find((daily, index) => index !== Number(pathValues[0]) && daily.name === value);
+            const duplicate = req.body.dailies.find(
+                (daily, index) => index !== Number(pathValues[0]) && daily.name?.toLowerCase() === value?.toLowerCase(),
+            );
 
             if (duplicate !== undefined) {
                 throw Error('Duplicate PF plan daily content name.');
