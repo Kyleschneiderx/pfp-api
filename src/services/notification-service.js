@@ -252,18 +252,29 @@ export default class NotificationService {
         if (deviceToken === null || deviceToken === '') return null;
 
         try {
-            const [userDeviceToken] = await this.database.models.UserDeviceTokens.findOrCreate({
-                where: {
-                    user_id: userId,
-                    token: deviceToken,
-                },
-                defaults: {
-                    user_id: userId,
-                    token: deviceToken,
-                },
-            });
+            return await this.database.transaction(async (transaction) => {
+                let userDeviceToken = await this.database.models.UserDeviceTokens.findOne(
+                    { where: { token: deviceToken } },
+                    { transaction: transaction },
+                );
 
-            return userDeviceToken;
+                if (userDeviceToken && userDeviceToken.user_id !== userId) {
+                    await this.database.models.UserDeviceTokens.destroy({ where: { id: userDeviceToken.id } }, { transaction: transaction });
+
+                    userDeviceToken = null;
+                }
+
+                [userDeviceToken] = await this.database.models.UserDeviceTokens.upsert(
+                    {
+                        id: userDeviceToken?.id,
+                        user_id: userId,
+                        token: deviceToken,
+                    },
+                    { transaction: transaction },
+                );
+
+                return userDeviceToken;
+            });
         } catch (error) {
             this.logger.error('Failed to add device token.', error);
 
