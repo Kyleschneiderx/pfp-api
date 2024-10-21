@@ -49,7 +49,11 @@ export default ({
         exceptions: ['/api/v1/users/signup'],
     });
 
-    router.use(fileUpload());
+    router.use(
+        fileUpload({
+            limits: { fieldSize: 100 * 1024 * 1024 },
+        }),
+    );
 
     router.use(
         express.json({
