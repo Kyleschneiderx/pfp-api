@@ -104,6 +104,42 @@ export default class SelectionService {
     }
 
     /**
+     * Get subscription package list
+     * @param {object=} filter
+     * @param {number=} filter.id Subscription package id
+     * @returns {Promise<SubscriptionPackages[]>} Subscription package model
+     * @throws {InternalServerError} If failed to get subscription package
+     */
+    async getSubscriptionPackages(filter) {
+        try {
+            const list = await this.database.models.SubscriptionPackages.findAll({
+                nest: true,
+                attributes: {
+                    exclude: ['deleted_at'],
+                },
+                order: [['id', 'ASC']],
+                where: {
+                    ...(filter?.id && { id: filter.id }),
+                },
+            });
+
+            return list.map((item) => {
+                item.dataValues.price /= 100;
+
+                if (item.dataValues.discounted_price) {
+                    item.dataValues.discounted_price /= 100;
+                }
+
+                return item;
+            });
+        } catch (error) {
+            this.logger.error('Failed to get subscription package list', error);
+
+            throw new exceptions.InternalServerError('Failed to get subscription package list', error);
+        }
+    }
+
+    /**
      * Get overall selections
      * @param {object=} filter
      * @param {Array<string>=} filter.select Selections to return
@@ -136,6 +172,9 @@ export default class SelectionService {
             }),
             ...((filter.select?.includes('exercise_category') || filter.select?.length === 0 || filter.select === undefined) && {
                 exercise_category: await this.getExerciseCategories(filter?.exercise_category),
+            }),
+            ...((filter.select?.includes('subscription_package') || filter.select?.length === 0 || filter.select === undefined) && {
+                subscription_package: await this.getSubscriptionPackages(filter?.subscription_package),
             }),
         };
     }

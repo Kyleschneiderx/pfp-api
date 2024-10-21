@@ -10,6 +10,9 @@ export default (sequelize, DataTypes) => {
             name: {
                 type: DataTypes.STRING(100),
             },
+            short_description: {
+                type: DataTypes.STRING(60),
+            },
             description: {
                 type: DataTypes.TEXT,
             },
@@ -21,6 +24,9 @@ export default (sequelize, DataTypes) => {
             },
             is_recommended: {
                 type: DataTypes.BOOLEAN,
+            },
+            reference: {
+                type: DataTypes.STRING(100),
             },
             created_at: {
                 type: DataTypes.DATE,

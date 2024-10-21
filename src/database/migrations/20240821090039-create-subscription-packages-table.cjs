@@ -12,6 +12,9 @@ module.exports = createMigration({
         name: {
             type: DataTypes.STRING(100),
         },
+        short_description: {
+            type: DataTypes.STRING(60),
+        },
         description: {
             type: DataTypes.TEXT,
         },
@@ -23,6 +26,9 @@ module.exports = createMigration({
         },
         is_recommended: {
             type: DataTypes.BOOLEAN,
+        },
+        reference: {
+            type: DataTypes.STRING(100),
         },
         created_at: {
             type: DataTypes.DATE,
