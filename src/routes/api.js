@@ -112,6 +112,7 @@ export default ({
         '/v1/misc',
         routeV1Miscellaneous({
             miscellaneousController: miscellaneousController,
+            selectionService: selectionService,
         }),
     );
 

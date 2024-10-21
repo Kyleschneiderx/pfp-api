@@ -14,4 +14,13 @@ export default class MiscellaneousController {
     async handleGetSurveyQuestionsRoute(req, res) {
         return res.json(await this.miscellaneousService.getSurveyQuestions());
     }
+
+    async handleCreatePaymentRoute(req, res) {
+        const payment = await this.miscellaneousService.createPayment({
+            userId: req.auth.user_id,
+            package: req.subscriptionPackage,
+        });
+
+        return res.status(201).json(payment);
+    }
 }

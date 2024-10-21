@@ -310,4 +310,26 @@ export default class SelectionService {
             throw new exceptions.InternalServerError('Failed to verify status', error);
         }
     }
+
+    /**
+     * Get subscription package by id
+     *
+     * @param {number} id Subscription package id
+     * @returns {Promise<SubscriptionPackages>}
+     * @throws {InternalServerError} If failed to get subscription package
+     */
+    async getSubscriptionPackageById(id) {
+        try {
+            return await this.database.models.SubscriptionPackages.findOne({
+                attributes: {
+                    exclude: ['deleted_at'],
+                },
+                where: { id: id },
+            });
+        } catch (error) {
+            this.logger.error('Failed to get subscription package', error);
+
+            throw new exceptions.InternalServerError('Failed to get subscription package', error);
+        }
+    }
 }

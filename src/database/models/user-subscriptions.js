@@ -15,6 +15,9 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
+            reference: {
+                type: DataTypes.STRING(100),
+            },
             package_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see subscription_packages table',
@@ -25,6 +28,12 @@ export default (sequelize, DataTypes) => {
             },
             price: {
                 type: DataTypes.DOUBLE(20, 2),
+            },
+            status: {
+                type: DataTypes.STRING(20),
+            },
+            response: {
+                type: DataTypes.TEXT('long'),
             },
             created_at: {
                 type: DataTypes.DATE,
@@ -51,9 +60,29 @@ export default (sequelize, DataTypes) => {
                     fields: [{ name: 'package_id' }],
                 },
                 {
+                    name: 'user_subscriptions_reference',
+                    using: 'BTREE',
+                    fields: [{ name: 'reference' }],
+                },
+                {
+                    name: 'user_subscriptions_status',
+                    using: 'BTREE',
+                    fields: [{ name: 'status' }],
+                },
+                {
                     name: 'user_subscriptions_user_id_package_id',
                     using: 'BTREE',
                     fields: [{ name: 'user_id' }, { name: 'package_id' }],
+                },
+                {
+                    name: 'user_subscriptions_user_id_reference',
+                    using: 'BTREE',
+                    fields: [{ name: 'user_id' }, { name: 'reference' }],
+                },
+                {
+                    name: 'user_subscriptions_user_id_status',
+                    using: 'BTREE',
+                    fields: [{ name: 'user_id' }, { name: 'status' }],
                 },
             ],
         },

@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
@@ -110,6 +111,40 @@ export default class MiscellaneousService {
             this.logger.error('Failed to answer survey', error);
 
             throw new exceptions.InternalServerError('Failed to answer survey', error);
+        }
+    }
+
+    /**
+     * Create payment for user subscription
+     *
+     * @param {object} data
+     * @param {userId} data.userId User account id
+     * @param {SubscriptionPackages} data.package SubscriptionPackages instance
+     * @returns {Promise<UserSubscriptions>} UserSubscriptions instance
+     * @throws {InternalServerError} If failed to create payment
+     */
+    async createPayment(data) {
+        try {
+            const payment = await this.database.models.UserSubscriptions.create({
+                user_id: data.userId,
+                reference: uuid(),
+                package_id: data.package.id,
+                price: data.package.discounted_price ?? data.package.price,
+            });
+
+            delete payment.dataValues.package_id;
+
+            delete data.package.dataValues.created_at;
+
+            delete data.package.dataValues.updated_at;
+
+            payment.dataValues.package = data.package;
+
+            return payment;
+        } catch (error) {
+            this.logger.error('Failed to create payment', error);
+
+            throw new exceptions.InternalServerError('Failed to create payemnt', error);
         }
     }
 }
