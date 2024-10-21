@@ -19,16 +19,16 @@ module.exports = createMigration({
             type: DataTypes.STRING(100),
         },
         request_header: {
-            type: DataTypes.TEXT,
+            type: DataTypes.TEXT('long'),
         },
         request: {
-            type: DataTypes.TEXT,
+            type: DataTypes.TEXT('long'),
         },
         response_header: {
-            type: DataTypes.TEXT,
+            type: DataTypes.TEXT('long'),
         },
         response: {
-            type: DataTypes.TEXT,
+            type: DataTypes.TEXT('long'),
         },
         status_code: {
             type: DataTypes.INTEGER,
