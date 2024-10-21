@@ -18,8 +18,22 @@ export default class Storage {
      * @param {object=} options
      */
     async store(name, data, path, options = {}) {
+        if (data === undefined) return {};
+
+        if (name === undefined) {
+            name = uuid();
+        }
+
         try {
-            const fileName = `${uuid()}.${this.file.extractExtension(name)}`;
+            let extension = this.file.extractExtension(name);
+
+            if (name === undefined && options?.contentType !== undefined) {
+                extension = this.file.getExtensionByMimeType(options?.contentType);
+
+                name = `${name}.${extension}`;
+            }
+
+            const fileName = `${uuid()}.${extension}`;
 
             const s3Response = await this.driver.send(
                 new this.s3.PutObjectCommand({
