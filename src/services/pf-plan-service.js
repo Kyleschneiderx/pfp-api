@@ -238,7 +238,7 @@ export default class PfPlanService {
 
             await pfPlan.reload();
 
-            if (storeResponse?.path && oldPhoto) {
+            if (storeResponse?.path !== undefined && oldPhoto) {
                 await this.storage.delete(oldPhoto.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
             }
 
