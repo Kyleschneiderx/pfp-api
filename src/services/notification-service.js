@@ -253,10 +253,7 @@ export default class NotificationService {
 
         try {
             return await this.database.transaction(async (transaction) => {
-                let userDeviceToken = await this.database.models.UserDeviceTokens.findOne(
-                    { where: { token: deviceToken } },
-                    { transaction: transaction },
-                );
+                let userDeviceToken = await this.database.models.UserDeviceTokens.findOne({ where: { token: deviceToken } });
 
                 if (userDeviceToken && userDeviceToken.user_id !== userId) {
                     await this.database.models.UserDeviceTokens.destroy({ where: { id: userDeviceToken.id } }, { transaction: transaction });
