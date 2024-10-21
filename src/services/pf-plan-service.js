@@ -108,15 +108,12 @@ export default class PfPlanService {
      * @throws {InternalServerError} If failed to create PF plan
      */
     async createPfPlan(data) {
+        let storeResponse;
         try {
-            let storeResponse;
-
-            if (data.photo !== undefined) {
-                storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
-                    contentType: data.photo.mimetype,
-                    s3: { bucket: process.env.S3_BUCKET_NAME },
-                });
-            }
+            storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
+                contentType: data.photo.mimetype,
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
 
             const pfPlanInfo = await this.database.transaction(async (transaction) => {
                 const pfPlan = await this.database.models.PfPlans.create(
@@ -182,6 +179,8 @@ export default class PfPlanService {
 
             return pfPlanInfo;
         } catch (error) {
+            await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
+
             this.logger.error('Failed to create PF plan.', error);
 
             throw new exceptions.InternalServerError('Failed to create PF plan', error);
@@ -214,12 +213,10 @@ export default class PfPlanService {
     async updatePfPlan(data) {
         let storeResponse;
         try {
-            if (data.photo !== undefined) {
-                storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
-                    contentType: data.photo.mimetype,
-                    s3: { bucket: process.env.S3_BUCKET_NAME },
-                });
-            }
+            storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
+                contentType: data.photo.mimetype,
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
 
             const pfPlan = await this.database.models.PfPlans.findOne({ where: { id: data.id } });
 
@@ -344,9 +341,7 @@ export default class PfPlanService {
 
             return pfPlan;
         } catch (error) {
-            if (storeResponse !== undefined) {
-                await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
-            }
+            await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
 
             this.logger.error('Failed to update PF plan.', error);
 
