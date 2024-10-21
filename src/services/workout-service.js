@@ -171,7 +171,7 @@ export default class WorkoutService {
                 });
             }
 
-            if (oldStatus === DRAFT_WORKOUT_STATUS_ID) {
+            if (oldStatus === DRAFT_WORKOUT_STATUS_ID && data.statusId === PUBLISHED_WORKOUT_STATUS_ID) {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_WORKOUT,

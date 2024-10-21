@@ -334,7 +334,7 @@ export default class PfPlanService {
                 });
             }
 
-            if (oldStatus === DRAFT_PF_PLAN_STATUS_ID) {
+            if (oldStatus === DRAFT_PF_PLAN_STATUS_ID && data.statusId === PUBLISHED_PF_PLAN_STATUS_ID) {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_PF_PLAN,

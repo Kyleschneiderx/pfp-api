@@ -226,7 +226,7 @@ export default class EducationService {
 
             delete education.dataValues.deleted_at;
 
-            if (oldStatus === DRAFT_EDUCATION_STATUS_ID) {
+            if (oldStatus === DRAFT_EDUCATION_STATUS_ID && data.statusId === PUBLISHED_EDUCATION_STATUS_ID) {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_EDUCATION,
