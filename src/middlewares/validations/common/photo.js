@@ -15,6 +15,8 @@ export default ({ field, file, isRequired = false }) => [
             return true;
         })
         .customSanitizer(async (value, { req }) => {
+            if (value === undefined || value === null || value === '') return;
+
             try {
                 const response = await fetch(value);
                 const contentType = response.headers.get('content-type');
