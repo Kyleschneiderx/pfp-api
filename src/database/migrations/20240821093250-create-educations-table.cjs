@@ -13,7 +13,7 @@ module.exports = createMigration({
             type: DataTypes.STRING(300),
         },
         content: {
-            type: DataTypes.TEXT,
+            type: DataTypes.TEXT('long'),
         },
         photo: {
             type: DataTypes.STRING(300),

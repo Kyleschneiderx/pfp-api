@@ -14,7 +14,7 @@ export default (sequelize, DataTypes) => {
                 type: DataTypes.TEXT,
             },
             content: {
-                type: DataTypes.TEXT,
+                type: DataTypes.TEXT('long'),
             },
             photo: {
                 type: DataTypes.STRING(300),

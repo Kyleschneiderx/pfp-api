@@ -6,7 +6,7 @@ module.exports = createMigration({
     schema: {},
     columns: {
         content: {
-            type: DataTypes.TEXT,
+            type: DataTypes.TEXT('long'),
             after: 'description',
         },
     },
