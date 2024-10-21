@@ -1,14 +1,15 @@
-import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID } from '../constants/index.js';
+import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID, APP_SETUP_ACCOUNT_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserController {
-    constructor({ userService, verificationService, authService, pfPlanService, miscellaneousService, notificationService }) {
+    constructor({ userService, verificationService, authService, pfPlanService, miscellaneousService, notificationService, emailService }) {
         this.userService = userService;
         this.verificationService = verificationService;
         this.authService = authService;
         this.pfPlanService = pfPlanService;
         this.miscellaneousService = miscellaneousService;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -155,5 +156,20 @@ export default class UserController {
         await this.userService.removeUserSubscription(req.params.user_id);
 
         return res.json({ msg: 'Subscription successfully removed' });
+    }
+
+    async handleSendUserInviteRoute(req, res) {
+        const user = await this.userService.getUser({ userId: req.params.user_id, withProfile: true });
+
+        const token = this.authService.generateSession(user);
+
+        await this.emailService.sendInviteEmail({
+            link: `${APP_SETUP_ACCOUNT_URL}${token}`,
+            receiver: {
+                address: user.email,
+                name: user.user_profile.name,
+            },
+        });
+        return res.json({ msg: 'Invite email successfully sent.' });
     }
 }

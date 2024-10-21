@@ -67,6 +67,12 @@ export default ({
     router.use(verifyAdmin);
 
     router.post(
+        '/:user_id/invite',
+        validateInput(validations.removeUserValidation({ userService })),
+        userController.handleSendUserInviteRoute.bind(userController),
+    );
+
+    router.post(
         '/',
         validateInput(validations.createUserValidation({ userService, file, selectionService })),
         userController.handleCreateUserRoute.bind(userController),

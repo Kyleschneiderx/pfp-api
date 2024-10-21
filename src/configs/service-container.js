@@ -32,7 +32,12 @@ const serviceContainer = {
 Object.assign(serviceContainer, {
     selectionService: new services.SelectionService({ database: serviceContainer.database, logger: serviceContainer.logger }),
     loggerService: new services.LoggerService({ logger: serviceContainer.logger, database: serviceContainer.database }),
-    emailService: new services.EmailService({ logger: serviceContainer.logger, smtp: serviceContainer.smtp, file: serviceContainer.file }),
+    emailService: new services.EmailService({
+        logger: serviceContainer.logger,
+        smtp: serviceContainer.smtp,
+        file: serviceContainer.file,
+        helper: serviceContainer.helper,
+    }),
     notificationService: new services.NotificationService({
         logger: serviceContainer.logger,
         database: serviceContainer.database,
@@ -115,6 +120,7 @@ Object.assign(serviceContainer, {
         pfPlanService: serviceContainer.pfPlanService,
         miscellaneousService: serviceContainer.miscellaneousService,
         notificationService: serviceContainer.notificationService,
+        emailService: serviceContainer.emailService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,
