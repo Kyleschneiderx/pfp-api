@@ -146,4 +146,14 @@ export default class UserController {
     async handleVerifySsoExist(req, res) {
         return res.status(204).send();
     }
+
+    async handleRemoveUserSubscriptionRoute(req, res) {
+        if (!(await this.userService.isUserPremium(req.params.user_id))) {
+            throw new exceptions.Forbidden('You cannot access this content.');
+        }
+
+        await this.userService.removeUserSubscription(req.params.user_id);
+
+        return res.json({ msg: 'Subscription successfully removed' });
+    }
 }

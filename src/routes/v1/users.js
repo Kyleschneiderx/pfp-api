@@ -31,6 +31,12 @@ export default ({
         userController.handleGetUserRoute.bind(userController),
     );
 
+    router.delete(
+        '/:user_id/subscription',
+        validateInput([commonValidations.userAccessUserIdValidation({ userService })]),
+        userController.handleRemoveUserSubscriptionRoute.bind(userController),
+    );
+
     router.put(
         '/:user_id/password',
         validateInput(validations.changePasswordValidation({ userService, password })),

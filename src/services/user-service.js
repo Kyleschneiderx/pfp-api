@@ -844,4 +844,29 @@ export default class UserService {
             throw new exceptions.InternalServerError('Failed to deactivate inactive accounts', error);
         }
     }
+
+    /**
+     * Remove user subscription
+     * @param {number} userId User account user id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to remove user subscription
+     */
+    async removeUserSubscription(userId) {
+        try {
+            return await this.database.models.Users.update(
+                {
+                    type_id: FREE_USER_TYPE_ID,
+                },
+                {
+                    where: {
+                        id: userId,
+                    },
+                },
+            );
+        } catch (error) {
+            this.logger.error('Failed to remove user subscription', error);
+
+            throw new exceptions.InternalServerError('Failed to remove user subscription', error);
+        }
+    }
 }
