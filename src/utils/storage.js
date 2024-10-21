@@ -50,7 +50,7 @@ export default class Storage {
      * @param {object=} options
      */
     async delete(path, options = {}) {
-        if (!path || path?.length === 0) return [];
+        if (!path || path === undefined || path?.length === 0) return [];
         try {
             if (!Array.isArray(path)) path = [path];
 
