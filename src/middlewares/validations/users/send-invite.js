@@ -13,7 +13,7 @@ export default ({ userService }) => {
         .custom((value, { req }) => {
             const { user } = req;
 
-            if (user === undefined) {
+            if (!user) {
                 throw new Error('Invalid user');
             }
 
