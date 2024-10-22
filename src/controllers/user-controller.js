@@ -174,7 +174,6 @@ export default class UserController {
     }
 
     async handleSetupPasswordRoute(req, res) {
-        console.log(234234234);
         await this.userService.resetUserPassword(req.auth.user_id, req.body.password);
 
         return res.json({ msg: 'Password successfully set.' });
