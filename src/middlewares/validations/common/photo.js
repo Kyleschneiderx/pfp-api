@@ -2,11 +2,13 @@ import { check, body } from 'express-validator';
 import * as constants from '../../../constants/index.js';
 
 export default ({ field, file, isRequired = false }) => [
-    body('photo')
+    body(field)
         .trim()
         .optional()
+        .if(body('photo').exists({ values: 'falsy' }))
         .isURL()
-        .withMessage('Photo must be URL')
+        .withMessage('Photo must be URL'),
+    body(field)
         .custom((value, { req }) => {
             if (req.files !== undefined) return true;
 
