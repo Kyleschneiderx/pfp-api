@@ -64,14 +64,20 @@ export default class WorkoutService {
                 });
 
                 if (data.exercises) {
+                    let arrangement = 0;
                     await this.database.models.WorkoutExercises.bulkCreate(
-                        data.exercises.map((exercise) => ({
-                            workout_id: workout.id,
-                            exercise_id: exercise.exercise_id,
-                            sets: exercise.sets,
-                            reps: exercise.reps,
-                            hold: exercise.hold,
-                        })),
+                        data.exercises.map((exercise) => {
+                            arrangement += 1;
+
+                            return {
+                                workout_id: workout.id,
+                                exercise_id: exercise.exercise_id,
+                                sets: exercise.sets,
+                                reps: exercise.reps,
+                                hold: exercise.hold,
+                                arrangement: arrangement,
+                            };
+                        }),
                         {
                             transaction: transaction,
                         },
@@ -113,8 +119,8 @@ export default class WorkoutService {
      * @throws {InternalServerError} If failed to update exercise
      */
     async updateWorkout(data) {
+        let storeResponse;
         try {
-            let storeResponse;
             if (data.photo !== undefined) {
                 storeResponse = await this.storage.store(data.photo.name, data.photo.data, WORKOUT_PHOTO_PATH, {
                     contentType: data.photo.mimetype,
@@ -153,20 +159,43 @@ export default class WorkoutService {
             delete workout.dataValues.deleted_at;
 
             if (data.exercises) {
-                await this.database.transaction(async (transaction) => {
-                    await this.database.models.WorkoutExercises.destroy({ where: { workout_id: workout.id }, transaction: transaction });
+                let arrangement = 0;
 
-                    await this.database.models.WorkoutExercises.bulkCreate(
-                        data.exercises.map((exercise) => ({
+                const toRemoveWorkoutExerciseIds = [];
+
+                const woroutExercises = await this.database.models.WorkoutExercises.findAll({ where: { workout_id: data.id } });
+
+                const upcomingWorkoutExerciseIds = data.exercises.map((incomingExercise) => Number(incomingExercise.workout_exercise_id));
+
+                woroutExercises.forEach((workoutExercise) => {
+                    if (!upcomingWorkoutExerciseIds.includes(workoutExercise.id)) {
+                        toRemoveWorkoutExerciseIds.push(workoutExercise.id);
+                    }
+                });
+
+                await this.database.transaction(async (transaction) => {
+                    await this.database.models.WorkoutExercises.destroy({ where: { id: toRemoveWorkoutExerciseIds }, transaction: transaction });
+
+                    const upsertPayloads = data.exercises.map((exercise) => {
+                        arrangement += 1;
+
+                        return {
+                            id: exercise.workout_exercise_id,
                             workout_id: workout.id,
                             exercise_id: exercise.exercise_id,
                             sets: exercise.sets,
                             reps: exercise.reps,
                             hold: exercise.hold,
-                        })),
-                        {
-                            transaction: transaction,
-                        },
+                            arrangement: arrangement,
+                        };
+                    });
+
+                    await Promise.all(
+                        upsertPayloads.map(async (payload) => {
+                            await this.database.models.WorkoutExercises.upsert(payload, {
+                                transaction: transaction,
+                            });
+                        }),
                     );
                 });
             }
@@ -181,6 +210,8 @@ export default class WorkoutService {
 
             return workout;
         } catch (error) {
+            await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
+
             this.logger.error('Failed to update workout.', error);
 
             throw new exceptions.InternalServerError('Failed to update workout', error);
@@ -311,7 +342,7 @@ export default class WorkoutService {
                         as: 'workout_exercises',
                         required: false,
                         attributes: {
-                            exclude: ['deleted_at', 'workout_id', 'day', 'created_at', 'updated_at', 'exercise_id'],
+                            exclude: ['deleted_at', 'workout_id', 'day', 'created_at', 'updated_at', 'exercise_id', 'arrangement'],
                         },
                         include: [
                             {
@@ -333,7 +364,10 @@ export default class WorkoutService {
                                 ],
                             },
                         ],
-                        order: [['id', 'DESC']],
+                        order: [
+                            ['arrangement', 'ASC'],
+                            ['id', 'DESC'],
+                        ],
                     },
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [
@@ -619,6 +653,24 @@ export default class WorkoutService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to check workout', error);
+        }
+    }
+
+    /**
+     * Check workout exercise exist by id
+     *
+     * @param {number} workoutId Workout exercise id
+     * @param {number} id Workout id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to check workout exercise
+     */
+    async isWorkoutExerciseExistById(id, workoutId) {
+        try {
+            return Boolean(await this.database.models.WorkoutExercises.count({ where: { id: id, ...(workoutId && { workout_id: workoutId }) } }));
+        } catch (error) {
+            this.logger.error('Failed to check workout exercise', error);
+
+            throw new exceptions.InternalServerError('Failed to check workout exercise', error);
         }
     }
 

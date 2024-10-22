@@ -49,6 +49,18 @@ export default ({ workoutService, exerciseService, selectionService, file }) => 
 
             return value;
         }),
+    body('exercises.*.workout_exercise_id')
+        .optional()
+        .notEmpty()
+        .withMessage('Workout exercise id is required.')
+        .customSanitizer((value) => Number(value))
+        .custom(async (value, { req }) => {
+            if (!(await workoutService.isWorkoutExerciseExistById(value, req.params.id))) {
+                throw new Error('Workout exercise does not exist.');
+            }
+
+            return true;
+        }),
     commonValidation.exerciseIdValidation({ exerciseService, isBody: true, field: 'exercises.*.exercise_id' }),
     body('exercises.*.sets')
         .trim()
