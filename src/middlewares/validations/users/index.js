@@ -6,3 +6,4 @@ export { default as signupValidation } from './signup.js';
 export { default as changePasswordValidation } from './change-password.js';
 export { default as getUserPfPlanProgressValidation } from './get-user-pf-plan-progress.js';
 export { default as updateUserSurveyAnswerValidation } from './update-user-survey-answer.js';
+export { default as sendInviteValidation } from './send-invite.js';

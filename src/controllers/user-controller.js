@@ -1,4 +1,11 @@
-import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID, APP_SETUP_ACCOUNT_URL } from '../constants/index.js';
+import {
+    REPORT_DEFAULT_PAGE,
+    REPORT_DEFAULT_ITEMS,
+    ACTIVE_STATUS_ID,
+    INACTIVE_STATUS_ID,
+    APP_SETUP_ACCOUNT_URL,
+    USER_ACCOUNT_TYPE_ID,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserController {
@@ -159,12 +166,12 @@ export default class UserController {
     }
 
     async handleSendUserInviteRoute(req, res) {
-        const user = await this.userService.getUser({ userId: req.params.user_id, withProfile: true });
+        const user = req.params.user_id;
 
         const token = this.authService.generateSession(user);
 
         await this.emailService.sendInviteEmail({
-            link: `${APP_SETUP_ACCOUNT_URL}${token}`,
+            link: `${APP_SETUP_ACCOUNT_URL}${token.access}`,
             receiver: {
                 address: user.email,
                 name: user.user_profile.name,

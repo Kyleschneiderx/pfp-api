@@ -118,7 +118,7 @@ export default class UserService {
             subQuery: false,
             limit: filter.pageItems,
             offset: filter.page * filter.pageItems - filter.pageItems,
-            attributes: ['id', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
+            attributes: ['id', 'password', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
             include: [
                 {
                     model: this.database.models.UserProfiles,
@@ -188,6 +188,8 @@ export default class UserService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
+            row.dataValues.can_invite = !row.dataValues.password;
+
             row.user_profile.photo = this.helper.generateProtectedUrl(
                 row.user_profile.photo,
                 `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
@@ -195,6 +197,8 @@ export default class UserService {
                     expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
                 },
             );
+
+            delete row.dataValues.password;
 
             return row;
         });

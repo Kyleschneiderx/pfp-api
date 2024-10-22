@@ -68,7 +68,7 @@ export default ({
 
     router.post(
         '/:user_id/invite',
-        validateInput(validations.removeUserValidation({ userService })),
+        validateInput([validations.sendInviteValidation({ userService })]),
         userController.handleSendUserInviteRoute.bind(userController),
     );
 
