@@ -688,6 +688,7 @@ export default class UserService {
      * @param {string=} filter.dateFrom Start date
      * @param {string=} filter.dateTo End date
      * @returns {Promise<{
+     * total_users: number,
      * periodic_summary: {
      *   [key: string]: {
      *      free: number,
@@ -777,7 +778,10 @@ export default class UserService {
                 premium: uniqueSignupData.find((item) => item.type_id === PREMIUM_USER_TYPE_ID)?.count || 0,
             };
 
+            uniqueSignup.total = uniqueSignup.free + uniqueSignup.premium;
+
             return {
+                total_users: await this.database.models.Users.count({ where: { account_type_id: USER_ACCOUNT_TYPE_ID } }),
                 periodic_summary: summary,
                 unique_signups: uniqueSignup,
             };
