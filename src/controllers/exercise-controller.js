@@ -1,8 +1,9 @@
-import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS } from '../constants/index.js';
+import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, SYSTEM_AUDITS } from '../constants/index.js';
 
 export default class ExerciseController {
-    constructor({ exerciseService }) {
+    constructor({ exerciseService, loggerService }) {
         this.exerciseService = exerciseService;
+        this.loggerService = loggerService;
     }
 
     async handleCreateExerciseRoute(req, res) {
@@ -17,6 +18,9 @@ export default class ExerciseController {
             photo: req.files?.photo,
             video: req.files?.video,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_EXERCISE);
+
         return res.status(201).json(exercise);
     }
 
@@ -48,6 +52,8 @@ export default class ExerciseController {
     async handleRemoveExerciseRoute(req, res) {
         await this.exerciseService.removeExercise(req.params.id);
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_EXERCISE);
+
         return res.json({ msg: 'Successfully removed exercise.' });
     }
 
@@ -64,6 +70,9 @@ export default class ExerciseController {
             photo: req.files?.photo,
             video: req.files?.video,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_EXERCISE);
+
         return res.json(list);
     }
 }

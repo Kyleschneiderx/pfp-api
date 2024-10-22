@@ -6,13 +6,15 @@ import {
     PUBLISHED_WORKOUT_STATUS_ID,
     FAVORITE_WORKOUT_STATUS,
     UNFAVORITE_WORKOUT_STATUS,
+    SYSTEM_AUDITS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutController {
-    constructor({ workoutService, userService }) {
+    constructor({ workoutService, userService, loggerService }) {
         this.workoutService = workoutService;
         this.userService = userService;
+        this.loggerService = loggerService;
     }
 
     async handleCreateWorkoutRoute(req, res) {
@@ -24,6 +26,9 @@ export default class WorkoutController {
             isPremium: req.body.is_premium,
             exercises: req.body.exercises,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_WORKOUT);
+
         return res.status(201).json(workout);
     }
 
@@ -62,6 +67,8 @@ export default class WorkoutController {
     async handleRemoveWorkoutRoute(req, res) {
         await this.workoutService.removeWorkout(req.params.id);
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_WORKOUT);
+
         return res.json({ msg: 'Successfully removed workout.' });
     }
 
@@ -75,17 +82,25 @@ export default class WorkoutController {
             isPremium: req.body.is_premium,
             exercises: req.body.exercises,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_WORKOUT);
+
         return res.json(workout);
     }
 
     async handleAddFavoriteWorkoutRoute(req, res) {
         const userWorkoutFavorite = await this.workoutService.updateUserFavoriteWorkouts(req.auth.user_id, req.params.id, FAVORITE_WORKOUT_STATUS);
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.ADD_FAVORITE_WORKOUT);
+
         return res.json(userWorkoutFavorite);
     }
 
     async handleRemoveFavoriteWorkoutRoute(req, res) {
         await this.workoutService.updateUserFavoriteWorkouts(req.auth.user_id, req.params.id, UNFAVORITE_WORKOUT_STATUS);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_FAVORITE_WORKOUT);
+
         return res.json({ msg: 'Successfully removed workout to favorites.' });
     }
 

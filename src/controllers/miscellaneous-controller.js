@@ -1,6 +1,9 @@
+import { SYSTEM_AUDITS } from '../constants/index.js';
+
 export default class MiscellaneousController {
-    constructor({ miscellaneousService }) {
+    constructor({ miscellaneousService, loggerService }) {
         this.miscellaneousService = miscellaneousService;
+        this.loggerService = loggerService;
     }
 
     async handleGetPrivacyPolicyRoute(req, res) {
@@ -20,6 +23,8 @@ export default class MiscellaneousController {
             userId: req.auth.user_id,
             package: req.subscriptionPackage,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_SUBSCRIPTION_PAYMENT);
 
         return res.status(201).json(payment);
     }

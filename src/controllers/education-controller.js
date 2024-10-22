@@ -5,13 +5,15 @@ import {
     FAVORITE_EDUCATION_STATUS,
     UNFAVORITE_EDUCATION_STATUS,
     PUBLISHED_EDUCATION_STATUS_ID,
+    SYSTEM_AUDITS,
 } from '../constants/index.js';
 
 export default class EducationController {
-    constructor({ educationService, userService, notificationService }) {
+    constructor({ educationService, userService, notificationService, loggerService }) {
         this.educationService = educationService;
         this.userService = userService;
         this.notificationService = notificationService;
+        this.loggerService = loggerService;
     }
 
     async handleCreateEducationRoute(req, res) {
@@ -25,6 +27,8 @@ export default class EducationController {
             statusId: req.body.status_id,
             referencePfPlanId: req.body.reference_pf_plan_id,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_EDUCATION);
 
         return res.status(201).json(education);
     }
@@ -58,6 +62,8 @@ export default class EducationController {
     async handleRemoveEducationRoute(req, res) {
         await this.educationService.removeEducation(req.params.id);
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_EDUCATION);
+
         return res.json({ msg: 'Successfully removed education.' });
     }
 
@@ -74,6 +80,8 @@ export default class EducationController {
             referencePfPlanId: req.body.reference_pf_plan_id,
         });
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_EDUCATION);
+
         return res.json(education);
     }
 
@@ -84,11 +92,16 @@ export default class EducationController {
             FAVORITE_EDUCATION_STATUS,
         );
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.ADD_FAVORITE_EDUCATION);
+
         return res.json(userWorkoutFavorite);
     }
 
     async handleRemoveFavoriteEducationRoute(req, res) {
         await this.educationService.updateUserFavoriteEducations(req.auth.user_id, req.params.id, UNFAVORITE_EDUCATION_STATUS);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_FAVORITE_EDUCATION);
+
         return res.json({ msg: 'Successfully removed education to favorites.' });
     }
 

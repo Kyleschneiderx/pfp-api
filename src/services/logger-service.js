@@ -22,4 +22,25 @@ export default class LoggerService {
 
         return apiLog;
     }
+
+    /**
+     * Generate system audit log
+     *
+     * @param {number} descriptionId System audit description id
+     * @param {object} data
+     * @returns {Promise<void>}
+     */
+    async logSystemAudit(userId, descriptionId) {
+        let audit;
+        try {
+            audit = this.database.models.SystemAudits.create({
+                user_id: userId,
+                description_id: descriptionId,
+            });
+        } catch (error) {
+            this.logger.error('Failed to log system aud.', error);
+        }
+
+        return audit;
+    }
 }

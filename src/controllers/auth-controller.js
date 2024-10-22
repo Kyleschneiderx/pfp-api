@@ -1,8 +1,11 @@
+import { SYSTEM_AUDITS } from '../constants/index.js';
+
 export default class AuthController {
-    constructor({ authService, userService, notificationService }) {
+    constructor({ authService, userService, notificationService, loggerService }) {
         this.authService = authService;
         this.userService = userService;
         this.notificationService = notificationService;
+        this.loggerService = loggerService;
     }
 
     async handleLoginRoute(req, res) {
@@ -17,6 +20,8 @@ export default class AuthController {
         delete req.user.dataValues.password;
         delete req.user.dataValues.google_id;
         delete req.user.dataValues.apple_id;
+
+        this.loggerService.logSystemAudit(req.user.id, SYSTEM_AUDITS.LOGIN);
 
         return res.json({
             user: req.user,

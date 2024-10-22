@@ -1,8 +1,24 @@
-import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID, APP_SETUP_ACCOUNT_URL } from '../constants/index.js';
+import {
+    REPORT_DEFAULT_PAGE,
+    REPORT_DEFAULT_ITEMS,
+    ACTIVE_STATUS_ID,
+    INACTIVE_STATUS_ID,
+    APP_SETUP_ACCOUNT_URL,
+    SYSTEM_AUDITS,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserController {
-    constructor({ userService, verificationService, authService, pfPlanService, miscellaneousService, notificationService, emailService }) {
+    constructor({
+        userService,
+        verificationService,
+        authService,
+        pfPlanService,
+        miscellaneousService,
+        notificationService,
+        emailService,
+        loggerService,
+    }) {
         this.userService = userService;
         this.verificationService = verificationService;
         this.authService = authService;
@@ -10,6 +26,7 @@ export default class UserController {
         this.miscellaneousService = miscellaneousService;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.loggerService = loggerService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -34,6 +51,8 @@ export default class UserController {
 
         await this.userService.updateUserLastLogin(user.id);
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_ACCOUNT);
+
         return res.status(201).json({
             user: user,
             token: token,
@@ -52,6 +71,8 @@ export default class UserController {
             photo: req.files?.photo,
         });
 
+        this.loggerService.logSystemAudit(user.id, SYSTEM_AUDITS.REGISTER);
+
         return res.status(201).json(user);
     }
 
@@ -66,11 +87,16 @@ export default class UserController {
             typeId: req.body.type_id,
             photo: req.files?.photo,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_ACCOUNT);
+
         return res.json(user);
     }
 
     async handleRemoveUserRoute(req, res) {
         await this.userService.removeUserAccount(req.params.user_id);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_ACCOUNT);
 
         return res.json({ msg: 'Successfully removed patient.' });
     }
@@ -107,6 +133,9 @@ export default class UserController {
 
     async handleChangePasswordRoute(req, res) {
         await this.userService.resetUserPassword(req.params.user_id, req.body.password);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CHANGE_PASSWORD);
+
         return res.json({ msg: 'Password successfully changed.' });
     }
 
@@ -115,6 +144,9 @@ export default class UserController {
             userId: req.params.user_id,
             photo: req.files?.photo,
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_ACCOUNT);
+
         return res.json({ photo: user.user_profile.photo });
     }
 
@@ -141,6 +173,8 @@ export default class UserController {
 
         await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
 
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SUBMIT_SURVEY);
+
         return res.json({ msg: 'Survey successfully submitted' });
     }
 
@@ -154,6 +188,8 @@ export default class UserController {
         }
 
         await this.userService.removeUserSubscription(req.params.user_id);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_SUBSCRIPTION);
 
         return res.json({ msg: 'Subscription successfully removed' });
     }
@@ -170,11 +206,16 @@ export default class UserController {
                 name: user.user_profile.name,
             },
         });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SEND_INVITE);
+
         return res.json({ msg: 'Invite email successfully sent.' });
     }
 
     async handleSetupPasswordRoute(req, res) {
         await this.userService.resetUserPassword(req.auth.user_id, req.body.password);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SETUP_PASSWORD);
 
         return res.json({ msg: 'Password successfully set.' });
     }

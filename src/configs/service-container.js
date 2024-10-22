@@ -111,6 +111,7 @@ Object.assign(serviceContainer, {
         userService: serviceContainer.userService,
         authService: serviceContainer.authService,
         notificationService: serviceContainer.notificationService,
+        loggerService: serviceContainer.loggerService,
     }),
     userController: new controllers.UserController({
         logger: serviceContainer.logger,
@@ -121,6 +122,7 @@ Object.assign(serviceContainer, {
         miscellaneousService: serviceContainer.miscellaneousService,
         notificationService: serviceContainer.notificationService,
         emailService: serviceContainer.emailService,
+        loggerService: serviceContainer.loggerService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,
@@ -137,29 +139,35 @@ Object.assign(serviceContainer, {
         userService: serviceContainer.userService,
         emailService: serviceContainer.emailService,
         verificationService: serviceContainer.verificationService,
+        loggerService: serviceContainer.loggerService,
     }),
     exerciseController: new controllers.ExerciseController({
         logger: serviceContainer.logger,
         exerciseService: serviceContainer.exerciseService,
+        loggerService: serviceContainer.loggerService,
     }),
     workoutController: new controllers.WorkoutController({
         logger: serviceContainer.logger,
         workoutService: serviceContainer.workoutService,
         userService: serviceContainer.userService,
+        loggerService: serviceContainer.loggerService,
     }),
     pfPlanController: new controllers.PfPlanController({
         logger: serviceContainer.logger,
         pfPlanService: serviceContainer.pfPlanService,
         userService: serviceContainer.userService,
+        loggerService: serviceContainer.loggerService,
     }),
     educationController: new controllers.EducationController({
         logger: serviceContainer.logger,
         educationService: serviceContainer.educationService,
         userService: serviceContainer.userService,
+        loggerService: serviceContainer.loggerService,
     }),
     miscellaneousController: new controllers.MiscellaneousController({
         logger: serviceContainer.logger,
         miscellaneousService: serviceContainer.miscellaneousService,
+        loggerService: serviceContainer.loggerService,
     }),
     notificationController: new controllers.NotificationController({
         logger: serviceContainer.logger,
