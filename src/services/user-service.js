@@ -677,7 +677,7 @@ export default class UserService {
         } catch (error) {
             this.logger.error(error.message, error);
 
-            throw new exceptions.InternalServerError('Failed to reset user password', error);
+            throw new exceptions.InternalServerError('Failed to set user password', error);
         }
     }
 

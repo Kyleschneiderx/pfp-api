@@ -1,11 +1,4 @@
-import {
-    REPORT_DEFAULT_PAGE,
-    REPORT_DEFAULT_ITEMS,
-    ACTIVE_STATUS_ID,
-    INACTIVE_STATUS_ID,
-    APP_SETUP_ACCOUNT_URL,
-    USER_ACCOUNT_TYPE_ID,
-} from '../constants/index.js';
+import { REPORT_DEFAULT_PAGE, REPORT_DEFAULT_ITEMS, ACTIVE_STATUS_ID, INACTIVE_STATUS_ID, APP_SETUP_ACCOUNT_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserController {
@@ -178,5 +171,12 @@ export default class UserController {
             },
         });
         return res.json({ msg: 'Invite email successfully sent.' });
+    }
+
+    async handleSetupPasswordRoute(req, res) {
+        console.log(234234234);
+        await this.userService.resetUserPassword(req.auth.user_id, req.body.password);
+
+        return res.json({ msg: 'Password successfully set.' });
     }
 }

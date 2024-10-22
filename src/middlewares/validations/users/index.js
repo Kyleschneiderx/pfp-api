@@ -7,3 +7,4 @@ export { default as changePasswordValidation } from './change-password.js';
 export { default as getUserPfPlanProgressValidation } from './get-user-pf-plan-progress.js';
 export { default as updateUserSurveyAnswerValidation } from './update-user-survey-answer.js';
 export { default as sendInviteValidation } from './send-invite.js';
+export { default as setupPasswordValidation } from './setup-password.js';

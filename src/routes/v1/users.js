@@ -25,6 +25,12 @@ export default ({
 
     router.get('/summary', [verifyAdmin], userController.handleGetUserSummaryRoute.bind(userController));
 
+    router.put(
+        '/setup-password',
+        validateInput(validations.setupPasswordValidation({ userService, password })),
+        userController.handleSetupPasswordRoute.bind(userController),
+    );
+
     router.get(
         '/:user_id',
         validateInput([commonValidations.userAccessUserIdValidation({ userService })]),
