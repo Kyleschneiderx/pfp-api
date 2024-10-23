@@ -100,10 +100,14 @@ export default class PfPlanController {
     }
 
     async handleGetFavoritePfPlansRoute(req, res) {
-        const favorites = await this.pfPlanService.getFavoritePfPlans({
-            userId: req.auth.user_id,
+        const favorites = await this.pfPlanService.getPfPlans({
+            authenticatedUser: req.auth,
             id: req.query.id,
             name: req.query.name,
+            statusId: PUBLISHED_PF_PLAN_STATUS_ID,
+            favorite: {
+                userId: req.auth.user_id,
+            },
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });

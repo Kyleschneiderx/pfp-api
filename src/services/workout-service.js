@@ -225,6 +225,8 @@ export default class WorkoutService {
      * @param {string=} filter.id Workout id
      * @param {string=} filter.name Workout name
      * @param {string=} filter.statusId Workout status id
+     * @param {object=} filter.favorite
+     * @param {number} filter.favorite.userId User account id
      * @param {Array=} filter.sort Field and order to be use for sorting
      * @example [ [ {field}:{order} ] ]
      * @param {number=} filter.page Page for list to navigate
@@ -254,6 +256,20 @@ export default class WorkoutService {
                     attributes: ['id', 'value'],
                     where: {},
                 },
+                ...(filter?.favorite?.userId
+                    ? [
+                          {
+                              model: this.database.models.UserFavoriteWorkouts,
+                              as: 'user_favorite_workouts',
+                              attributes: [],
+                              required: true,
+                              where: {
+                                  user_id: filter.favorite.userId,
+                                  is_favorite: true,
+                              },
+                          },
+                      ]
+                    : []),
             ],
             order: [['id', 'DESC']],
             where: {
@@ -515,86 +531,6 @@ export default class WorkoutService {
 
             throw new exceptions.InternalServerError('Failed to update favorite workouts.', error);
         }
-    }
-
-    /**
-     * Get favorite workouts for user
-     *
-     * @param {object} filter
-     * @param {number} filter.userId User account user id
-     * @param {string=} filter.id Workout id
-     * @param {string=} filter.name Workout name
-     * @param {number} filter.page Page number
-     * @param {number} filter.pageItems Items per page
-     * @returns {Promise<{
-     * data: Workouts[],
-     * page: number,
-     * page_items: number,
-     * max_page: number
-     * }>} Workouts instance and pagination details
-     * @throws {InternalServerError} If failed to get favorite workouts
-     * @throws {NotFoundError} If no records found
-     */
-    async getFavoriteWorkouts(filter) {
-        const options = {
-            nest: true,
-            subQuery: false,
-            limit: filter.pageItems,
-            offset: filter.page * filter.pageItems - filter.pageItems,
-            attributes: {
-                exclude: ['deleted_at', 'status_id'],
-            },
-            include: [
-                {
-                    model: this.database.models.Statuses,
-                    as: 'status',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
-                {
-                    model: this.database.models.UserFavoriteWorkouts,
-                    as: 'user_favorite_workouts',
-                    required: true,
-                    attributes: [],
-                    where: {
-                        user_id: filter.userId,
-                        is_favorite: true,
-                    },
-                },
-            ],
-            order: [['id', 'DESC']],
-            where: {
-                ...(filter.id && { id: filter.id }),
-                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
-            },
-        };
-
-        let count;
-        let rows;
-        try {
-            ({ count, rows } = await this.database.models.Workouts.findAndCountAll(options));
-        } catch (error) {
-            this.logger.error(error.message, error);
-
-            throw new exceptions.InternalServerError('Failed to get favorite workouts', error);
-        }
-
-        if (!rows.length) throw new exceptions.NotFound('No records found.');
-
-        rows = rows.map((row) => {
-            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
-
-            return row;
-        });
-
-        return {
-            data: rows,
-            page: filter.page,
-            page_items: filter.pageItems,
-            max_page: Math.ceil(count / filter.pageItems),
-        };
     }
 
     /**

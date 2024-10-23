@@ -106,10 +106,13 @@ export default class EducationController {
     }
 
     async handleGetFavoriteEducationsRoute(req, res) {
-        const favorites = await this.educationService.getFavoriteEducations({
-            userId: req.auth.user_id,
+        const favorites = await this.educationService.getEducations({
             id: req.query.id,
             title: req.query.title,
+            statusId: PUBLISHED_EDUCATION_STATUS_ID,
+            favorite: {
+                userId: req.auth.user_id,
+            },
             page: req.query.page ?? REPORT_DEFAULT_PAGE,
             pageItems: req.query.page_items ?? REPORT_DEFAULT_ITEMS,
         });

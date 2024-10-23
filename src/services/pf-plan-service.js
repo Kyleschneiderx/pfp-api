@@ -410,6 +410,9 @@ export default class PfPlanService {
      * @param {number=} filter.authenticatedUser Authenticated user
      * @param {string=} filter.id Pf plan id
      * @param {string=} filter.name Pf plan name
+     * @param {string=} filter.statusId PF plan status id
+     * @param {object=} filter.favorite
+     * @param {number} filter.favorite.userId User account id
      * @param {Array=} filter.sort Field and order to be use for sorting
      * @example [ [ {field}:{order} ] ]
      * @param {number=} filter.page Page for list to navigate
@@ -459,6 +462,20 @@ export default class PfPlanService {
                               required: false,
                               where: {
                                   user_id: filter?.authenticatedUser?.user_id,
+                              },
+                          },
+                      ]
+                    : []),
+                ...(filter?.favorite
+                    ? [
+                          {
+                              model: this.database.models.UserFavoritePfPlans,
+                              as: 'user_favorite_pf_plans',
+                              attributes: [],
+                              required: true,
+                              where: {
+                                  user_id: filter.favorite.userId,
+                                  is_favorite: true,
                               },
                           },
                       ]
@@ -809,85 +826,6 @@ export default class PfPlanService {
 
             throw new exceptions.InternalServerError('Failed to update favorite PF plans.', error);
         }
-    }
-
-    /**
-     * Get favorite PF plans for user
-     *
-     * @param {object} filter
-     * @param {number} filter.userId User account user id
-     * @param {string=} filter.id Pf Plan id
-     * @param {string=} filter.name Pf Plan name
-     * @param {number} filter.page Page number
-     * @param {number} filter.pageItems Items per page
-     * @returns {Promise<{
-     * data: PfPlans[],
-     * page: number,
-     * page_items: number,
-     * max_page: number
-     * }>} PfPlans instance and pagination details
-     * @throws {InternalServerError} If failed to get favorite PF plans
-     * @throws {NotFoundError} If no records found
-     */
-    async getFavoritePfPlans(filter) {
-        const options = {
-            nest: true,
-            subQuery: false,
-            limit: filter.pageItems,
-            offset: filter.page * filter.pageItems - filter.pageItems,
-            attributes: {
-                exclude: ['deleted_at', 'status_id'],
-            },
-            include: [
-                ...this._defaultPfPlansRelation(),
-                {
-                    model: this.database.models.UserFavoritePfPlans,
-                    as: 'user_favorite_pf_plans',
-                    required: true,
-                    attributes: [],
-                    where: {
-                        user_id: filter.userId,
-                        is_favorite: true,
-                    },
-                },
-            ],
-            order: [['id', 'DESC']],
-            where: {
-                ...(filter.id && { id: filter.id }),
-                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
-            },
-        };
-
-        let count;
-        let rows;
-        try {
-            ({ count, rows } = await this.database.models.PfPlans.findAndCountAll(options));
-        } catch (error) {
-            this.logger.error(error.message, error);
-
-            throw new exceptions.InternalServerError('Failed to get favorite PF plans', error);
-        }
-
-        if (!rows.length) throw new exceptions.NotFound('No records found.');
-
-        rows = rows.map((row) => {
-            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
-
-            row.media_upload = this.helper.generateProtectedUrl(row.media_upload, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
-
-            return row;
-        });
-
-        return {
-            data: rows,
-            page: filter.page,
-            page_items: filter.pageItems,
-            max_page: Math.ceil(count / filter.pageItems),
-        };
     }
 
     /**
