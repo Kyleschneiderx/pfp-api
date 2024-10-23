@@ -578,7 +578,7 @@ export default class PfPlanService {
                         attributes: {
                             exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
                         },
-                        include: [...this.__defaultPfPlanDailiesRelation()],
+                        include: [...this._defaultPfPlanDailiesRelation()],
                     },
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [
@@ -1127,7 +1127,7 @@ export default class PfPlanService {
                                     user_id: userPfPlan.user_id,
                                 },
                             },
-                            ...this.__defaultPfPlanDailiesRelation(),
+                            ...this._defaultPfPlanDailiesRelation(),
                         ],
                     },
                 ],
