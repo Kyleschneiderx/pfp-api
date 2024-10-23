@@ -435,7 +435,7 @@ export default class PfPlanService {
                         ? [[Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected']]
                         : []),
                 ],
-                exclude: ['deleted_at', 'status_id'],
+                exclude: ['deleted_at', 'status_id', 'content'],
             },
             include: [
                 ...this._defaultPfPlansRelation(),

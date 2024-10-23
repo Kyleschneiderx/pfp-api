@@ -275,7 +275,7 @@ export default class EducationService {
             limit: filter.pageItems,
             offset: filter.page * filter.pageItems - filter.pageItems,
             attributes: {
-                exclude: ['deleted_at', 'status_id'],
+                exclude: ['deleted_at', 'status_id', 'content'],
             },
             include: [
                 {
