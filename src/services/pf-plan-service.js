@@ -52,6 +52,16 @@ export default class PfPlanService {
                 as: 'pf_plan_daily_contents',
                 attributes: {
                     include: ['id', 'sets', 'reps', 'hold'],
+                    exclude: [
+                        'deleted_at',
+                        'pf_plan_daily_id',
+                        'pf_plan_id',
+                        'exercise_id',
+                        'created_at',
+                        'updated_at',
+                        'arrangement',
+                        'education_id',
+                    ],
                 },
                 include: [
                     {
@@ -68,7 +78,7 @@ export default class PfPlanService {
                         as: 'education',
                         required: false,
                         attributes: {
-                            exclude: ['deleted_at'],
+                            exclude: ['deleted_at', 'content'],
                         },
                         where: {},
                     },
