@@ -58,33 +58,5 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
 
             return true;
         }),
-    body('dailies.*.contents')
-        .exists({ value: 'falsy' })
-        .withMessage('Daily contents is required.')
-        .isArray({ min: 1 })
-        .withMessage('Daily contents should not be empty.'),
-    body('dailies.*.contents.*').custom((value) => {
-        if (value.exercise_id === undefined && value.education_id === undefined) throw new Error('Either exercise or education is required');
-
-        if (value.exercise_id !== undefined) {
-            if (value.sets === undefined) throw new Error('Number of sets is required.');
-            if (value.reps === undefined) throw new Error('Number of reps is required.');
-            if (value.hold === undefined) throw new Error('Number of hold is required.');
-        }
-
-        return true;
-    }),
-    commonValidation.exerciseIdValidation({
-        exerciseService,
-        isBody: true,
-        isRequired: false,
-        field: 'dailies.*.contents.*.exercise_id',
-    }),
-    commonValidation.educationIdValidation({
-        educationService,
-        isBody: true,
-        isRequired: false,
-        isPublishedOnly: true,
-        field: 'dailies.*.contents.*.education_id',
-    }),
+    ...commonValidation.pfPlanDailyContentsValidation({ exerciseService, educationService, pfPlanService }),
 ];

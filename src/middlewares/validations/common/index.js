@@ -20,3 +20,4 @@ export { default as filterValidation } from './filter.js';
 export { default as mediaUrlValidation } from './media-url.js';
 export { default as mediaUploadValidation } from './media-upload.js';
 export { default as workoutExercisesValidation } from './workout-exercises.js';
+export { default as pfPlanDailyContentsValidation } from './pf-plan-daily-contents.js';

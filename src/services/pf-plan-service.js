@@ -110,8 +110,8 @@ export default class PfPlanService {
     async createPfPlan(data) {
         let storeResponse;
         try {
-            storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
-                contentType: data.photo.mimetype,
+            storeResponse = await this.storage.store(data.photo?.name, data.photo?.data, PFPLAN_PHOTO_PATH, {
+                contentType: data.photo?.mimetype,
                 s3: { bucket: process.env.S3_BUCKET_NAME },
             });
 
@@ -213,8 +213,8 @@ export default class PfPlanService {
     async updatePfPlan(data) {
         let storeResponse;
         try {
-            storeResponse = await this.storage.store(data.photo.name, data.photo.data, PFPLAN_PHOTO_PATH, {
-                contentType: data.photo.mimetype,
+            storeResponse = await this.storage.store(data.photo?.name, data.photo?.data, PFPLAN_PHOTO_PATH, {
+                contentType: data.photo?.mimetype,
                 s3: { bucket: process.env.S3_BUCKET_NAME },
             });
 
