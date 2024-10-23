@@ -1,18 +1,8 @@
-import { query } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 
 export default () => [
-    query('id')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('name')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : value)),
-    query('status_id')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
+    commonValidation.filterValidation({ field: 'id', isInt: true }),
+    commonValidation.filterValidation({ field: 'name', isString: true }),
+    commonValidation.filterValidation({ field: 'status_id', isInt: true }),
     ...commonValidation.paginationValidation(),
 ];

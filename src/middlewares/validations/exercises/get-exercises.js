@@ -1,46 +1,24 @@
-import { query } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 
 export default () => [
-    query('id')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('category_id')
-        .trim()
-        .optional()
-        .customSanitizer((value) => {
-            if (value === '') return undefined;
+    commonValidation.filterValidation({ field: 'id', isInt: true }),
+    commonValidation.filterValidation({ field: 'category_id' }).customSanitizer((value) => {
+        if (value === '') return undefined;
 
-            if (!Array.isArray(value)) {
-                value = [value];
-            }
+        if (!Array.isArray(value)) {
+            value = [value];
+        }
 
-            value = value.filter((val) => val !== '' && val !== undefined);
+        value = value.filter((val) => val !== '' && val !== undefined);
 
-            if (value.length === 0) return undefined;
+        if (value.length === 0) return undefined;
 
-            return value;
-        }),
-    query('sets_from')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('sets_to')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('reps_from')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('reps_to')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : Number(value))),
-    query('name')
-        .trim()
-        .optional()
-        .customSanitizer((value) => (value === '' ? undefined : value)),
+        return value;
+    }),
+    commonValidation.filterValidation({ field: 'sets_from', isInt: true }),
+    commonValidation.filterValidation({ field: 'sets_to', isInt: true }),
+    commonValidation.filterValidation({ field: 'reps_from', isInt: true }),
+    commonValidation.filterValidation({ field: 'reps_to', isInt: true }),
+    commonValidation.filterValidation({ field: 'name', isString: true }),
     ...commonValidation.paginationValidation(),
 ];
