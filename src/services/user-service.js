@@ -232,7 +232,7 @@ export default class UserService {
                 nest: true,
                 subQuery: false,
                 attributes: ['id', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
-                include: [...this._defaultUsersRelation],
+                include: [...this._defaultUsersRelation()],
                 order: [['id', 'DESC']],
                 where: {
                     id: id,
