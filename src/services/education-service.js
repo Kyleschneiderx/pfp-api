@@ -351,21 +351,14 @@ export default class EducationService {
             const education = await this.database.models.Educations.findOne({
                 nest: true,
                 subQuery: false,
-                attributes: [
-                    'id',
-                    'title',
-                    'description',
-                    'content',
-                    'photo',
-                    'reference_pf_plan_id',
-                    'media_url',
-                    'media_upload',
-                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
-                        ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
-                        : []),
-                    'created_at',
-                    'updated_at',
-                ],
+                attributes: {
+                    include: [
+                        ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                            ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
+                            : []),
+                    ],
+                    exclude: ['deleted_at', 'status_id'],
+                },
                 include: [
                     {
                         model: this.database.models.Statuses,

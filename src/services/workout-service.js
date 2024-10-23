@@ -318,18 +318,14 @@ export default class WorkoutService {
             const workout = await this.database.models.Workouts.findOne({
                 nest: true,
                 subQuery: false,
-                attributes: [
-                    'id',
-                    'name',
-                    'description',
-                    'is_premium',
-                    'photo',
-                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
-                        ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
-                        : []),
-                    'created_at',
-                    'updated_at',
-                ],
+                attributes: {
+                    include: [
+                        ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                            ? [[Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite']]
+                            : []),
+                    ],
+                    exclude: ['deleted_at', 'status_id'],
+                },
                 include: [
                     {
                         model: this.database.models.Statuses,

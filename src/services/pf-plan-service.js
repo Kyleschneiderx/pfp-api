@@ -25,6 +25,60 @@ export default class PfPlanService {
     }
 
     /**
+     * Default PF plan relation
+     *
+     * @returns {object[]}
+     */
+    _defaultPfPlansRelation() {
+        return [
+            {
+                model: this.database.models.Statuses,
+                as: 'status',
+                attributes: ['id', 'value'],
+                where: {},
+            },
+        ];
+    }
+
+    /**
+     * Default PF plan dailies relation
+     *
+     * @returns {object[]}
+     */
+    _defaultPfPlanDailiesRelation() {
+        return [
+            {
+                model: this.database.models.PfPlanDailyContents,
+                as: 'pf_plan_daily_contents',
+                attributes: {
+                    include: ['id', 'sets', 'reps', 'hold'],
+                },
+                include: [
+                    {
+                        model: this.database.models.Exercises,
+                        as: 'exercise',
+                        required: false,
+                        attributes: {
+                            exclude: ['deleted_at', 'reps', 'sets', 'hold'],
+                        },
+                        where: {},
+                    },
+                    {
+                        model: this.database.models.Educations,
+                        as: 'education',
+                        required: false,
+                        attributes: {
+                            exclude: ['deleted_at'],
+                        },
+                        where: {},
+                    },
+                ],
+                where: {},
+            },
+        ];
+    }
+
+    /**
      * Compute PF plan progress percentage
      *
      * @param {number} fulfilled Number of fulfilled days
@@ -381,15 +435,10 @@ export default class PfPlanService {
                         ? [[Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected']]
                         : []),
                 ],
-                exclude: ['deleted_at'],
+                exclude: ['deleted_at', 'status_id'],
             },
             include: [
-                {
-                    model: this.database.models.Statuses,
-                    as: 'status',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
+                ...this._defaultPfPlansRelation(),
                 ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                     ? [
                           {
@@ -437,6 +486,7 @@ export default class PfPlanService {
 
         let count;
         let rows;
+
         try {
             ({ count, rows } = await this.database.models.PfPlans.findAndCountAll(options));
         } catch (error) {
@@ -500,15 +550,10 @@ export default class PfPlanService {
                               ]
                             : []),
                     ],
-                    exclude: ['deleted_at'],
+                    exclude: ['deleted_at', 'status_id'],
                 },
                 include: [
-                    {
-                        model: this.database.models.Statuses,
-                        as: 'status',
-                        attributes: ['id', 'value'],
-                        where: {},
-                    },
+                    ...this._defaultPfPlansRelation(),
                     {
                         model: this.database.models.PfPlanDailies,
                         as: 'pf_plan_dailies',
@@ -516,36 +561,7 @@ export default class PfPlanService {
                         attributes: {
                             exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
                         },
-                        include: [
-                            {
-                                model: this.database.models.PfPlanDailyContents,
-                                as: 'pf_plan_daily_contents',
-                                attributes: {
-                                    include: ['id', 'sets', 'reps', 'hold'],
-                                },
-                                include: [
-                                    {
-                                        model: this.database.models.Exercises,
-                                        as: 'exercise',
-                                        required: false,
-                                        attributes: {
-                                            exclude: ['deleted_at', 'reps', 'sets', 'hold'],
-                                        },
-                                        where: {},
-                                    },
-                                    {
-                                        model: this.database.models.Educations,
-                                        as: 'education',
-                                        required: false,
-                                        attributes: {
-                                            exclude: ['deleted_at'],
-                                        },
-                                        where: {},
-                                    },
-                                ],
-                                where: {},
-                            },
-                        ],
+                        include: [...this.__defaultPfPlanDailiesRelation()],
                     },
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [
@@ -823,12 +839,7 @@ export default class PfPlanService {
                 exclude: ['deleted_at', 'status_id'],
             },
             include: [
-                {
-                    model: this.database.models.Statuses,
-                    as: 'status',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
+                ...this._defaultPfPlansRelation(),
                 {
                     model: this.database.models.UserFavoritePfPlans,
                     as: 'user_favorite_pf_plans',
@@ -1157,15 +1168,10 @@ export default class PfPlanService {
                 nest: true,
                 subQuery: false,
                 attributes: {
-                    exclude: ['deleted_at'],
+                    exclude: ['deleted_at', 'status_id'],
                 },
                 include: [
-                    {
-                        model: this.database.models.Statuses,
-                        as: 'status',
-                        attributes: ['id', 'value'],
-                        where: {},
-                    },
+                    ...this._defaultPfPlansRelation(),
                     {
                         model: this.database.models.PfPlanDailies,
                         as: 'pf_plan_dailies',
@@ -1183,33 +1189,7 @@ export default class PfPlanService {
                                     user_id: userPfPlan.user_id,
                                 },
                             },
-                            {
-                                model: this.database.models.PfPlanDailyContents,
-                                as: 'pf_plan_daily_contents',
-                                attributes: {
-                                    include: ['id', 'sets', 'reps', 'hold'],
-                                },
-                                include: [
-                                    {
-                                        model: this.database.models.Exercises,
-                                        as: 'exercise',
-                                        required: false,
-                                        attributes: {
-                                            exclude: ['deleted_at', 'sets', 'reps', 'hold'],
-                                        },
-                                        where: {},
-                                    },
-                                    {
-                                        model: this.database.models.Educations,
-                                        as: 'education',
-                                        required: false,
-                                        attributes: {
-                                            exclude: ['deleted_at'],
-                                        },
-                                        where: {},
-                                    },
-                                ],
-                            },
+                            ...this.__defaultPfPlanDailiesRelation(),
                         ],
                     },
                 ],

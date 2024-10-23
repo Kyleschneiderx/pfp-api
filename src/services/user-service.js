@@ -37,6 +37,39 @@ export default class UserService {
     }
 
     /**
+     * Default users relation
+     * @returns {object[]}
+     */
+    _defaultUsersRelation() {
+        return [
+            {
+                model: this.database.models.UserProfiles,
+                as: 'user_profile',
+                attributes: ['name', 'birthdate', 'contact_number', 'description', 'photo'],
+                where: {},
+            },
+            {
+                model: this.database.models.AccountTypes,
+                as: 'account_type',
+                attributes: ['id', 'value'],
+                where: {},
+            },
+            {
+                model: this.database.models.UserTypes,
+                as: 'user_type',
+                attributes: ['id', 'value'],
+                where: {},
+            },
+            {
+                model: this.database.models.Statuses,
+                as: 'status',
+                attributes: ['id', 'value'],
+                where: {},
+            },
+        ];
+    }
+
+    /**
      * Retrieve user account information
      * @param {object} filter
      * @param {string=} filter.email User account email address
@@ -119,32 +152,7 @@ export default class UserService {
             limit: filter.pageItems,
             offset: filter.page * filter.pageItems - filter.pageItems,
             attributes: ['id', 'password', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
-            include: [
-                {
-                    model: this.database.models.UserProfiles,
-                    as: 'user_profile',
-                    attributes: ['name', 'birthdate', 'contact_number', 'description', 'photo'],
-                    where: {},
-                },
-                {
-                    model: this.database.models.AccountTypes,
-                    as: 'account_type',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
-                {
-                    model: this.database.models.UserTypes,
-                    as: 'user_type',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
-                {
-                    model: this.database.models.Statuses,
-                    as: 'status',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
-            ],
+            include: [...this._defaultUsersRelation()],
             order: [['id', 'DESC']],
             where: {
                 account_type_id: USER_ACCOUNT_TYPE_ID,
@@ -224,32 +232,7 @@ export default class UserService {
                 nest: true,
                 subQuery: false,
                 attributes: ['id', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
-                include: [
-                    {
-                        model: this.database.models.UserProfiles,
-                        as: 'user_profile',
-                        attributes: ['name', 'birthdate', 'contact_number', 'description', 'photo'],
-                        where: {},
-                    },
-                    {
-                        model: this.database.models.AccountTypes,
-                        as: 'account_type',
-                        attributes: ['id', 'value'],
-                        where: {},
-                    },
-                    {
-                        model: this.database.models.UserTypes,
-                        as: 'user_type',
-                        attributes: ['id', 'value'],
-                        where: {},
-                    },
-                    {
-                        model: this.database.models.Statuses,
-                        as: 'status',
-                        attributes: ['id', 'value'],
-                        where: {},
-                    },
-                ],
+                include: [...this._defaultUsersRelation],
                 order: [['id', 'DESC']],
                 where: {
                     id: id,
@@ -340,23 +323,14 @@ export default class UserService {
      */
     async createUserAccount(data) {
         let storeResponse;
-
-        if (data.photo !== undefined) {
-            try {
-                const resizeData = await this.file.resizeImage(data.photo.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
-
-                storeResponse = await this.storage.store(data.photo.name, resizeData, USER_PHOTO_PATH, {
-                    contentType: data.photo.mimetype,
-                    s3: { bucket: process.env.S3_BUCKET_NAME },
-                });
-            } catch (error) {
-                this.logger.error(error.message, error);
-
-                throw new exceptions.InternalServerError('Failed to process photo', error);
-            }
-        }
-
         try {
+            const resizeData = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+
+            storeResponse = await this.storage.store(data.photo?.name, resizeData, USER_PHOTO_PATH, {
+                contentType: data.photo?.mimetype,
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
+
             const userInfo = await this.database.transaction(async (transaction) => {
                 const user = await this.database.models.Users.create(
                     {
@@ -407,9 +381,7 @@ export default class UserService {
 
             return userInfo;
         } catch (error) {
-            if (storeResponse !== undefined) {
-                await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
-            }
+            await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
 
             this.logger.error(error.message, error);
 
@@ -521,23 +493,14 @@ export default class UserService {
      */
     async updateUserAccount(data) {
         let storeResponse;
-
-        if (data.photo !== undefined) {
-            try {
-                const resizeData = await this.file.resizeImage(data.photo.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
-
-                storeResponse = await this.storage.store(data.photo.name, resizeData, USER_PHOTO_PATH, {
-                    contentType: data.photo.mimetype,
-                    s3: { bucket: process.env.S3_BUCKET_NAME },
-                });
-            } catch (error) {
-                this.logger.error(error.message, error);
-
-                throw new exceptions.InternalServerError('Failed to process photo', error);
-            }
-        }
-
         try {
+            const resizeData = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+
+            storeResponse = await this.storage.store(data.photo?.name, resizeData, USER_PHOTO_PATH, {
+                contentType: data.photo?.mimetype,
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
+
             const usersUpdatePayload = {
                 ...(data.email && { email: data.email }),
                 ...(data.typeId && { type_id: data.typeId }),
@@ -598,9 +561,7 @@ export default class UserService {
 
             return user;
         } catch (error) {
-            if (storeResponse !== undefined) {
-                await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
-            }
+            await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
 
             this.logger.error('Failed to update user', error);
 
