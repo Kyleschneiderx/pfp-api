@@ -19,3 +19,4 @@ export { default as packageIdValidation } from './package-id.js';
 export { default as filterValidation } from './filter.js';
 export { default as mediaUrlValidation } from './media-url.js';
 export { default as mediaUploadValidation } from './media-upload.js';
+export { default as workoutExercisesValidation } from './workout-exercises.js';
