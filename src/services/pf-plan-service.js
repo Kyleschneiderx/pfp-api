@@ -375,19 +375,14 @@ export default class PfPlanService {
             subQuery: false,
             limit: filter.pageItems,
             offset: filter.page * filter.pageItems - filter.pageItems,
-            attributes: [
-                'id',
-                'name',
-                'description',
-                'content',
-                'photo',
-                'is_premium',
-                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
-                    ? [[Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected']]
-                    : []),
-                'created_at',
-                'updated_at',
-            ],
+            attributes: {
+                include: [
+                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [[Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected']]
+                        : []),
+                ],
+                exclude: ['deleted_at'],
+            },
             include: [
                 {
                     model: this.database.models.Statuses,
@@ -496,22 +491,17 @@ export default class PfPlanService {
             const pfPlan = await this.database.models.PfPlans.findOne({
                 nest: true,
                 subQuery: false,
-                attributes: [
-                    'id',
-                    'name',
-                    'description',
-                    'content',
-                    'photo',
-                    'is_premium',
-                    ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
-                        ? [
-                              [Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite'],
-                              [Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected'],
-                          ]
-                        : []),
-                    'created_at',
-                    'updated_at',
-                ],
+                attributes: {
+                    include: [
+                        ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                            ? [
+                                  [Sequelize.fn('COALESCE', Sequelize.col('is_favorite'), null, 0), 'is_favorite'],
+                                  [Sequelize.fn('COALESCE', Sequelize.col('user_pf_plan.user_id'), null, 0), 'is_selected'],
+                              ]
+                            : []),
+                    ],
+                    exclude: ['deleted_at'],
+                },
                 include: [
                     {
                         model: this.database.models.Statuses,
@@ -531,16 +521,7 @@ export default class PfPlanService {
                                 model: this.database.models.PfPlanDailyContents,
                                 as: 'pf_plan_daily_contents',
                                 attributes: {
-                                    exclude: [
-                                        'deleted_at',
-                                        'created_at',
-                                        'updated_at',
-                                        'pf_plan_id',
-                                        'pf_plan_daily_id',
-                                        'exercise_id',
-                                        'education_id',
-                                        'arrangement',
-                                    ],
+                                    include: ['id', 'sets', 'reps', 'hold'],
                                 },
                                 include: [
                                     {
@@ -1175,7 +1156,9 @@ export default class PfPlanService {
             const pfPlan = await this.database.models.PfPlans.findOne({
                 nest: true,
                 subQuery: false,
-                attributes: ['id', 'name', 'description', 'content', 'photo', 'is_premium', 'created_at', 'updated_at'],
+                attributes: {
+                    exclude: ['deleted_at'],
+                },
                 include: [
                     {
                         model: this.database.models.Statuses,
@@ -1204,16 +1187,7 @@ export default class PfPlanService {
                                 model: this.database.models.PfPlanDailyContents,
                                 as: 'pf_plan_daily_contents',
                                 attributes: {
-                                    exclude: [
-                                        'deleted_at',
-                                        'created_at',
-                                        'updated_at',
-                                        'pf_plan_id',
-                                        'pf_plan_daily_id',
-                                        'exercise_id',
-                                        'education_id',
-                                        'arrangement',
-                                    ],
+                                    include: ['id', 'sets', 'reps', 'hold'],
                                 },
                                 include: [
                                     {
