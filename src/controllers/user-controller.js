@@ -51,7 +51,7 @@ export default class UserController {
 
         await this.userService.updateUserLastLogin(user.id);
 
-        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_ACCOUNT);
+        this.loggerService.logSystemAudit(user.id, SYSTEM_AUDITS.REGISTER);
 
         return res.status(201).json({
             user: user,
@@ -71,7 +71,7 @@ export default class UserController {
             photo: req.files?.photo,
         });
 
-        this.loggerService.logSystemAudit(user.id, SYSTEM_AUDITS.REGISTER);
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_ACCOUNT);
 
         return res.status(201).json(user);
     }
