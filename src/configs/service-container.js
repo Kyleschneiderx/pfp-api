@@ -168,6 +168,8 @@ Object.assign(serviceContainer, {
         logger: serviceContainer.logger,
         miscellaneousService: serviceContainer.miscellaneousService,
         loggerService: serviceContainer.loggerService,
+        emailService: serviceContainer.emailService,
+        userService: serviceContainer.userService,
     }),
     notificationController: new controllers.NotificationController({
         logger: serviceContainer.logger,

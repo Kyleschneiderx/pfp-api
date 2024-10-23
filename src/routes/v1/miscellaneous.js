@@ -17,5 +17,7 @@ export default ({ miscellaneousController, selectionService }) => {
         miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController),
     );
 
+    router.post('/contact-support', miscellaneousController.handleSendContactSupportRoute.bind(miscellaneousController));
+
     return router;
 };

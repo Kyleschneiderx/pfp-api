@@ -108,4 +108,43 @@ export default class EmailService {
             throw new exceptions.InternalServerError('Failed to send invite email.', error);
         }
     }
+
+    /**
+     * Send contact support emaill to admin
+     *
+     * @param {object} data Email data
+     * @param {object} data.receiver Email receiver
+     * @param {string} data.receiver.address Email receiver address
+     * @param {string} data.receiver.name Email receiver name
+     * @param {string} data.email Customer email
+     * @param {string} data.name Customer name
+     * @param {string} data.message Message
+     * @returns {Promise<object>} Nodemailer send object
+     * @throws {InternalServerError} If failed to send contact support email
+     */
+    async sendContactSupportEmail(data) {
+        let template = this.file.readFile(`${__dirname}/templates/contact-support.html`, {
+            encoding: 'utf8',
+        });
+        if (template) {
+            template = this.helper.replacer(template, {
+                message: data.message ?? '',
+                name: data.name ?? '',
+                email: data.email ?? '',
+            });
+        }
+
+        try {
+            return await this.smtp.send({
+                from: `${process.env.SMTP_SENDER_NAME} <${process.env.SMTP_SENDER_EMAIL}>`,
+                to: data.receiver,
+                subject: `[${process.env.APP_NAME}] Contact Support`,
+                html: template,
+            });
+        } catch (error) {
+            this.logger.error('Failed to send contact support email.', error);
+
+            throw new exceptions.InternalServerError('Failed to send contact support email.', error);
+        }
+    }
 }

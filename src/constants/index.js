@@ -166,3 +166,7 @@ export const SYSTEM_AUDITS = {
     REGISTER: 33,
     SELECT_PF_PLAN: 34,
 };
+
+export const CONTACT_SUPPORT_NAME = process.env.SUPPORT_NAME;
+
+export const CONTACT_SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
