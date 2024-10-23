@@ -16,3 +16,4 @@ export { default as pfPlanIdValidation } from './pf-plan-id.js';
 export { default as statusIdValidation } from './status.js';
 export { default as educationIdValidation } from './education-id.js';
 export { default as packageIdValidation } from './package-id.js';
+export { default as filterValidation } from './filter.js';
