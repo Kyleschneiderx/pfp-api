@@ -77,6 +77,8 @@ export default class File {
     }
 
     static async resizeImage(buffer, width, height, options = {}) {
+        if (buffer === undefined || buffer === null) return buffer;
+
         try {
             const metadata = await sharp(buffer).metadata();
 
