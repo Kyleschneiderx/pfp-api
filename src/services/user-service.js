@@ -793,20 +793,28 @@ export default class UserService {
      */
     async deactivateInactiveAccounts() {
         try {
+            const option = {
+                account_type_id: USER_ACCOUNT_TYPE_ID,
+                status_id: ACTIVE_STATUS_ID,
+                last_login_at: {
+                    [Sequelize.Op.lt]: new dateFnsUtc.UTCDate(
+                        dateFns.format(dateFns.sub(new Date(), { days: INACTIVE_ACCOUNT_PERIOD_IN_DAYS }), DATE_FORMAT),
+                    ),
+                },
+            };
+
+            const deactivatedUsers = await this.database.models.Users.findAll({
+                where: option,
+            });
+
             await this.database.models.Users.update(
                 { status_id: INACTIVE_STATUS_ID },
                 {
-                    where: {
-                        account_type_id: USER_ACCOUNT_TYPE_ID,
-                        status_id: ACTIVE_STATUS_ID,
-                        last_login_at: {
-                            [Sequelize.Op.lt]: new dateFnsUtc.UTCDate(
-                                dateFns.format(dateFns.sub(new Date(), { days: INACTIVE_ACCOUNT_PERIOD_IN_DAYS }), DATE_FORMAT),
-                            ),
-                        },
-                    },
+                    where: option,
                 },
             );
+
+            return deactivatedUsers;
         } catch (error) {
             this.logger.error('Failed to deactivate inactive accounts', error);
 

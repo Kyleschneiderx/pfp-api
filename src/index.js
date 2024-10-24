@@ -79,7 +79,12 @@ app.get('/', (req, res) => {
 
 app.listen(process.env.APP_PORT, () => {
     serviceContainer.scheduler.run(
-        tasks({ logger: serviceContainer.logger, userService: serviceContainer.userService, pfPlanService: serviceContainer.pfPlanService }),
+        tasks({
+            logger: serviceContainer.logger,
+            userService: serviceContainer.userService,
+            pfPlanService: serviceContainer.pfPlanService,
+            notificationService: serviceContainer.notificationService,
+        }),
     );
 
     serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}`);
