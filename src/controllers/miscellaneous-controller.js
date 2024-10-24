@@ -44,6 +44,17 @@ export default class MiscellaneousController {
             message: req.body.message ?? '',
         });
 
-        return res.json({ msg: 'Successfully post message to support.' });
+        return res.json({
+            msg: 'Successfully post message to support.',
+            data: {
+                receiver: {
+                    name: CONTACT_SUPPORT_NAME,
+                    address: CONTACT_SUPPORT_EMAIL,
+                },
+                name: user.user_profile.name,
+                email: user.email,
+                message: req.body.message ?? '',
+            },
+        });
     }
 }
