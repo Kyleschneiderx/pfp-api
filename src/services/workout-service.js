@@ -334,6 +334,7 @@ export default class WorkoutService {
             const workout = await this.database.models.Workouts.findOne({
                 nest: true,
                 subQuery: false,
+                logging: console.log,
                 attributes: {
                     include: [
                         ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
@@ -395,7 +396,10 @@ export default class WorkoutService {
                           ]
                         : []),
                 ],
-                order: [['id', 'DESC']],
+                order: [
+                    [{ model: this.database.models.WorkoutExercises, as: 'workout_exercises' }, 'arrangement', 'ASC'],
+                    [{ model: this.database.models.WorkoutExercises, as: 'workout_exercises' }, 'id', 'ASC'],
+                ],
                 where: {
                     id: id,
                     ...(filter.statusId && { status_id: filter.statusId }),
