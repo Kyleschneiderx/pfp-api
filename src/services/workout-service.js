@@ -334,7 +334,6 @@ export default class WorkoutService {
             const workout = await this.database.models.Workouts.findOne({
                 nest: true,
                 subQuery: false,
-                logging: console.log,
                 attributes: {
                     include: [
                         ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
