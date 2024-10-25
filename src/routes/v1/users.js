@@ -5,6 +5,7 @@ import * as commonValidations from '../../middlewares/validations/common/index.j
 
 export default ({
     verifyAdmin,
+    verifyUser,
     userController,
     userService,
     file,
@@ -27,7 +28,7 @@ export default ({
 
     router.put(
         '/setup-password',
-        validateInput(validations.setupPasswordValidation({ userService, password })),
+        [validateInput(validations.setupPasswordValidation({ userService, password })), verifyUser],
         userController.handleSetupPasswordRoute.bind(userController),
     );
 
@@ -39,34 +40,37 @@ export default ({
 
     router.delete(
         '/:user_id/subscription',
-        validateInput([commonValidations.userAccessUserIdValidation({ userService })]),
+        [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
         userController.handleRemoveUserSubscriptionRoute.bind(userController),
     );
 
     router.put(
         '/:user_id/password',
-        validateInput(validations.changePasswordValidation({ userService, password })),
+        [validateInput(validations.changePasswordValidation({ userService, password })), verifyUser],
         userController.handleChangePasswordRoute.bind(userController),
     );
 
     router.put(
         '/:user_id/photo',
-        validateInput([
-            commonValidations.userAccessUserIdValidation({ userService }),
-            ...commonValidations.photoValidation({ field: 'photo', file: file, isRequired: true }),
-        ]),
+        [
+            validateInput([
+                commonValidations.userAccessUserIdValidation({ userService }),
+                ...commonValidations.photoValidation({ field: 'photo', file: file, isRequired: true }),
+            ]),
+            verifyUser,
+        ],
         userController.handleUploadUserPhotoRoute.bind(userController),
     );
 
     router.get(
         '/:user_id/pf-plan-progress',
-        validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService })),
+        [validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService })), verifyUser],
         userController.handleGetUserPfPlanProgressRoute.bind(userController),
     );
 
     router.put(
         '/:user_id/survey',
-        validateInput(validations.updateUserSurveyAnswerValidation({ userService, miscellaneousService })),
+        [validateInput(validations.updateUserSurveyAnswerValidation({ userService, miscellaneousService })), verifyUser],
         userController.handleUpdateUserSurveyRoute.bind(userController),
     );
 
