@@ -185,6 +185,7 @@ export default ({
         '/v1/educations',
         routeV1Educations({
             verifyAdmin: middlewares.verifyAdmin,
+            verifyUser: middlewares.verifyUser,
             educationController: educationController,
             educationService: educationService,
             selectionService: selectionService,
