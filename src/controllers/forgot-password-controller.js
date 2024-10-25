@@ -27,7 +27,7 @@ export default class ForgotPasswordController {
             link: req.user.account_type_id === ADMIN_ACCOUNT_TYPE_ID ? `${WEB_RESET_PASSWORD_URL}/${token}` : `${APP_RESET_PASSWORD_URL}/${token}`,
         });
 
-        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.FORGOT_PASSWORD);
+        this.loggerService.logSystemAudit(req.user.id, SYSTEM_AUDITS.FORGOT_PASSWORD);
 
         return res.json({
             msg: 'Successfully sent reset password link to your email.',
@@ -44,7 +44,7 @@ export default class ForgotPasswordController {
             statusId: DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID,
         });
 
-        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.FORGOT_PASSWORD);
+        this.loggerService.logSystemAudit(req.user.id, SYSTEM_AUDITS.FORGOT_PASSWORD);
 
         return res.json({
             msg: 'Successfully sent OTP to your email for reset password. Check your OTP to proceed with your action.',
@@ -57,7 +57,7 @@ export default class ForgotPasswordController {
 
         await this.authService.updateResetPasswordRequestStatus(req.resetRequest.id, USED_RESET_PASSWORD_REQUEST_STATUS_ID);
 
-        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.RESET_PASSWORD);
+        this.loggerService.logSystemAudit(req.user.id, SYSTEM_AUDITS.RESET_PASSWORD);
 
         return res.json({ msg: 'Password successfully reset.' });
     }
