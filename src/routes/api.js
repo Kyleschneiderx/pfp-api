@@ -133,6 +133,7 @@ export default ({
         '/v1/users',
         routeV1Users({
             verifyAdmin: middlewares.verifyAdmin,
+            verifyUser: middlewares.verifyUser,
             userController: userController,
             userService: userService,
             selectionService: selectionService,
@@ -160,6 +161,7 @@ export default ({
         '/v1/workouts',
         routeV1Workouts({
             verifyAdmin: middlewares.verifyAdmin,
+            verifyUser: middlewares.verifyUser,
             workoutController: workoutController,
             workoutService: workoutService,
             exerciseService: exerciseService,
@@ -172,6 +174,7 @@ export default ({
         '/v1/pf-plans',
         routeV1PfPlans({
             verifyAdmin: middlewares.verifyAdmin,
+            verifyUser: middlewares.verifyUser,
             pfPlanController: pfPlanController,
             pfPlanService: pfPlanService,
             exerciseService: exerciseService,

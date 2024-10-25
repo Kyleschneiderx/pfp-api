@@ -3,16 +3,10 @@ import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/workouts/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ verifyAdmin, workoutController, workoutService, exerciseService, selectionService, file }) => {
+export default ({ verifyAdmin, verifyUser, workoutController, workoutService, exerciseService, selectionService, file }) => {
     const router = express.Router();
 
     router.get('/', validateInput(validations.getWorkoutsValidation()), workoutController.handleGetWorkoutsRoute.bind(workoutController));
-
-    router.get(
-        '/favorites',
-        validateInput(validations.getFavoriteWorkoutsValidation()),
-        workoutController.handleGetFavoriteWorkoutsRoute.bind(workoutController),
-    );
 
     router.get(
         '/:id',
@@ -20,15 +14,21 @@ export default ({ verifyAdmin, workoutController, workoutService, exerciseServic
         workoutController.handleGetWorkoutRoute.bind(workoutController),
     );
 
+    router.get(
+        '/favorites',
+        [validateInput(validations.getFavoriteWorkoutsValidation()), verifyUser],
+        workoutController.handleGetFavoriteWorkoutsRoute.bind(workoutController),
+    );
+
     router.post(
         '/:id/favorite',
-        validateInput([validations.updateFavoriteWorkoutValidation({ workoutService, isFavorite: true })]),
+        [validateInput([validations.updateFavoriteWorkoutValidation({ workoutService, isFavorite: true })]), verifyUser],
         workoutController.handleAddFavoriteWorkoutRoute.bind(workoutController),
     );
 
     router.delete(
         '/:id/favorite',
-        validateInput([validations.updateFavoriteWorkoutValidation({ workoutService, isUnfavorite: true })]),
+        [validateInput([validations.updateFavoriteWorkoutValidation({ workoutService, isUnfavorite: true })]), verifyUser],
         workoutController.handleRemoveFavoriteWorkoutRoute.bind(workoutController),
     );
 
