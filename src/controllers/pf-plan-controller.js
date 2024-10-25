@@ -138,7 +138,6 @@ export default class PfPlanController {
     }
 
     async handleDeselectPfPlanRoute(req, res) {
-        console.log(123123);
         await this.pfPlanService.deselectPfPlan(req.params.id, req.auth.user_id);
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.DESELECT_PF_PLAN);
