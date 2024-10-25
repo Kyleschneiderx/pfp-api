@@ -32,6 +32,12 @@ export default ({ verifyAdmin, pfPlanController, pfPlanService, exerciseService,
         pfPlanController.handleSelectPfPlanRoute.bind(pfPlanController),
     );
 
+    router.delete(
+        '/:id/deselect',
+        validateInput(validations.deselectPfPlanValidation({ pfPlanService })),
+        pfPlanController.handleDeselectPfPlanRoute.bind(pfPlanController),
+    );
+
     router.put(
         '/:id/progress',
         validateInput(validations.updatePfPlanProgressValidation({ pfPlanService, educationService, exerciseService })),

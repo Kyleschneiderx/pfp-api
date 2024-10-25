@@ -129,6 +129,14 @@ module.exports = {
                 id: 32,
                 description: 'Remove Favorite Education',
             },
+            {
+                id: 33,
+                description: 'Register',
+            },
+            {
+                id: 34,
+                description: 'Select PF Plan',
+            },
         ]),
 
     down: (queryInterface, Sequelize) => queryInterface.bulkDelete('system_audit_descriptions', null, {}),

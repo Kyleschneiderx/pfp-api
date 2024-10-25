@@ -137,6 +137,15 @@ export default class PfPlanController {
         return res.json({ msg: 'Successfully selected PF plan.' });
     }
 
+    async handleDeselectPfPlanRoute(req, res) {
+        console.log(123123);
+        await this.pfPlanService.deselectPfPlan(req.params.id, req.auth.user_id);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.DESELECT_PF_PLAN);
+
+        return res.json({ msg: 'Successfully deselected PF plan.' });
+    }
+
     async handleUpdatePfPlanProgressRoute(req, res) {
         const pfPlanProgress = await this.pfPlanService.updatePfPlanProgress(req.params.id, {
             userId: req.auth.user_id,

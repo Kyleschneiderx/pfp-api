@@ -908,6 +908,24 @@ export default class PfPlanService {
     }
 
     /**
+     * Remove selected PF plan program
+     *
+     * @param {number} id PF plan id
+     * @param {number} userId User account id
+     * @returns {Promise<UserPfPlans>} UserPfPlans instance
+     * @throws {InternalServerError} If failed to deselect PF plan program
+     */
+    async deselectPfPlan(id, userId) {
+        try {
+            await this.database.models.UserPfPlans.destroy({ where: { user_id: userId, pf_plan_id: id } });
+        } catch (error) {
+            this.logger.error('Failed to deselect PF plan', error);
+
+            throw new exceptions.InternalServerError('Failed to deselect PF plan', error);
+        }
+    }
+
+    /**
      * Get selected PF plan by user id
      *
      * @param {number} userId User account id
