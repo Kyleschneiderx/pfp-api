@@ -45,5 +45,5 @@ export default ({ selectionService, file, exerciseService }) => [
     body('description').trim().optional().isString(),
     body('how_to').trim().optional().isString(),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
-    ...commonValidation.videoValidation({ field: 'video', file: file, isRequired: true }),
+    commonValidation.videoValidation({ field: 'video', file: file, isRequired: true }),
 ];

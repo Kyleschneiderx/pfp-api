@@ -104,7 +104,7 @@ export default ({
 
     router.delete(
         '/:user_id/photo',
-        validateInput(commonValidations.userIdValidation({ userService })),
+        validateInput([commonValidations.userIdValidation({ userService })]),
         userController.handleRemoveUserPhotoRoute.bind(userController),
     );
 

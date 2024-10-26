@@ -1,6 +1,6 @@
 import { body } from 'express-validator';
 
-export default ({ selectionService, isOptional = false }) => [
+export default ({ selectionService, isOptional = false }) =>
     body('type_id')
         .trim()
         .customSanitizer((value) => Number(value))
@@ -18,5 +18,4 @@ export default ({ selectionService, isOptional = false }) => [
             }
 
             return true;
-        }),
-];
+        });

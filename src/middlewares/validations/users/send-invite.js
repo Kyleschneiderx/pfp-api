@@ -2,7 +2,7 @@ import { USER_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 import * as commonValidation from '../common/index.js';
 
 export default ({ userService }) => {
-    const [rules] = commonValidation.userIdValidation({ userService });
+    const rules = commonValidation.userIdValidation({ userService });
 
     rules
         .customSanitizer(async (value, { req }) => {

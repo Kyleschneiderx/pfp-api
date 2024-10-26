@@ -1,7 +1,7 @@
 import { check } from 'express-validator';
 import * as constants from '../../../constants/index.js';
 
-export default ({ field, file, isRequired = false }) => [
+export default ({ field, file, isRequired = false }) =>
     check(field).custom((value, { req }) => {
         if ((req.files === undefined || req.files === null) && isRequired === false) return true;
 
@@ -20,5 +20,4 @@ export default ({ field, file, isRequired = false }) => [
         }
 
         return true;
-    }),
-];
+    });
