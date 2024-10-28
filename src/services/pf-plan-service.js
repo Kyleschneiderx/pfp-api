@@ -14,6 +14,7 @@ import {
     PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS,
     DATE_FORMAT,
     PUBLISHED_EDUCATION_STATUS_ID,
+    TIME_FORMAT,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -1380,47 +1381,113 @@ export default class PfPlanService {
      * Reset all paused PF plans progress that is passed retention period
      *
      * @returns {Promise<void>}
+     * @throws {InternalServerError} If failed to reset PF plan progress elapsed retention period
      */
     async resetPfPlanProgressElapsedRetentionPeriod() {
-        const userPfPlans = await this.database.models.UserPfPlans.findAll({
-            attributes: {
-                exclude: [],
-            },
-            where: {
-                id: {
-                    [Sequelize.Op.in]: Sequelize.literal(
-                        `(${this.database.dialect.queryGenerator
-                            .selectQuery('user_pf_plans', {
-                                attributes: [[Sequelize.fn('Max', Sequelize.col('id')), 'id']],
-                                group: ['user_id', 'pf_plan_id'],
-                            })
-                            .slice(0, -1)})`,
-                    ),
+        try {
+            const userPfPlans = await this.database.models.UserPfPlans.findAll({
+                attributes: {
+                    exclude: [],
                 },
-                created_at: {
-                    [Sequelize.Op.lt]: new Date(
-                        dateFns.format(dateFns.sub(new Date(), { days: PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS }), DATE_FORMAT),
-                    ),
+                where: {
+                    id: {
+                        [Sequelize.Op.in]: Sequelize.literal(
+                            `(${this.database.dialect.queryGenerator
+                                .selectQuery('user_pf_plans', {
+                                    attributes: [[Sequelize.fn('Max', Sequelize.col('id')), 'id']],
+                                    group: ['user_id', 'pf_plan_id'],
+                                })
+                                .slice(0, -1)})`,
+                        ),
+                    },
+                    created_at: {
+                        [Sequelize.Op.lt]: new Date(
+                            dateFns.format(dateFns.sub(new Date(), { days: PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS }), DATE_FORMAT),
+                        ),
+                    },
+                    reset_at: null,
                 },
-                reset_at: null,
-            },
-            paranoid: false,
-        });
+                paranoid: false,
+            });
 
-        if (userPfPlans.length === 0) return;
+            if (userPfPlans.length === 0) return;
 
-        await Promise.all(
-            userPfPlans.map(async (userPfPlan) => {
-                await this.database.models.UserPfPlanProgress.destroy({ where: { user_id: userPfPlan.user_id, pf_plan_id: userPfPlan.pf_plan_id } });
+            await Promise.all(
+                userPfPlans.map(async (userPfPlan) => {
+                    await this.database.models.UserPfPlanProgress.destroy({
+                        where: { user_id: userPfPlan.user_id, pf_plan_id: userPfPlan.pf_plan_id },
+                    });
 
-                await this.database.models.UserPfPlanDailyProgress.destroy({
-                    where: { user_id: userPfPlan.user_id, pf_plan_id: userPfPlan.pf_plan_id },
-                });
+                    await this.database.models.UserPfPlanDailyProgress.destroy({
+                        where: { user_id: userPfPlan.user_id, pf_plan_id: userPfPlan.pf_plan_id },
+                    });
 
-                userPfPlan.reset_at = new Date();
+                    userPfPlan.reset_at = new Date();
 
-                await userPfPlan.save();
-            }),
-        );
+                    await userPfPlan.save();
+                }),
+            );
+        } catch (error) {
+            this.logger.error('Failed to reset pf plan progress on elapsed retention period', error);
+
+            throw new exceptions.InternalServerError('Failed to reset pf plan progress on elapsed retention period', error);
+        }
+    }
+
+    /**
+     * Get users daily PF plan reminder
+     *
+     * @returns {Promise<PfPlanDailies>} PfPlanDailies instance
+     * @throws {InternalServerError} If failed to get daily PF plan reminder
+     */
+    async getUserDailyPfPlanReminder() {
+        try {
+            const utcTime = dateFns.format(new dateFnsUtc.UTCDate(), TIME_FORMAT);
+
+            const enabledNotificationSettings = await this.database.models.UserNotificationSettings.findAll({
+                where: { is_enable: true, time_utc: utcTime },
+            });
+
+            const usersDailyPfPlan = await Promise.all(
+                enabledNotificationSettings.map(async (setting) => {
+                    const userPfPlan = await this.database.models.UserPfPlans.findOne({
+                        where: { user_id: setting.user_id },
+                    });
+
+                    if (!userPfPlan) {
+                        return null;
+                    }
+
+                    const startDate = userPfPlan.created_at;
+
+                    const currentDate = new dateFnsUtc.UTCDate();
+
+                    const elapsedDays = dateFns.differenceInDays(dateFns.format(currentDate, DATE_FORMAT), dateFns.format(startDate, DATE_FORMAT));
+
+                    const pfPlanDaily = await this.database.models.PfPlanDailies.findOne({
+                        where: {
+                            pf_plan_id: userPfPlan.pf_plan_id,
+                            day: elapsedDays + 1,
+                        },
+                        raw: true,
+                    });
+
+                    if (!pfPlanDaily) {
+                        return null;
+                    }
+
+                    return {
+                        user_id: setting.user_id,
+                        ...pfPlanDaily,
+                    };
+                }),
+            );
+
+            return usersDailyPfPlan.filter((dailyPfPlan) => dailyPfPlan !== null);
+        } catch (error) {
+            this.logger.error('Failed to get daily PF plan reminder', error);
+
+            throw new exceptions.InternalServerError('Failed to get daily PF plan reminder', error);
+        }
     }
 }
