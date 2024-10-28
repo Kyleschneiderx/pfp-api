@@ -4,6 +4,8 @@ export const DATETIME_FORMAT = 'yyyy-MM-dd HH:mm:ss';
 
 export const DATE_YEAR_MONTH_FORMAT = 'yyyy-MM';
 
+export const TIME_FORMAT = 'HH:mm:ss';
+
 export const MONTHLY_PERIOD = 'monthly';
 
 export const WEEKLY_PERIOD = 'weekly';

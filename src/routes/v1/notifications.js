@@ -1,9 +1,12 @@
 import express from 'express';
 import validateInput from '../../middlewares/validate-input.js';
+import * as validations from '../../middlewares/validations/notifications/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ notificationController }) => {
+export default ({ notificationController, verifyUser }) => {
     const router = express.Router();
+
+    router.use(verifyUser);
 
     router.get(
         '/',
@@ -12,6 +15,14 @@ export default ({ notificationController }) => {
     );
 
     router.delete('/', notificationController.handleRemoveNotificationRoute.bind(notificationController));
+
+    router.put(
+        '/settings',
+        validateInput(validations.updateNotificationSettingsValidation()),
+        notificationController.handleUpdateNotificationSettingsRoute.bind(notificationController),
+    );
+
+    router.get('/settings', notificationController.handleGetNotificationSettingsRoute.bind(notificationController));
 
     return router;
 };

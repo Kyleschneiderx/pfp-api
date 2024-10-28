@@ -1,4 +1,8 @@
 import { Sequelize } from 'sequelize';
+import * as dateFnsUtc from '@date-fns/utc';
+import * as dateFnsTz from 'date-fns-tz';
+import * as dateFns from 'date-fns';
+import { DATE_FORMAT, DATETIME_FORMAT, TIME_FORMAT } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class NotificationService {
@@ -276,6 +280,68 @@ export default class NotificationService {
             this.logger.error('Failed to add device token.', error);
 
             throw new exceptions.InternalServerError('Failed to add device token', error);
+        }
+    }
+
+    /**
+     * Update user notification settings
+     *
+     * @param {number} userId User account id
+     * @param {object} data
+     * @param {boolean} data.isEnable Notification state
+     * @param {string} data.time Desired time to be notified daily
+     * @param {string} data.timezone Desired timezone for the time
+     * @returns {Promise<UserNotificationSettings>}
+     * @throws {InternalServerError} If failed to update notification settings
+     */
+    async updateUserNotificationSettings(userId, data) {
+        try {
+            let userSetting = await this.database.models.UserNotificationSettings.findOne({ where: { user_id: userId } });
+
+            const timezoneDate = dateFnsTz.format(dateFnsTz.toZonedTime(new dateFnsUtc.UTCDate(), data.timezone), DATE_FORMAT, {
+                timeZone: data.timezone,
+            });
+
+            const utcDateTime = dateFnsTz.fromZonedTime(new dateFnsUtc.UTCDate(`${timezoneDate} ${data.time}`), data.timezone);
+
+            const utcTime = dateFns.format(new dateFnsUtc.UTCDate(utcDateTime), TIME_FORMAT);
+
+            [userSetting] = await this.database.models.UserNotificationSettings.upsert({
+                id: userSetting?.id,
+                user_id: userId,
+                is_enable: data.isEnable,
+                time: data.time,
+                time_utc: utcTime,
+                timezone: data.timezone,
+            });
+
+            delete userSetting.dataValues.time_utc;
+
+            return userSetting;
+        } catch (error) {
+            this.logger.error('Failed to update notification settings.', error);
+
+            throw new exceptions.InternalServerError('Failed to update notification settings', error);
+        }
+    }
+
+    /**
+     * Get user notification settings
+     *
+     * @param {number} userId User account id
+     * @returns {Promise<UserNotificationSettings>}
+     * @throws {InternalServerError} If failed to get notification settings
+     */
+    async getUserNotificationSettings(userId) {
+        try {
+            return await this.database.models.UserNotificationSettings.findOne({
+                attributes: { exclude: ['time_utc', 'deleted_at'] },
+                where: { user_id: userId },
+            });
+        } catch (error) {
+            this.logger.error('Failed to get notification settings.', error);
+
+            throw new exceptions.InternalServerError('Failed to get notification settings', error);
         }
     }
 }

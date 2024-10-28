@@ -200,6 +200,7 @@ export default ({
     router.use(
         '/v1/notifications',
         routeV1Notifications({
+            verifyUser: middlewares.verifyUser,
             notificationController: notificationController,
         }),
     );

@@ -21,4 +21,18 @@ export default class NotificationController {
 
         return res.json({ msg: 'Notifications successfully removed' });
     }
+
+    async handleUpdateNotificationSettingsRoute(req, res) {
+        return res.json(
+            await this.notificationService.updateUserNotificationSettings(req.auth.user_id, {
+                isEnable: req.body.is_enable,
+                time: req.body.time,
+                timezone: req.body.timezone,
+            }),
+        );
+    }
+
+    async handleGetNotificationSettingsRoute(req, res) {
+        return res.json(await this.notificationService.getUserNotificationSettings(req.auth.user_id));
+    }
 }

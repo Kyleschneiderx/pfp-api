@@ -33,3 +33,4 @@ export { default as UserRemovedNotificationIndicators } from './user-removed-not
 export { default as UserDeviceTokens } from './user-device-tokens.js';
 export { default as SystemAuditDescriptions } from './system-audit-descriptions.js';
 export { default as SystemAudits } from './system-audits.js';
+export { default as UserNotificationSettings } from './user-notification-settings.js';
