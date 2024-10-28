@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
 import * as dateFns from 'date-fns';
+import * as dateFnsUtc from '@date-fns/utc';
 import {
     ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
     PFPLAN_PHOTO_PATH,
@@ -908,16 +909,34 @@ export default class PfPlanService {
      */
     async selectPfPlan(id, userId, data) {
         try {
+            const dateToday = new dateFnsUtc.UTCDate();
+
+            let startAt = dateToday;
+
             return await this.database.transaction(async (transaction) => {
+                const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
+                    where: { user_id: userId, pf_plan_id: id },
+                    order: [['id', 'DESC']],
+                    paranoid: false,
+                });
+
+                startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
+
                 await this.database.models.UserPfPlans.destroy({ where: { user_id: userId } }, { transaction });
 
                 if (data.isStartOver) {
+                    lastRecordOfNewPfPlan.reset_at = dateToday;
+
+                    await lastRecordOfNewPfPlan.save({ transaction: transaction });
+
                     await this.database.models.UserPfPlanDailyProgress.destroy({ where: { user_id: userId, pf_plan_id: id } }, { transaction });
 
                     await this.database.models.UserPfPlanProgress.destroy({ where: { user_id: userId, pf_plan_id: id } }, { transaction });
+
+                    startAt = dateToday;
                 }
 
-                return this.database.models.UserPfPlans.create({ user_id: userId, pf_plan_id: id }, { transaction });
+                return this.database.models.UserPfPlans.create({ user_id: userId, pf_plan_id: id, start_at: startAt }, { transaction });
             });
         } catch (error) {
             this.logger.error('Failed to select PF plan', error);
@@ -1143,7 +1162,7 @@ export default class PfPlanService {
                 userPfPlanProgressObject[progress.day] = progress;
             });
 
-            const startPlan = userPfPlan.created_at;
+            const startPlan = userPfPlan.start_at;
 
             const currentDate = new Date();
 

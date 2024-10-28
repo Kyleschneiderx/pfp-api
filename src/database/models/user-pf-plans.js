@@ -23,6 +23,9 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
+            start_at: {
+                type: DataTypes.DATE,
+            },
             reset_at: {
                 type: DataTypes.DATE,
             },
