@@ -41,7 +41,6 @@ export default ({ exerciseService, educationService, pfPlanService }) => [
         educationService,
         isBody: true,
         isRequired: false,
-        isPublishedOnly: true,
         field: 'dailies.*.contents.*.education_id',
     }),
 ];

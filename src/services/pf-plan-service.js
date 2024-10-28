@@ -12,6 +12,7 @@ import {
     DRAFT_PF_PLAN_STATUS_ID,
     PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS,
     DATE_FORMAT,
+    PUBLISHED_EDUCATION_STATUS_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -83,7 +84,25 @@ export default class PfPlanService {
                         where: {},
                     },
                 ],
-                where: {},
+                where: {
+                    education_id: {
+                        [Sequelize.Op.or]: [
+                            {
+                                [Sequelize.Op.eq]: null,
+                            },
+                            {
+                                [Sequelize.Op.in]: Sequelize.literal(
+                                    `(${this.database.dialect.queryGenerator
+                                        .selectQuery('educations', {
+                                            attributes: ['id'],
+                                            where: { status_id: PUBLISHED_EDUCATION_STATUS_ID },
+                                        })
+                                        .slice(0, -1)})`,
+                                ),
+                            },
+                        ],
+                    },
+                },
             },
         ];
     }
