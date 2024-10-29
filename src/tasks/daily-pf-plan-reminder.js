@@ -5,7 +5,7 @@ export default ({ logger, pfPlanService, notificationService }) => {
 
     return {
         name: name,
-        schedule: '*/5 * * * * *',
+        schedule: '* * * * *',
         process: async () => {
             logger.info(`Starting task [${name}]`);
             try {
