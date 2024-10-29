@@ -333,8 +333,9 @@ export default class NotificationService {
      * @throws {InternalServerError} If failed to get notification settings
      */
     async getUserNotificationSettings(userId) {
+        let userNotificationSettings;
         try {
-            return await this.database.models.UserNotificationSettings.findOne({
+            userNotificationSettings = await this.database.models.UserNotificationSettings.findOne({
                 attributes: { exclude: ['time_utc', 'deleted_at'] },
                 where: { user_id: userId },
             });
@@ -343,5 +344,9 @@ export default class NotificationService {
 
             throw new exceptions.InternalServerError('Failed to get notification settings', error);
         }
+
+        if (!userNotificationSettings) throw new exceptions.NotFound('Notification settings not found');
+
+        return userNotificationSettings;
     }
 }
