@@ -209,5 +209,32 @@ export default ({
         res.send('Welcome!');
     });
 
+    router.get('/.well-known/assetlinks.json', (req, res) =>
+        res.json([
+            {
+                relation: ['delegate_permission/common.handle_all_urls'],
+                target: {
+                    namespace: 'android_app',
+                    package_name: process.env.DEEPLINK_ANDROID_PACKAGE,
+                    sha256_cert_fingerprints: [process.env.DEEPLINK_ANDROID_SHA256],
+                },
+            },
+        ]),
+    );
+
+    router.get('/apple-app-site-association', (req, res) =>
+        res.json({
+            applinks: {
+                apps: [],
+                details: [
+                    {
+                        appID: process.env.DEEPLINK_IOS_APPID,
+                        paths: ['*'],
+                    },
+                ],
+            },
+        }),
+    );
+
     return router;
 };
