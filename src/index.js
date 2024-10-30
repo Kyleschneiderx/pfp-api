@@ -90,7 +90,7 @@ app.get('/.well-known/assetlinks.json', (req, res) =>
     ]),
 );
 
-app.get('/apple-app-site-association', (req, res) =>
+app.get('/.well-known/apple-app-site-association', (req, res) =>
     res.json({
         applinks: {
             apps: [],
