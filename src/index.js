@@ -97,7 +97,11 @@ app.get('/apple-app-site-association', (req, res) =>
             details: [
                 {
                     appID: process.env.DEEPLINK_IOS_APPID,
-                    paths: ['/app/*'],
+                    components: [
+                        {
+                            '/': '/app/*',
+                        },
+                    ],
                 },
             ],
         },
