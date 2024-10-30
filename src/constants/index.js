@@ -70,7 +70,7 @@ export const USED_RESET_PASSWORD_REQUEST_STATUS_ID = 3;
 
 export const RESET_PASSWORD_EXPIRATION_IN_SECONDS = 3600;
 
-export const USER_PHOTO_PATH = 'user-photo';
+export const USER_PHOTO_PATH = `${process.env.APP_ENV}/user-photo`;
 
 export const USER_PHOTO_HEIGHT = 200;
 
@@ -80,11 +80,11 @@ export const ASSET_URL = `${process.env.APP_URL}/api/assets`;
 
 export const S3_OBJECT_URL = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_REGION}.amazonaws.com`;
 
-export const EXERCISE_PHOTO_PATH = 'exercises-photo';
+export const EXERCISE_PHOTO_PATH = `${process.env.APP_ENV}/exercises-photo`;
 
-export const EXERCISE_VIDEO_PATH = 'exercises-video';
+export const EXERCISE_VIDEO_PATH = `${process.env.APP_ENV}/exercises-video`;
 
-export const EXERCISE_AUDIO_PATH = 'exercises-audio';
+export const EXERCISE_AUDIO_PATH = `${process.env.APP_ENV}/exercises-audio`;
 
 export const ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES = 60;
 
@@ -96,21 +96,21 @@ export const FAVORITE_WORKOUT_STATUS = true;
 
 export const UNFAVORITE_WORKOUT_STATUS = false;
 
-export const WORKOUT_PHOTO_PATH = 'workout-photo';
+export const WORKOUT_PHOTO_PATH = `${process.env.APP_ENV}/workout-photo`;
 
 export const DRAFT_PF_PLAN_STATUS_ID = 4;
 
 export const PUBLISHED_PF_PLAN_STATUS_ID = 5;
 
-export const PFPLAN_PHOTO_PATH = 'pf-plan-photo';
+export const PFPLAN_PHOTO_PATH = `${process.env.APP_ENV}/pf-plan-photo`;
 
 export const DRAFT_EDUCATION_STATUS_ID = 4;
 
 export const PUBLISHED_EDUCATION_STATUS_ID = 5;
 
-export const EDUCATION_PHOTO_PATH = 'education-photo';
+export const EDUCATION_PHOTO_PATH = `${process.env.APP_ENV}/education-photo`;
 
-export const EDUCATION_MEDIA_PATH = 'education-media';
+export const EDUCATION_MEDIA_PATH = `${process.env.APP_ENV}/education-media`;
 
 export const FAVORITE_EDUCATION_STATUS = true;
 
