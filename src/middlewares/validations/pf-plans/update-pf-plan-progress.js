@@ -41,6 +41,7 @@ export default ({ pfPlanService }) => [
         .trim()
         .exists({ value: 'falsy' })
         .isBoolean()
+        .withMessage('Is skip should be boolean.')
         .customSanitizer((value) => {
             try {
                 return JSON.parse(value);

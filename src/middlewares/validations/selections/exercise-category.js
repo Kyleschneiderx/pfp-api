@@ -25,7 +25,9 @@ export default ({ selectionService, isUpdate = false, isDelete = false }) => {
                 .exists({ values: 'falsy' })
                 .withMessage('Name is required.')
                 .isString()
+                .withMessage('Name should be string.')
                 .isLength({ max: 100 })
+                .withMessage('Name should not exceed 100 characters.')
                 .custom(async (value, { req }) => {
                     if (await selectionService.isExerciseCategoryExistByValue(value, isUpdate ? req.params.id : undefined)) {
                         throw new Error('Exercise category already exist.');

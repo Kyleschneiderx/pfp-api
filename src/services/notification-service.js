@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize';
 import * as dateFnsUtc from '@date-fns/utc';
 import * as dateFnsTz from 'date-fns-tz';
 import * as dateFns from 'date-fns';
-import { DATE_FORMAT, DATETIME_FORMAT, TIME_FORMAT } from '../constants/index.js';
+import { DATE_FORMAT, TIME_FORMAT } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class NotificationService {

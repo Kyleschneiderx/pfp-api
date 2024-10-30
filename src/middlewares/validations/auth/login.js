@@ -25,8 +25,11 @@ export default ({ userService, password, isAdmin, authService }) => {
             .exists({ values: 'falsy' })
             .withMessage('Email is required.')
             .isString()
+            .withMessage('Email should be string.')
             .isEmail()
+            .withMessage('Invalid email.')
             .isLength({ max: 150 })
+            .withMessage('Email should not exceed 150 characters.')
             .customSanitizer(async (value, { req }) => {
                 req.user = await userService.getUser({
                     email: value,
@@ -50,6 +53,7 @@ export default ({ userService, password, isAdmin, authService }) => {
             .exists({ values: 'falsy' })
             .withMessage('Password is required.')
             .isString()
+            .withMessage('Password should be string.')
             .custom(async (value, { req }) => {
                 if (!password.verify(value, req.user.password)) {
                     throw new Error('Incorrect email or password.');
@@ -63,6 +67,7 @@ export default ({ userService, password, isAdmin, authService }) => {
             .exists({ values: 'falsy' })
             .withMessage('Google token is required.')
             .isString()
+            .withMessage('Google token should be string.')
             .custom(async (value, { req }) => {
                 let googleId;
 
@@ -89,6 +94,7 @@ export default ({ userService, password, isAdmin, authService }) => {
             .exists({ values: 'falsy' })
             .withMessage('Apple token is required.')
             .isString()
+            .withMessage('Apple token should be string.')
             .custom(async (value, { req }) => {
                 let appleId;
 

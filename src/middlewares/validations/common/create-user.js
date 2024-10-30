@@ -17,8 +17,19 @@ export default ({ userService, file }) => [
         .exists({ values: 'falsy' })
         .withMessage('Birthdate is required.')
         .isDate()
+        .withMessage('Birthdate should be a valid date.')
         .isISO8601()
-        .isBefore(new Date().toUTCString()),
-    body('contact_number').trim().exists({ values: 'falsy' }).withMessage('Contact number is required.').isString().isLength({ max: 20 }).isNumeric(),
+        .withMessage('Invalid date format.')
+        .isBefore(new Date().toUTCString())
+        .withMessage('Birthdate should be before today.'),
+    body('contact_number')
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Contact number is required.')
+        .isString()
+        .withMessage('Contact number should be string.')
+        .isLength({ max: 20 })
+        .withMessage('Contact number should not exceed 20 characters.')
+        .isNumeric(),
     ...photoValidation({ field: 'photo', file: file }),
 ];

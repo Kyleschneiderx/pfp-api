@@ -6,6 +6,7 @@ export default ({ authService }) =>
         .exists({ values: 'falsy' })
         .withMessage('Token is required.')
         .isString()
+        .withMessage('Token should be string.')
         .custom(async (value) => {
             try {
                 await authService.verifyResetPasswordRequestReference(value);

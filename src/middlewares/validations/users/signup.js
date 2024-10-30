@@ -11,7 +11,9 @@ export default ({ userService, file, verificationService, authService }) => [
         .exists({ values: 'falsy' })
         .withMessage('OTP is required.')
         .isString()
+        .withMessage('OTP should be string.')
         .isLength({ min: 6, max: 6 })
+        .withMessage('OTP should be 6 characters long.')
         .custom(async (value, { req }) => {
             try {
                 await verificationService.verifyOtp(req.body.email, value);
@@ -25,6 +27,7 @@ export default ({ userService, file, verificationService, authService }) => [
         .exists({ values: 'falsy' })
         .withMessage('Google token is required.')
         .isString()
+        .withMessage('Google token should be string.')
         .custom(async (value, { req }) => {
             let payload;
             try {
@@ -40,6 +43,7 @@ export default ({ userService, file, verificationService, authService }) => [
         .exists({ values: 'falsy' })
         .withMessage('Apple token is required.')
         .isString()
+        .withMessage('Apple token should be string.')
         .custom(async (value, { req }) => {
             let payload;
             try {

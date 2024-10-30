@@ -7,27 +7,29 @@ export default ({ pfPlanService, field = 'id', isRequired = true, isBody = false
     if (isBody) rule = body(field);
 
     if (isRequired) {
-        rule.exists({ values: 'falsy' }).withMessage('PF Plan id is required.');
+        rule.exists({ values: 'falsy' });
     } else {
         rule.optional().notEmpty();
     }
 
-    rule.customSanitizer((value) => (value === 'null' ? null : Number(value))).custom(async (value, { req }) => {
-        if (value === null) {
+    rule.withMessage('PF Plan id is required.')
+        .customSanitizer((value) => (value === 'null' ? null : Number(value)))
+        .custom(async (value, { req }) => {
+            if (value === null) {
+                return true;
+            }
+
+            const isPfPlanExist =
+                req.auth.account_type_id === ADMIN_ACCOUNT_TYPE_ID
+                    ? await pfPlanService.isPfPlanExistById(value)
+                    : await pfPlanService.isPublishedPfPlanExistById(value);
+
+            if (!isPfPlanExist) {
+                throw new Error('PF Plan does not exist.');
+            }
+
             return true;
-        }
-
-        const isPfPlanExist =
-            req.auth.account_type_id === ADMIN_ACCOUNT_TYPE_ID
-                ? await pfPlanService.isPfPlanExistById(value)
-                : await pfPlanService.isPublishedPfPlanExistById(value);
-
-        if (!isPfPlanExist) {
-            throw new Error('PF Plan does not exist.');
-        }
-
-        return true;
-    });
+        });
 
     return rule;
 };

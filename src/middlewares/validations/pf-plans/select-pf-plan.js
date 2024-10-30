@@ -14,5 +14,5 @@ export default ({ pfPlanService }) => [
 
             return true;
         }),
-    body('is_start_over').optional().notEmpty().isBoolean(),
+    body('is_start_over').optional().notEmpty().isBoolean().withMessage('Is start over should be boolean.'),
 ];

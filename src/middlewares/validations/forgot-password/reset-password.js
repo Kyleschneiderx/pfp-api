@@ -8,15 +8,20 @@ export default ({ verificationService, userService, authService, password }) => 
         .exists({ values: 'falsy' })
         .withMessage('Email is required.')
         .isString()
+        .withMessage('Email should be string.')
         .isEmail()
-        .isLength({ max: 150 }),
+        .withMessage('Invalid email.')
+        .isLength({ max: 150 })
+        .withMessage('Email should not exceed 150 characters.'),
     body('otp')
         .trim()
         .if(body('token').not().exists({ values: 'falsy' }))
         .exists({ values: 'falsy' })
         .withMessage('OTP is required.')
         .isString()
+        .withMessage('OTP should be string.')
         .isLength({ min: 6, max: 6 })
+        .withMessage('OTP should be 6 characters long.')
         .custom(async (value, { req }) => {
             let resetRequest;
             try {
@@ -38,6 +43,7 @@ export default ({ verificationService, userService, authService, password }) => 
         .exists({ values: 'falsy' })
         .withMessage('Token is required.')
         .isString()
+        .withMessage('Token should be string.')
         .custom(async (value, { req }) => {
             let resetRequest;
             try {

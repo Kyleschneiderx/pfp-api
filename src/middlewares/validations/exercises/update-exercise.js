@@ -9,7 +9,9 @@ export default ({ selectionService, file, exerciseService }) => [
         .notEmpty()
         .withMessage('Name is required.')
         .isString()
+        .withMessage('Name should be string.')
         .isLength({ max: 150 })
+        .withMessage('Name should not exceed 150 characters.')
         .custom(async (value, { req }) => {
             if (await exerciseService.isExerciseNameExist(value, req.params.id)) {
                 throw new Error('Exercise name already exists.');
@@ -33,23 +35,26 @@ export default ({ selectionService, file, exerciseService }) => [
         .notEmpty()
         .withMessage('Number of sets is required.')
         .customSanitizer((value) => Number(value))
-        .isNumeric(),
+        .isNumeric()
+        .withMessage('Sets should be numeric.'),
     body('reps')
         .trim()
         .optional()
         .notEmpty()
         .withMessage('Number of reps is required.')
         .customSanitizer((value) => Number(value))
-        .isNumeric(),
+        .isNumeric()
+        .withMessage('Reps should be numeric.'),
     body('hold')
         .trim()
         .optional()
         .notEmpty()
         .withMessage('Number of hold is required.')
         .customSanitizer((value) => Number(value))
-        .isNumeric(),
-    body('description').trim().optional().isString(),
-    body('how_to').trim().optional().isString(),
+        .isNumeric()
+        .withMessage('Hold should be numeric.'),
+    body('description').trim().optional().isString().withMessage('Description should be string.'),
+    body('how_to').trim().optional().isString().withMessage('How to should be string.'),
     ...commonValidation.photoValidation({ field: 'photo', file: file }),
     commonValidation.videoValidation({ field: 'video', file: file }),
 ];

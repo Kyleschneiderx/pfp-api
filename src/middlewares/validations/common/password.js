@@ -10,6 +10,7 @@ export default ({ password, field = 'password', isSignup = false, isReset = fals
     rule.exists({ values: 'falsy' })
         .withMessage('Password is required.')
         .isString()
+        .withMessage('Password should be string.')
         .isStrongPassword({
             minLength: 8,
             minNumbers: 1,

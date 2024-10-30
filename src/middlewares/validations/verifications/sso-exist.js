@@ -6,6 +6,7 @@ export default ({ userService, authService }) =>
         .exists({ values: 'falsy' })
         .withMessage('SSO token is required.')
         .isString()
+        .withMessage('Token should be string.')
         .custom(async (value) => {
             let decodedToken;
             try {

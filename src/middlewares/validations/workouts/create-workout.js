@@ -8,7 +8,9 @@ export default ({ exerciseService, selectionService, file, workoutService }) => 
         .exists({ values: 'falsy' })
         .withMessage('Name is required.')
         .isString()
+        .withMessage('Name should be string.')
         .isLength({ max: 150 })
+        .withMessage('Name should not exceed 150 characters.')
         .custom(async (value) => {
             if (await workoutService.isWorkoutNameExist(value)) {
                 throw new Error('Workout name already exists.');
@@ -16,10 +18,10 @@ export default ({ exerciseService, selectionService, file, workoutService }) => 
 
             return true;
         }),
-    body('description').trim().exists({ values: 'falsy' }).isString(),
+    body('description').trim().exists({ values: 'falsy' }).isString().withMessage('Description should be string.'),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_WORKOUT_STATUS_ID, PUBLISHED_WORKOUT_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
-    body('is_premium').trim().exists({ value: 'falsy' }).isBoolean(),
+    body('is_premium').trim().exists({ value: 'falsy' }).isBoolean().withMessage('Is premium should be boolean.'),
     body('exercises')
         .customSanitizer((value) => {
             if (value === '') return undefined;

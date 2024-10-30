@@ -8,7 +8,9 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
         .exists({ values: 'falsy' })
         .withMessage('Name is required.')
         .isString()
+        .withMessage('Name should be string.')
         .isLength({ max: 150 })
+        .withMessage('Name should not exceed 150 characters.')
         .custom(async (value) => {
             if (await pfPlanService.isPfPlanNameExist(value)) {
                 throw new Error('PF plan name already exists.');
@@ -16,8 +18,8 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
 
             return true;
         }),
-    body('description').trim().exists({ value: 'falsy' }).isString(),
-    body('content').trim().exists({ value: 'falsy' }).isString(),
+    body('description').trim().exists({ value: 'falsy' }).isString().withMessage('Description should be string.'),
+    body('content').trim().exists({ value: 'falsy' }).isString().withMessage('Content should be string.'),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
     body('dailies')
@@ -40,13 +42,16 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
         .exists({ values: 'falsy' })
         .withMessage('Day is required.')
         .customSanitizer((value) => Number(value))
-        .isNumeric(),
+        .isNumeric()
+        .withMessage('Day should be numeric.'),
     body('dailies.*.name')
         .trim()
         .exists({ values: 'falsy' })
         .withMessage('Daily content name is required.')
         .isString()
+        .withMessage('Daily content name should be string.')
         .isLength({ max: 150 })
+        .withMessage('Daily content name should not exceed 150 characters.')
         .custom((value, { req, pathValues }) => {
             const duplicate = req.body.dailies.find(
                 (daily, index) => index !== Number(pathValues[0]) && daily.name?.toLowerCase() === value?.toLowerCase(),

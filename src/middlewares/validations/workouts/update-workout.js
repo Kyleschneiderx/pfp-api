@@ -10,7 +10,9 @@ export default ({ workoutService, exerciseService, selectionService, file }) => 
         .notEmpty()
         .withMessage('Name is required.')
         .isString()
+        .withMessage('Name should be string.')
         .isLength({ max: 150 })
+        .withMessage('Name should not exceed 150 characters.')
         .custom(async (value, { req }) => {
             if (await workoutService.isWorkoutNameExist(value, req.params.id)) {
                 throw new Error('Workout name already exists.');
@@ -18,9 +20,9 @@ export default ({ workoutService, exerciseService, selectionService, file }) => 
 
             return true;
         }),
-    body('description').trim().optional().notEmpty().isString(),
+    body('description').trim().optional().notEmpty().isString().withMessage('Description should be string.'),
     ...commonValidation.photoValidation({ field: 'photo', file: file }),
-    body('is_premium').trim().optional().notEmpty().isBoolean(),
+    body('is_premium').trim().optional().notEmpty().isBoolean().withMessage('Is premium should be boolean.'),
     commonValidation
         .statusIdValidation({
             selectionService,

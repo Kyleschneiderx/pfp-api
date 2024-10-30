@@ -16,6 +16,7 @@ export default ({ userService, password }) => {
             .exists({ value: 'falsy' })
             .withMessage('Old password is required.')
             .isString()
+            .withMessage('Old password should be string.')
             .custom((value, { req }) => {
                 if (!password.verify(value, req.user.password)) {
                     throw new Error('Incorrect old password.');

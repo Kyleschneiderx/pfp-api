@@ -10,7 +10,9 @@ export default ({ exerciseService, educationService, pfPlanService, selectionSer
         .notEmpty()
         .withMessage('Name is required.')
         .isString()
+        .withMessage('Name should be string.')
         .isLength({ max: 150 })
+        .withMessage('Name should not exceed 150 characters.')
         .custom(async (value, { req }) => {
             if (await pfPlanService.isPfPlanNameExist(value, req.params.id)) {
                 throw new Error('PF plan name already exists.');
@@ -18,8 +20,8 @@ export default ({ exerciseService, educationService, pfPlanService, selectionSer
 
             return true;
         }),
-    body('description').trim().optional().notEmpty().isString(),
-    body('content').trim().optional().notEmpty().isString(),
+    body('description').trim().optional().notEmpty().isString().withMessage('Description should be string.'),
+    body('content').trim().optional().notEmpty().isString().withMessage('Content should be string.'),
     commonValidation
         .statusIdValidation({
             selectionService,
@@ -66,13 +68,16 @@ export default ({ exerciseService, educationService, pfPlanService, selectionSer
         .exists({ values: 'falsy' })
         .withMessage('Day is required.')
         .customSanitizer((value) => Number(value))
-        .isNumeric(),
+        .isNumeric()
+        .withMessage('Day should be numeric.'),
     body('dailies.*.name')
         .trim()
         .exists({ values: 'falsy' })
         .withMessage('Daily content name is required.')
         .isString()
+        .withMessage('Daily content name should be string.')
         .isLength({ max: 150 })
+        .withMessage('Daily content name should not exceed 150 characters.')
         .custom(async (value, { req, pathValues }) => {
             if (await pfPlanService.isPfPlanDailyNameExist(value, req.body.dailies[pathValues[0]].daily_id, req.params.id)) {
                 throw new Error('PF plan daily content name already exists.');

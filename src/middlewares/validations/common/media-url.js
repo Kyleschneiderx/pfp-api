@@ -6,8 +6,10 @@ export default ({ file }) =>
         .trim()
         .optional()
         .isString()
+        .withMessage('Media URL should be string.')
         .if(body('media_url').notEmpty())
         .isURL()
+        .withMessage('Media URL should be URL.')
         .custom(async (value) => {
             const response = await fetch(value);
 
