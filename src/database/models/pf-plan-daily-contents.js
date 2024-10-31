@@ -95,7 +95,7 @@ export default (sequelize, DataTypes) => {
         },
     );
     model.associate = () => {
-        const { PfPlanDailyContents, PfPlanDailies, Exercises, Educations, UserPfPlanWorkoutProgress } = sequelize.models;
+        const { PfPlanDailyContents, PfPlanDailies, Exercises, Educations, UserPfPlanDailyProgress } = sequelize.models;
 
         PfPlanDailyContents.belongsTo(PfPlanDailies, { as: 'pf_plan_dailies', foreignKey: 'pf_plan_daily_id' });
 
@@ -103,7 +103,7 @@ export default (sequelize, DataTypes) => {
 
         PfPlanDailyContents.belongsTo(Educations, { as: 'education', foreignKey: 'education_id' });
 
-        PfPlanDailyContents.hasMany(UserPfPlanWorkoutProgress, { as: 'user_pf_plan_workout_progress', foreignKey: 'pf_plan_daily_content_id' });
+        PfPlanDailyContents.hasMany(UserPfPlanDailyProgress, { as: 'user_pf_plan_daily_progress', foreignKey: 'pf_plan_daily_content_id' });
     };
     return model;
 };

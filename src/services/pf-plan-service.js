@@ -46,9 +46,10 @@ export default class PfPlanService {
     /**
      * Default PF plan dailies relation
      *
+     * @param {number} userId Account user id
      * @returns {object[]}
      */
-    _defaultPfPlanDailiesRelation() {
+    _defaultPfPlanDailiesRelation(userId) {
         return [
             {
                 model: this.database.models.PfPlanDailyContents,
@@ -67,6 +68,18 @@ export default class PfPlanService {
                     ],
                 },
                 include: [
+                    ...((userId && [
+                        {
+                            model: this.database.models.UserPfPlanDailyProgress,
+                            as: 'user_pf_plan_daily_progress',
+                            required: false,
+                            attributes: ['is_skip', 'is_fulfilled', 'fulfilled', 'unfulfilled', 'skipped'],
+                            where: {
+                                user_id: userId,
+                            },
+                        },
+                    ]) ??
+                        []),
                     {
                         model: this.database.models.Exercises,
                         as: 'exercise',
@@ -1184,18 +1197,7 @@ export default class PfPlanService {
                         attributes: {
                             exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
                         },
-                        include: [
-                            {
-                                model: this.database.models.UserPfPlanDailyProgress,
-                                as: 'user_pf_plan_daily_progress',
-                                required: false,
-                                attributes: ['is_skip', 'is_fulfilled', 'fulfilled', 'unfulfilled', 'skipped'],
-                                where: {
-                                    user_id: userPfPlan.user_id,
-                                },
-                            },
-                            ...this._defaultPfPlanDailiesRelation(),
-                        ],
+                        include: [...this._defaultPfPlanDailiesRelation(userPfPlan.user_id)],
                     },
                 ],
                 order: [
@@ -1285,8 +1287,10 @@ export default class PfPlanService {
                     pfPlanDailyContent.dataValues.content_progress = this._extractPfPlanDefaultContentProgress(
                         pfPlanDaily.day,
                         dayDifference,
-                        pfPlanDaily.user_pf_plan_daily_progress,
+                        pfPlanDailyContent.user_pf_plan_daily_progress[0],
                     );
+
+                    delete pfPlanDailyContent.dataValues.user_pf_plan_daily_progress;
 
                     return pfPlanDailyContent;
                 });
@@ -1296,8 +1300,6 @@ export default class PfPlanService {
                 pfPlanDaily.dataValues.day_progress = this._extractPfPlanDefaultDailyProgress(pfPlanDaily.day, dayDifference, dayProgress);
 
                 delete pfPlanDaily.dataValues.pf_plan_daily_contents;
-
-                delete pfPlanDaily.dataValues.user_pf_plan_daily_progress;
 
                 return pfPlanDaily;
             });
