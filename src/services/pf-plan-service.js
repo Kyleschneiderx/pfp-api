@@ -1122,11 +1122,28 @@ export default class PfPlanService {
                     where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_skip: true },
                 });
 
+                totalUserPfPlanDailyFulfilled = await this.database.models.UserPfPlanDailyProgress.count({
+                    where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_fulfilled: true },
+                });
+
+                userPfPlanDailyProgress.unfulfilled = Math.max(pfPlanDailyTotalContents - totalUserPfPlanDailyFulfilled, 0);
+
                 await userPfPlanDailyProgress.save();
             }
 
-            const totalUserPfPlanFulfilled = await this.database.models.UserPfPlanDailyProgress.count({
-                where: { user_id: data.userId, pf_plan_id: pfPlanId, unfulfilled: 0 },
+            const userPfPlanFulfilled = await this.database.models.UserPfPlanDailyProgress.findAll({
+                attributes: ['pf_plan_daily_id', [Sequelize.fn('COUNT', 1), 'total_is_fulfilled'], 'total_contents'],
+                where: {
+                    user_id: data.userId,
+                    pf_plan_id: pfPlanId,
+                    is_fulfilled: 1,
+                },
+                group: ['pf_plan_daily_id'],
+                having: {
+                    total_is_fulfilled: {
+                        [Sequelize.Op.gte]: Sequelize.col('total_contents'),
+                    },
+                },
             });
 
             const userPfPlanDailyWithSkip = await this.database.models.UserPfPlanDailyProgress.findAll({
@@ -1142,8 +1159,8 @@ export default class PfPlanService {
                 total_days: pfPlanLastContentDay.day,
                 has_skip: userPfPlanDailyProgress ? Boolean(userPfPlanDailyProgress.skipped) : true,
                 is_fulfilled: userPfPlanDailyProgress ? !userPfPlanDailyProgress.unfulfilled : false,
-                fulfilled: totalUserPfPlanFulfilled,
-                unfulfilled: pfPlanLastContentDay.day - totalUserPfPlanFulfilled,
+                fulfilled: userPfPlanFulfilled.length,
+                unfulfilled: Math.max(pfPlanLastContentDay.day - userPfPlanFulfilled.length, 0),
                 skipped: userPfPlanDailyWithSkip.length,
             });
 
