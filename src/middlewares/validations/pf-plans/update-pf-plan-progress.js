@@ -25,9 +25,9 @@ export default ({ pfPlanService }) => [
         }),
     body('content_id')
         .optional()
-        .notEmpty()
-        .withMessage('PF plan content id is required.')
         .custom(async (value, { req }) => {
+            if (value === null) return true;
+
             const content = await pfPlanService.getPfPlanDailyContentById(req.params.id, value);
             if (!content) {
                 throw new Error('Invalid PF plan content.');
