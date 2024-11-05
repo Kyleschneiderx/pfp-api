@@ -68,6 +68,12 @@ export default ({
         userController.handleGetUserPfPlanProgressRoute.bind(userController),
     );
 
+    router.get(
+        '/:user_id/pf-plan-progress/stats',
+        [validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService })), verifyUser],
+        userController.handleGetUserPfPlanProgressStatisticsRoute.bind(userController),
+    );
+
     router.put(
         '/:user_id/survey',
         [validateInput(validations.updateUserSurveyAnswerValidation({ userService, miscellaneousService })), verifyUser],
