@@ -1164,6 +1164,8 @@ export default class PfPlanService {
                 skipped: userPfPlanDailyWithSkip.length,
             });
 
+            userPfPlanProgress.dataValues.is_skip = data.isSkip;
+
             return userPfPlanProgress;
         } catch (error) {
             await Promise.all(toRollback.map((record) => record.destroy({ force: true })));
