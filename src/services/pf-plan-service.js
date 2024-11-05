@@ -1094,7 +1094,27 @@ export default class PfPlanService {
                         where: { user_id: data.userId, pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id, is_fulfilled: true },
                     }),
                     this.database.models.PfPlanDailyContents.count({
-                        where: { pf_plan_id: pfPlanId, pf_plan_daily_id: data.content.pf_plan_daily_id },
+                        where: {
+                            pf_plan_id: pfPlanId,
+                            pf_plan_daily_id: data.content.pf_plan_daily_id,
+                            education_id: {
+                                [Sequelize.Op.or]: [
+                                    {
+                                        [Sequelize.Op.eq]: null,
+                                    },
+                                    {
+                                        [Sequelize.Op.in]: Sequelize.literal(
+                                            `(${this.database.dialect.queryGenerator
+                                                .selectQuery('educations', {
+                                                    attributes: ['id'],
+                                                    where: { status_id: PUBLISHED_EDUCATION_STATUS_ID },
+                                                })
+                                                .slice(0, -1)})`,
+                                        ),
+                                    },
+                                ],
+                            },
+                        },
                     }),
                 ]);
 
