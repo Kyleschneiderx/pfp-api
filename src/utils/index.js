@@ -5,3 +5,4 @@ export { default as Smtp } from './smtp.js';
 export { default as Storage } from './storage.js';
 export { default as Helper } from './helper.js';
 export { default as Scheduler } from './scheduler.js';
+export { default as InAppPurchase } from './in-app-purchase.js';
