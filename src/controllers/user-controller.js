@@ -166,6 +166,10 @@ export default class UserController {
         return res.json(progress);
     }
 
+    async handleGetUserPfPlanProgressStatisticsRoute(req, res) {
+        return res.json(await this.pfPlanService.getPfPlanProgressStatistics(req.selectedPlan));
+    }
+
     async handleUpdateUserSurveyRoute(req, res) {
         if (!(await this.userService.isUserPremium(req.params.user_id))) {
             throw new exceptions.Forbidden('You cannot access this content.');

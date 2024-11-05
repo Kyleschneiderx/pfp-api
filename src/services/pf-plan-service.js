@@ -1332,6 +1332,27 @@ export default class PfPlanService {
     }
 
     /**
+     * Get pf plan details including all exercises in it
+     *
+     * @param {number} userPfPlan UserPfPlans model instance
+     * @returns {Promise<UserPfPlanProgress>} UserPfPlanProgress instance
+     * @throws {InternalServerError} If failed to get PF plan progress statistics
+     */
+    async getPfPlanProgressStatistics(userPfPlan) {
+        try {
+            return await this.database.models.UserPfPlanProgress.findOne({
+                attributes: ['fulfilled', 'unfulfilled', 'skipped'],
+                where: { pf_plan_id: userPfPlan.pf_plan_id, user_id: userPfPlan.user_id },
+                order: [['updated_at', 'DESC']],
+            });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get PF plan progress statistics', error);
+        }
+    }
+
+    /**
      * Check if PF plan daily exist using name
      *
      * @param {string} name PF plan daily name
