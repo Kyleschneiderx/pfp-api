@@ -62,7 +62,7 @@ export const WEB_RESET_PASSWORD_URL = `${process.env.WEB_URL}/reset-password`;
 
 export const APP_RESET_PASSWORD_URL = `${process.env.MOBILE_URL}/forgot-password/reset`;
 
-export const APP_SETUP_ACCOUNT_URL = `${process.env.MOBILE_URL}/setup?token=`;
+export const APP_SETUP_ACCOUNT_URL = `${process.env.MOBILE_URL}/account?token=`;
 
 export const DEFAULT_RESET_PASSWORD_REQUEST_STATUS_ID = 1;
 
