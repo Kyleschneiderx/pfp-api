@@ -1,5 +1,5 @@
 export default class InAppPurchase {
-    constructor({ logger, apple: { appleAppStoreClient, appleAppStoreServerLib }, google: { googleAuthClient, googleApis } }) {
+    constructor({ logger, apple: { appleAppStoreClient, appleAppStoreServerLib } = {}, google: { googleAuthClient, googleApis } = {} }) {
         this.logger = logger;
         this.appleAppStoreClient = appleAppStoreClient;
         this.appleAppStoreServerLib = appleAppStoreServerLib;
@@ -48,6 +48,16 @@ export default class InAppPurchase {
         }
     }
 
+    /**
+     * Validate google purchase receipt
+     *
+     * @param {object} data
+     * @param {string} data.packageName Product name
+     * @param {string} data.productId Product id
+     * @param {string} data.purchaseToken Purchase token
+     * @param {string} data.orderId Order Id
+     * @returns
+     */
     async verifyGooglePurchase(data) {
         if (this.googleApis === undefined && this.googleAuthClient === undefined)
             throw new Error('Google apis module and google auth client is required.');
@@ -55,7 +65,6 @@ export default class InAppPurchase {
         this.googleApis.google.options({ auth: this.googleAuthClient });
 
         try {
-            // packageName,productId,token you can get from request sent from android
             const purchaseResponse = await this.googleApis.google
                 .androidpublisher({
                     version: 'v3',

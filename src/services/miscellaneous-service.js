@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid';
+import { PREMIUM_USER_TYPE_ID } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
@@ -124,6 +125,36 @@ export default class MiscellaneousService {
      * @throws {InternalServerError} If failed to create payment
      */
     async createPayment(data) {
+        try {
+            return await this.database.transaction(async (transaction) => {
+                const payment = await this.database.models.UserSubscriptions.create(
+                    {
+                        user_id: data.userId,
+                        response: JSON.stringify(data.receipt),
+                    },
+                    { transaction: transaction },
+                );
+
+                delete payment.dataValues.response;
+
+                await this.database.models.Users.update(
+                    { type_id: PREMIUM_USER_TYPE_ID },
+                    {
+                        where: { id: data.userId },
+                        transaction: transaction,
+                    },
+                );
+
+                return payment;
+            });
+        } catch (error) {
+            this.logger.error('Failed to create payment', error);
+
+            throw new exceptions.InternalServerError('Failed to create payment', error);
+        }
+    }
+
+    async updatePayment(data) {
         try {
             const payment = await this.database.models.UserSubscriptions.create({
                 user_id: data.userId,
