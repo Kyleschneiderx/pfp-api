@@ -2,6 +2,7 @@ import createLogger from '../common/logger/index.js';
 import sequelize from '../common/database/sequelize.js';
 import firebase from '../common/firebase/index.js';
 import appleAppStore, { appleAppStoreServerLib } from '../common/apple-app-store/index.js';
+// import googleAuthCLient, { googleApis } from '../common/googleapis/index.js';
 import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
@@ -28,6 +29,10 @@ const serviceContainer = {
             appleAppStoreClient: appleAppStore,
             appleAppStoreServerLib: appleAppStoreServerLib,
         },
+        // google: {
+        //     googleAuthCLient: googleAuthCLient,
+        //     googleApis: googleApis,
+        // },
     }),
     smtp: new utils.Smtp(
         {
