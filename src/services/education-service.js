@@ -359,6 +359,7 @@ export default class EducationService {
      * @param {object} filter
      * @param {number=} filter.statusId Education status id
      * @param {number=} filter.authenticatedUser Authenticated user
+     * @param {number=} filter.fromShare Identifier to return additional info like user info and selected PF plan
      * @returns {Promise<Educations>} Educations model instance
      * @throws {InternalServerError} If failed to get educations
      */
@@ -417,6 +418,23 @@ export default class EducationService {
 
             if (education.dataValues.is_favorite !== undefined) {
                 education.dataValues.is_favorite = Boolean(education.dataValues.is_favorite);
+            }
+
+            if (filter?.fromShare !== undefined) {
+                const user = await this.database.models.Users.findOne({
+                    where: {
+                        id: filter?.authenticatedUser?.user_id,
+                    },
+                });
+
+                const selectPfPlan = await this.database.models.UserPfPlans.findOne({
+                    where: {
+                        user_id: filter?.authenticatedUser?.user_id,
+                    },
+                });
+
+                education.dataValues.user_type_id = user?.type_id ?? null;
+                education.dataValues.selected_pf_plan_id = selectPfPlan?.pf_plan_id ?? null;
             }
 
             return education;

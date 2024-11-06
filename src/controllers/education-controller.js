@@ -49,8 +49,16 @@ export default class EducationController {
     }
 
     async handleGetEducationRoute(req, res) {
+        let fromShare;
+        try {
+            fromShare = JSON.parse(req.query.from_share);
+        } catch (error) {
+            /** empty */
+        }
+
         const education = await this.educationService.getEducationDetails(req.params.id, {
             authenticatedUser: req.auth,
+            fromShare: fromShare,
             ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
                 statusId: PUBLISHED_EDUCATION_STATUS_ID,
             }),
