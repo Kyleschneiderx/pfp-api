@@ -19,11 +19,17 @@ export default ({ userService, authService }) =>
 
             let appleId;
 
-            if (decodedToken?.firebase?.identities?.['google.com'] !== undefined) {
+            const provider = decodedToken?.firebase?.sign_in_provider;
+
+            if (provider === undefined) {
+                throw new Error('Invalid SSO token.');
+            }
+
+            if (provider === 'google.com') {
                 [googleId] = decodedToken.firebase.identities['google.com'];
             }
 
-            if (decodedToken?.firebase?.identities?.['apple.com'] !== undefined) {
+            if (provider === 'apple.com') {
                 [appleId] = decodedToken.firebase.identities['apple.com'];
             }
 
