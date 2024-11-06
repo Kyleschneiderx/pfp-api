@@ -109,14 +109,14 @@ app.get('/.well-known/apple-app-site-association', (req, res) =>
 );
 
 app.listen(process.env.APP_PORT, () => {
-    // serviceContainer.scheduler.run(
-    //     tasks({
-    //         logger: serviceContainer.logger,
-    //         userService: serviceContainer.userService,
-    //         pfPlanService: serviceContainer.pfPlanService,
-    //         notificationService: serviceContainer.notificationService,
-    //     }),
-    // );
+    serviceContainer.scheduler.run(
+        tasks({
+            logger: serviceContainer.logger,
+            userService: serviceContainer.userService,
+            pfPlanService: serviceContainer.pfPlanService,
+            notificationService: serviceContainer.notificationService,
+        }),
+    );
 
     serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}`);
 });
