@@ -421,7 +421,7 @@ export default class EducationService {
                 education.dataValues.is_favorite = Boolean(education.dataValues.is_favorite);
             }
 
-            if (filter?.fromShare !== undefined) {
+            if (filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID) {
                 const user = await this.database.models.Users.findOne({
                     where: {
                         id: filter?.authenticatedUser?.user_id,
