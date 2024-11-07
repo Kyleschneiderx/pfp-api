@@ -10,6 +10,7 @@ import {
     FAVORITE_EDUCATION_STATUS,
     NOTIFICATIONS,
     DRAFT_EDUCATION_STATUS_ID,
+    DRAFT_PF_PLAN_STATUS_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -435,6 +436,17 @@ export default class EducationService {
 
                 education.dataValues.user_type_id = user?.type_id ?? null;
                 education.dataValues.selected_pf_plan_id = selectPfPlan?.pf_plan_id ?? null;
+            }
+
+            if (education.reference_pf_plan_id !== null) {
+                const pfPlan = await this.database.models.PfPlans.findOne({
+                    where: {
+                        id: education.reference_pf_plan_id,
+                    },
+                });
+
+                education.dataValues.reference_pf_plan_id =
+                    pfPlan?.status_id === DRAFT_PF_PLAN_STATUS_ID ? null : education.dataValues.reference_pf_plan_id;
             }
 
             return education;
