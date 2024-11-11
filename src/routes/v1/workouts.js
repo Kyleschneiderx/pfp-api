@@ -9,15 +9,15 @@ export default ({ verifyAdmin, verifyUser, workoutController, workoutService, ex
     router.get('/', validateInput(validations.getWorkoutsValidation()), workoutController.handleGetWorkoutsRoute.bind(workoutController));
 
     router.get(
-        '/:id',
-        validateInput([commonValidations.workoutIdValidation({ workoutService })]),
-        workoutController.handleGetWorkoutRoute.bind(workoutController),
-    );
-
-    router.get(
         '/favorites',
         [validateInput(validations.getFavoriteWorkoutsValidation()), verifyUser],
         workoutController.handleGetFavoriteWorkoutsRoute.bind(workoutController),
+    );
+
+    router.get(
+        '/:id',
+        validateInput([commonValidations.workoutIdValidation({ workoutService })]),
+        workoutController.handleGetWorkoutRoute.bind(workoutController),
     );
 
     router.post(
