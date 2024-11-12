@@ -217,6 +217,11 @@ export default class UserController {
     }
 
     async handleSetupPasswordRoute(req, res) {
+        const user = await this.userService.getUser({
+            userId: req.auth.user_id,
+            withProfile: true,
+        });
+
         await this.userService.resetUserPassword(req.auth.user_id, req.body.password);
 
         if (req.body.device_token !== undefined) {
@@ -225,6 +230,16 @@ export default class UserController {
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SETUP_PASSWORD);
 
-        return res.json({ msg: 'Password successfully set.', data: { user_id: req.auth.user_id } });
+        await this.userService.updateUserLastLogin(user.id);
+
+        delete user.dataValues.password;
+
+        delete user.dataValues.google_id;
+
+        delete user.dataValues.apple_id;
+
+        delete user.dataValues.password;
+
+        return res.json({ msg: 'Password successfully set.', user: user });
     }
 }
