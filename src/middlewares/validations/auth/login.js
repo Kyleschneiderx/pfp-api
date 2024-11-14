@@ -57,7 +57,7 @@ export default ({ userService, password, isAdmin, authService }) => {
             .custom(async (value, { req }) => {
                 if (req.user.google_id || req.user.apple_id) {
                     const platform = req.user.google_id ? 'Google' : 'Apple';
-                    throw new Error(`This email is linked to an ${platform} account. Please log in with ${platform}.`);
+                    throw new Error(`This account was used to login using ${platform}.`);
                 }
 
                 if (!req.user.password) {
