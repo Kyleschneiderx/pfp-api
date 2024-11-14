@@ -219,8 +219,12 @@ export default class UserController {
     async handleSetupPasswordRoute(req, res) {
         await this.userService.resetUserPassword(req.auth.user_id, req.body.password);
 
+        if (req.body.device_token !== undefined) {
+            await this.notificationService.addUserDeviceToken(req.auth.user_id, req.body.device_token);
+        }
+
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SETUP_PASSWORD);
 
-        return res.json({ msg: 'Password successfully set.' });
+        return res.json({ msg: 'Password successfully set.', data: { user_id: req.auth.user_id } });
     }
 }
