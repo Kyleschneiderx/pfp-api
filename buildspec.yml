@@ -5,7 +5,7 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "Installing Node.js dependencies............."
+      - echo "Installing Node.js dependencies.............."
       - npm install
 
       # Install AWS CLI
