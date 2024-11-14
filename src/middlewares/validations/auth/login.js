@@ -55,6 +55,15 @@ export default ({ userService, password, isAdmin, authService }) => {
             .isString()
             .withMessage('Password should be string.')
             .custom(async (value, { req }) => {
+                if (req.user.google_id || req.user.apple_id) {
+                    const platform = req.user.google_id ? 'Google' : 'Apple';
+                    throw new Error(`This account was used to login using ${platform}. Try to login using ${platform}`);
+                }
+
+                if (!req.user.password) {
+                    throw new Error('No password set for this account.');
+                }
+
                 if (!password.verify(value, req.user.password)) {
                     throw new Error('Incorrect email or password.');
                 }
