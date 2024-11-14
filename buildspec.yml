@@ -34,4 +34,4 @@ phases:
 
 artifacts:
   files:
-    - imagedefinitions_$PROJECT_NAME-$ENVIRONMENT.json
+    - imagedefinitions_pelvic_floor-api-$ENVIRONMENT.json
