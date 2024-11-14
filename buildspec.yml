@@ -31,8 +31,8 @@ phases:
     commands:
       - echo "Pushing Docker image to ECR..."
       - docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/${PROJECT_NAME}-${ENVIRONMENT}:${IMAGE_TAG}"
-      - printf "[{\"name\":\"${PROJECT_NAME}-${ENVIRONMENT}\",\"imageUri\":\"%s\"}]" "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/${PROJECT_NAME}-${ENVIRONMENT}:${IMAGE_TAG}" > "imagedefinitions_pelvic-floor-${ENVIRONMENT}.json"
+      - printf "[{\"name\":\"${PROJECT_NAME}-${ENVIRONMENT}\",\"imageUri\":\"%s\"}]" "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/${PROJECT_NAME}-${ENVIRONMENT}:${IMAGE_TAG}" > "imagedefinitions_pelvic-floor-api-${ENVIRONMENT}.json"
 
 artifacts:
   files:
-    - "imagedefinitions_pelvic-floor-${ENVIRONMENT}.json"
+    - "imagedefinitions_pelvic-floor-api-${ENVIRONMENT}.json"
