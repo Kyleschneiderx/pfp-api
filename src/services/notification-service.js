@@ -227,10 +227,12 @@ export default class NotificationService {
         try {
             const lastNotification = await this.database.models.Notifications.findOne({ order: [['id', 'DESC']] });
 
-            await this.database.models.UserRemovedNotificationIndicators.create({
-                user_id: userId,
-                notification_id: lastNotification.id,
-            });
+            if (lastNotification) {
+                await this.database.models.UserRemovedNotificationIndicators.create({
+                    user_id: userId,
+                    notification_id: lastNotification.id,
+                });
+            }
 
             await this.database.models.Notifications.destroy({
                 where: {
