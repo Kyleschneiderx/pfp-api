@@ -11,6 +11,8 @@ const auth = new googleApisLib.google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/androidpublisher'],
 });
 
-const googleAuthCLient = await auth.getClient();
+const googleAuthClient = await auth.getClient();
 
-export default googleAuthCLient;
+console.log(googleAuthClient);
+
+export default googleAuthClient;
