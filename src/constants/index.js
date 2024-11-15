@@ -174,3 +174,7 @@ export const SYSTEM_AUDITS = {
 export const CONTACT_SUPPORT_NAME = process.env.SUPPORT_NAME;
 
 export const CONTACT_SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
+
+export const PAID_PURCHASE_STATUS = 'paid';
+
+export const EXPIRED_PURCHASE_STATUS = 'expired';

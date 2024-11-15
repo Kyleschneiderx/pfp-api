@@ -35,6 +35,9 @@ export default (sequelize, DataTypes) => {
             response: {
                 type: DataTypes.TEXT('long'),
             },
+            expires_at: {
+                type: DataTypes.DATEONLY,
+            },
             created_at: {
                 type: DataTypes.DATE,
             },
@@ -83,6 +86,11 @@ export default (sequelize, DataTypes) => {
                     name: 'user_subscriptions_user_id_status',
                     using: 'BTREE',
                     fields: [{ name: 'user_id' }, { name: 'status' }],
+                },
+                {
+                    name: 'user_subscriptions_expires_at',
+                    using: 'BTREE',
+                    fields: [{ name: 'expires_at' }],
                 },
             ],
         },

@@ -1,5 +1,8 @@
 import { v4 as uuid } from 'uuid';
-import { PREMIUM_USER_TYPE_ID } from '../constants/index.js';
+import * as dateFns from 'date-fns';
+import * as dateFnsUtc from '@date-fns/utc';
+import { Sequelize } from 'sequelize';
+import { PREMIUM_USER_TYPE_ID, DATE_FORMAT, FREE_USER_TYPE_ID, EXPIRED_PURCHASE_STATUS, PAID_PURCHASE_STATUS } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
@@ -126,11 +129,15 @@ export default class MiscellaneousService {
      */
     async createPayment(data) {
         try {
+            const expiresAt = dateFns.format(dateFns.add(new dateFnsUtc.UTCDate(), { days: 7 }), DATE_FORMAT);
+
             return await this.database.transaction(async (transaction) => {
                 const payment = await this.database.models.UserSubscriptions.create(
                     {
                         user_id: data.userId,
                         response: JSON.stringify(data.receipt),
+                        status: PAID_PURCHASE_STATUS,
+                        expires_at: expiresAt,
                     },
                     { transaction: transaction },
                 );
@@ -176,6 +183,44 @@ export default class MiscellaneousService {
             this.logger.error('Failed to create payment', error);
 
             throw new exceptions.InternalServerError('Failed to create payemnt', error);
+        }
+    }
+
+    async expireUserSubscriptions() {
+        try {
+            const subscriptions = await this.database.models.UserSubscriptions.findAll({
+                where: {
+                    status: {
+                        [Sequelize.Op.ne]: EXPIRED_PURCHASE_STATUS,
+                    },
+                    expires_at: {
+                        [Sequelize.Op.lte]: dateFns.format(new dateFnsUtc.UTCDate(), DATE_FORMAT),
+                    },
+                },
+            });
+
+            const userIds = [];
+
+            const subscriptionIds = [];
+
+            subscriptions.forEach((subscription) => {
+                userIds.push(subscription.user_id);
+
+                subscriptionIds.push(subscription.id);
+            });
+
+            this.database.transaction(async (transaction) => {
+                await this.database.models.UserSubscriptions.update(
+                    { status: EXPIRED_PURCHASE_STATUS },
+                    { where: { id: subscriptionIds }, transaction: transaction },
+                );
+
+                await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: userIds }, transaction: transaction });
+            });
+        } catch (error) {
+            this.logger.error('Failed to expire user subscriptions', error);
+
+            throw new exceptions.InternalServerError('Failed to expire user subscriptions', error);
         }
     }
 }

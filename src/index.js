@@ -115,6 +115,7 @@ app.listen(process.env.APP_PORT, () => {
             userService: serviceContainer.userService,
             pfPlanService: serviceContainer.pfPlanService,
             notificationService: serviceContainer.notificationService,
+            miscellaneousService: serviceContainer.miscellaneousService,
         }),
     );
 
