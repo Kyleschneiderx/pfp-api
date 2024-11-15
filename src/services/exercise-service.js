@@ -238,8 +238,8 @@ export default class ExerciseService {
             const exercise = await this.database.models.Exercises.findOne({ where: { id: id } });
 
             const toRemoveFiles = [
-                ...(exercise.photo && [exercise.photo.replace(ASSET_URL, S3_OBJECT_URL)]),
-                ...(exercise.video && [exercise.video.replace(ASSET_URL, S3_OBJECT_URL)]),
+                ...((exercise.photo && [exercise.photo.replace(ASSET_URL, S3_OBJECT_URL)]) ?? []),
+                ...((exercise.video && [exercise.video.replace(ASSET_URL, S3_OBJECT_URL)]) ?? []),
             ];
 
             await this.storage.delete(toRemoveFiles, {
