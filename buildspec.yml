@@ -19,19 +19,19 @@ phases:
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com
+      - aws ecr get-login-password --region ${ECR_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com
 
   build:
     commands:
       - echo "Building the Docker image..."
-      - docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/$PROJECT_NAME-$ENVIRONMENT:$IMAGE_TAG .
+      - docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/$PROJECT_NAME-$ENVIRONMENT:$IMAGE_TAG .
 
   post_build:
     commands:
       - echo "Pushing Docker image to ECR..."
-      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com/$PROJECT_NAME-$ENVIRONMENT:$IMAGE_TAG
-      - printf "[{\"name\":\"${PROJECT_NAME}-${ENVIRONMENT}\",\"imageUri\":\"%s\"}]" "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/$PROJECT_NAME-$ENVIRONMENT:$IMAGE_TAG" > imagedefinitions_pelvic-floor-${ENVIRONMENT}.json
+      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/$PROJECT_NAME-$ENVIRONMENT:$IMAGE_TAG
+      - printf "[{\"name\":\"${PROJECT_NAME}-${ENVIRONMENT}\",\"imageUri\":\"%s\"}]" "${AWS_ACCOUNT_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/$PROJECT_NAME-$ENVIRONMENT:$IMAGE_TAG" > imagedefinitions_pelvic-floor-api-${ENVIRONMENT}.json
 
 artifacts:
   files:
-    - imagedefinitions_pelvic-floor-${ENVIRONMENT}.json
+    - imagedefinitions_pelvic-floor-api-${ENVIRONMENT}.json
