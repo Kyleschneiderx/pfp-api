@@ -1,8 +1,8 @@
 import createLogger from '../common/logger/index.js';
 import sequelize from '../common/database/sequelize.js';
 import firebase from '../common/firebase/index.js';
-// import appleAppStore, { appleAppStoreServerLib } from '../common/apple-app-store/index.js';
-// import googleAuthClient, { googleApis } from '../common/googleapis/index.js';
+import appleAppStore, { appleAppStoreServerLib } from '../common/apple-app-store/index.js';
+import googleAuthClient, { googleApis } from '../common/googleapis/index.js';
 import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
@@ -20,18 +20,18 @@ const serviceContainer = {
     file: utils.File,
     ssoAuthentication: firebase.auth(),
     pushNotification: firebase.messaging(),
-    // appleAppStore: appleAppStore,
-    // inAppPurchase: new utils.InAppPurchase({
-    //     logger: logger,
-    //     apple: {
-    //         appleAppStoreClient: appleAppStore,
-    //         appleAppStoreServerLib: appleAppStoreServerLib,
-    //     },
-    //     google: {
-    //         googleAuthClient: googleAuthClient,
-    //         googleApis: googleApis,
-    //     },
-    // }),
+    appleAppStore: appleAppStore,
+    inAppPurchase: new utils.InAppPurchase({
+        logger: logger,
+        apple: {
+            appleAppStoreClient: appleAppStore,
+            appleAppStoreServerLib: appleAppStoreServerLib,
+        },
+        google: {
+            googleAuthClient: googleAuthClient,
+            googleApis: googleApis,
+        },
+    }),
     smtp: new utils.Smtp(
         {
             [process.env.SMTP_TYPE]: configSmtp[process.env.SMTP_TYPE],
