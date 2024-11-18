@@ -20,7 +20,6 @@ const serviceContainer = {
     file: utils.File,
     ssoAuthentication: firebase.auth(),
     pushNotification: firebase.messaging(),
-    appleAppStore: appleAppStore,
     inAppPurchase: new utils.InAppPurchase({
         logger: logger,
         apple: {
