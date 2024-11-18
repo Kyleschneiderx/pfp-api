@@ -13,6 +13,4 @@ const auth = new googleApisLib.google.auth.GoogleAuth({
 
 const googleAuthClient = await auth.getClient();
 
-console.log(googleAuthClient);
-
 export default googleAuthClient;
