@@ -179,9 +179,11 @@ export const GOOGLE_PAYMENT_PLATFORM = 'google_play';
 
 export const APPLE_PAYMENT_PLATFORM = 'apple_pay';
 
-export const PAID_PURCHASE_STATUS = 'paid';
+export const PAID_PURCHASE_STATUS = 'purchased';
 
 export const EXPIRED_PURCHASE_STATUS = 'expired';
+
+export const CANCELLED_PURCHASE_STATUS = 'canceled';
 
 export const GOOGLE_PAY_PAYMENT_RECEIVED = 1;
 

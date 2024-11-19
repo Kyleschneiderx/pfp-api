@@ -16,7 +16,6 @@ export default ({ inAppPurchase }) =>
             return value;
         })
         .custom(async (value, { req }) => {
-            // console.log(value);
             if (value['verificationData.source'] === GOOGLE_PAYMENT_PLATFORM) {
                 const verifiedReceipt = await inAppPurchase.verifyGooglePurchase({
                     packageName: value['verificationData.localVerificationData'].packageName,
@@ -24,6 +23,8 @@ export default ({ inAppPurchase }) =>
                     purchaseToken: value['verificationData.localVerificationData'].purchaseToken,
                     orderId: value['verificationData.localVerificationData'].orderId,
                 });
+
+                console.log(verifiedReceipt);
 
                 const googlePayAllowedPaymentState = [GOOGLE_PAY_FREE_TRIAL, GOOGLE_PAY_PAYMENT_RECEIVED];
 

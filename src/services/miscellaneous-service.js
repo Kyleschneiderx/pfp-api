@@ -2,13 +2,20 @@ import { v4 as uuid } from 'uuid';
 import * as dateFns from 'date-fns';
 import * as dateFnsUtc from '@date-fns/utc';
 import { Sequelize } from 'sequelize';
-import { PREMIUM_USER_TYPE_ID, DATE_FORMAT, FREE_USER_TYPE_ID, EXPIRED_PURCHASE_STATUS, DATETIME_FORMAT } from '../constants/index.js';
+import {
+    PREMIUM_USER_TYPE_ID,
+    FREE_USER_TYPE_ID,
+    EXPIRED_PURCHASE_STATUS,
+    CANCELLED_PURCHASE_STATUS,
+    GOOGLE_PAYMENT_PLATFORM,
+} from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
-    constructor({ logger, database }) {
+    constructor({ logger, database, inAppPurchase }) {
         this.database = database;
         this.logger = logger;
+        this.inAppPurchase = inAppPurchase;
     }
 
     /**
@@ -131,8 +138,6 @@ export default class MiscellaneousService {
         try {
             const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt.finalizedData.expireDate));
 
-            // console.log(expiresAt);
-            // qweqweqweqweqwe;
             return await this.database.transaction(async (transaction) => {
                 const payment = await this.database.models.UserSubscriptions.create(
                     {
@@ -167,62 +172,63 @@ export default class MiscellaneousService {
         }
     }
 
-    async updatePayment(data) {
-        try {
-            const payment = await this.database.models.UserSubscriptions.create({
-                user_id: data.userId,
-                reference: uuid(),
-                package_id: data.package.id,
-                price: data.package.discounted_price ?? data.package.price,
-            });
-
-            delete payment.dataValues.package_id;
-
-            delete data.package.dataValues.created_at;
-
-            delete data.package.dataValues.updated_at;
-
-            payment.dataValues.package = data.package;
-
-            return payment;
-        } catch (error) {
-            this.logger.error('Failed to create payment', error);
-
-            throw new exceptions.InternalServerError('Failed to create payemnt', error);
-        }
-    }
-
     async expireUserSubscriptions() {
         try {
             const subscriptions = await this.database.models.UserSubscriptions.findAll({
                 where: {
                     status: {
-                        [Sequelize.Op.ne]: EXPIRED_PURCHASE_STATUS,
+                        [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS],
                     },
                     expires_at: {
-                        [Sequelize.Op.lte]: dateFns.format(new dateFnsUtc.UTCDate(), DATE_FORMAT),
+                        [Sequelize.Op.gt]: dateFns.sub(new dateFnsUtc.UTCDate(), { minutes: 5 }),
+                        [Sequelize.Op.lte]: new dateFnsUtc.UTCDate(),
                     },
                 },
             });
 
-            const userIds = [];
+            await Promise.all(
+                subscriptions.map(async (subscription) => {
+                    const receipt = JSON.parse(subscription.response);
 
-            const subscriptionIds = [];
+                    let updateSubscription = null;
 
-            subscriptions.forEach((subscription) => {
-                userIds.push(subscription.user_id);
+                    let isDowngradeUser = false;
 
-                subscriptionIds.push(subscription.id);
-            });
+                    if (subscription.platform === GOOGLE_PAYMENT_PLATFORM) {
+                        const verifiedReceipt = await this.inAppPurchase.verifyGooglePurchase({
+                            packageName: receipt['verificationData.localVerificationData'].packageName,
+                            productId: receipt['verificationData.localVerificationData'].productId,
+                            purchaseToken: receipt['verificationData.localVerificationData'].purchaseToken,
+                            orderId: receipt['verificationData.localVerificationData'].orderId,
+                        });
 
-            this.database.transaction(async (transaction) => {
-                await this.database.models.UserSubscriptions.update(
-                    { status: EXPIRED_PURCHASE_STATUS },
-                    { where: { id: subscriptionIds }, transaction: transaction },
-                );
+                        if (verifiedReceipt.cancelReason !== undefined) {
+                            updateSubscription = {
+                                status: CANCELLED_PURCHASE_STATUS,
+                                cancel_at: verifiedReceipt.userCancellationTimeMillis
+                                    ? new dateFnsUtc.UTCDate(Number(verifiedReceipt.userCancellationTimeMillis))
+                                    : null,
+                            };
 
-                await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: userIds }, transaction: transaction });
-            });
+                            isDowngradeUser = true;
+                        } else if (verifiedReceipt.paymentState === undefined) {
+                            updateSubscription = {
+                                status: EXPIRED_PURCHASE_STATUS,
+                            };
+
+                            isDowngradeUser = true;
+                        }
+                    }
+
+                    if (updateSubscription) {
+                        await this.database.models.UserSubscriptions.update(updateSubscription, { where: { id: subscription.id } });
+                    }
+
+                    if (isDowngradeUser) {
+                        await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: subscription.user_id } });
+                    }
+                }),
+            );
         } catch (error) {
             this.logger.error('Failed to expire user subscriptions', error);
 
