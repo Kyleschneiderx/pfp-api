@@ -11,11 +11,7 @@ export default ({ miscellaneousController, selectionService }) => {
 
     router.get('/survey', miscellaneousController.handleGetSurveyQuestionsRoute.bind(miscellaneousController));
 
-    router.post(
-        '/payment',
-        validateInput([commonValidations.packageIdValidation({ selectionService })]),
-        miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController),
-    );
+    router.post('/payment', miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController));
 
     router.post('/contact-support', miscellaneousController.handleSendContactSupportRoute.bind(miscellaneousController));
 
