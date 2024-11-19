@@ -24,8 +24,6 @@ export default ({ inAppPurchase }) =>
                     orderId: value['verificationData.localVerificationData'].orderId,
                 });
 
-                console.log(verifiedReceipt);
-
                 const googlePayAllowedPaymentState = [GOOGLE_PAY_FREE_TRIAL, GOOGLE_PAY_PAYMENT_RECEIVED];
 
                 if (!googlePayAllowedPaymentState.includes(verifiedReceipt.paymentState)) {

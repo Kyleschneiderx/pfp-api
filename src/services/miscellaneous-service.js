@@ -136,19 +136,19 @@ export default class MiscellaneousService {
      */
     async createPayment(data) {
         try {
-            const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt.finalizedData.expireDate));
+            const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.finalizedData?.expireDate));
 
             return await this.database.transaction(async (transaction) => {
                 const payment = await this.database.models.UserSubscriptions.create(
                     {
                         user_id: data.userId,
                         response: JSON.stringify(data.receipt),
-                        price: data.receipt.finalizedData.amount,
-                        currency: data.receipt.finalizedData.currency,
-                        status: data.receipt.finalizedData.status,
-                        platform: data.receipt.finalizedData.platform,
+                        price: data.receipt?.finalizedData?.amount,
+                        currency: data.receipt?.finalizedData?.currency,
+                        status: data.receipt?.finalizedData?.status,
+                        platform: data.receipt?.finalizedData?.platform,
                         expires_at: expiresAt,
-                        reference: data.receipt.finalizedData.reference,
+                        reference: data.receipt?.finalizedData?.reference,
                     },
                     { transaction: transaction },
                 );
