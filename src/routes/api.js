@@ -41,6 +41,7 @@ export default ({
     miscellaneousController,
     miscellaneousService,
     notificationController,
+    inAppPurchase,
 }) => {
     const router = express.Router();
 
@@ -117,6 +118,7 @@ export default ({
         routeV1Miscellaneous({
             miscellaneousController: miscellaneousController,
             selectionService: selectionService,
+            inAppPurchase: inAppPurchase,
         }),
     );
 

@@ -175,6 +175,14 @@ export const CONTACT_SUPPORT_NAME = process.env.SUPPORT_NAME;
 
 export const CONTACT_SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
 
+export const GOOGLE_PAYMENT_PLATFORM = 'google_play';
+
+export const APPLE_PAYMENT_PLATFORM = 'apple_pay';
+
 export const PAID_PURCHASE_STATUS = 'paid';
 
 export const EXPIRED_PURCHASE_STATUS = 'expired';
+
+export const GOOGLE_PAY_PAYMENT_RECEIVED = 1;
+
+export const GOOGLE_PAY_FREE_TRIAL = 2;

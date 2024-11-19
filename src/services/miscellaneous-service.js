@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import * as dateFns from 'date-fns';
 import * as dateFnsUtc from '@date-fns/utc';
 import { Sequelize } from 'sequelize';
-import { PREMIUM_USER_TYPE_ID, DATE_FORMAT, FREE_USER_TYPE_ID, EXPIRED_PURCHASE_STATUS, PAID_PURCHASE_STATUS } from '../constants/index.js';
+import { PREMIUM_USER_TYPE_ID, DATE_FORMAT, FREE_USER_TYPE_ID, EXPIRED_PURCHASE_STATUS, DATETIME_FORMAT } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
@@ -129,15 +129,21 @@ export default class MiscellaneousService {
      */
     async createPayment(data) {
         try {
-            const expiresAt = dateFns.format(dateFns.add(new dateFnsUtc.UTCDate(), { days: 7 }), DATE_FORMAT);
+            const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt.finalizedData.expireDate));
 
+            // console.log(expiresAt);
+            // qweqweqweqweqwe;
             return await this.database.transaction(async (transaction) => {
                 const payment = await this.database.models.UserSubscriptions.create(
                     {
                         user_id: data.userId,
                         response: JSON.stringify(data.receipt),
-                        status: PAID_PURCHASE_STATUS,
+                        price: data.receipt.finalizedData.amount,
+                        currency: data.receipt.finalizedData.currency,
+                        status: data.receipt.finalizedData.status,
+                        platform: data.receipt.finalizedData.platform,
                         expires_at: expiresAt,
+                        reference: data.receipt.finalizedData.reference,
                     },
                     { transaction: transaction },
                 );

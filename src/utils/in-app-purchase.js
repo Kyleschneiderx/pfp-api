@@ -65,31 +65,21 @@ export default class InAppPurchase {
         this.googleApis.google.options({ auth: this.googleAuthClient });
 
         try {
-            const purchaseResponse = await this.googleApis.google
-                .androidpublisher({
-                    version: 'v3',
-                })
-                .purchases.products.get({
-                    packageName: data.packageName,
-                    productId: data.productId,
-                    token: data.purchaseToken,
-                });
-
-            if (purchaseResponse.data.purchaseState !== 0) {
-                throw new Error('Purchase is either pending or cancelled');
-            }
-
-            if (purchaseResponse.data.consumptionState !== 0) {
-                throw new Error('Purchase is already consumed');
-            }
+            const purchaseResponse = await this.googleApis.google.androidpublisher({ version: 'v3' }).purchases.subscriptions.get({
+                packageName: data.packageName,
+                subscriptionId: data.productId,
+                token: data.purchaseToken,
+            });
 
             if (purchaseResponse.data.orderId !== data.orderId) {
                 throw new Error('Invalid order id');
             }
 
-            return purchaseResponse;
+            return purchaseResponse.data;
         } catch (error) {
             this.logger.error('Failed to verify google purchase.', error);
+
+            console.log(error.response.data.error);
 
             throw new Error('Failed to verify google purchase.', { cause: error });
         }
