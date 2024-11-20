@@ -3,7 +3,7 @@ export default ({ logger, miscellaneousService }) => {
 
     return {
         name: name,
-        schedule: '0 0 * * *',
+        schedule: '*/5 * * * *',
         process: async () => {
             logger.info(`Starting task [${name}]`);
             try {

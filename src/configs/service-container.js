@@ -115,6 +115,7 @@ Object.assign(serviceContainer, {
     miscellaneousService: new services.MiscellaneousService({
         logger: serviceContainer.logger,
         database: serviceContainer.database,
+        inAppPurchase: serviceContainer.inAppPurchase,
     }),
 });
 

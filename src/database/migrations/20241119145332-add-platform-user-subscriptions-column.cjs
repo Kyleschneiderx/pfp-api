@@ -5,16 +5,16 @@ module.exports = createMigration({
     table: 'user_subscriptions',
     schema: {},
     columns: {
-        expires_at: {
-            type: DataTypes.DATE,
-            after: 'response',
+        platform: {
+            type: DataTypes.STRING(100),
+            after: 'status',
         },
     },
     indexes: [
         {
-            name: 'user_subscriptions_expires_at',
+            name: 'user_subscriptions_platform',
             using: 'BTREE',
-            fields: [{ name: 'expires_at' }],
+            fields: [{ name: 'platform' }],
         },
     ],
 });

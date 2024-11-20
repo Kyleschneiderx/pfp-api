@@ -175,6 +175,21 @@ export const CONTACT_SUPPORT_NAME = process.env.SUPPORT_NAME;
 
 export const CONTACT_SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
 
-export const PAID_PURCHASE_STATUS = 'paid';
+export const GOOGLE_PAYMENT_PLATFORM = 'google_play';
+
+export const APPLE_PAYMENT_PLATFORM = 'app_store';
+
+export const PAID_PURCHASE_STATUS = 'purchased';
 
 export const EXPIRED_PURCHASE_STATUS = 'expired';
+
+export const CANCELLED_PURCHASE_STATUS = 'canceled';
+
+export const GOOGLE_PAY_PAYMENT_RECEIVED = 1;
+
+export const GOOGLE_PAY_FREE_TRIAL = 2;
+
+export const SUBSCRIPTION_PRODUCTS = {
+    pelvic_floor_pro_weekly_subscription: 'Pelvic Floor Pro Weekly Subscription',
+    pelvic_floor_pro_yearly_subscription: 'Pelvic Floor Pro Yearly Premium',
+};
