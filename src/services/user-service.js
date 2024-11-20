@@ -22,6 +22,9 @@ import {
     MONTHLY_PERIOD_UNIT,
     MONTHLY_PERIOD_LABEL_FORMAT,
     WEEKLY_PERIOD_LABEL_FORMAT,
+    EXPIRED_PURCHASE_STATUS,
+    CANCELLED_PURCHASE_STATUS,
+    SUBSCRIPTION_PRODUCTS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -248,6 +251,21 @@ export default class UserService {
                     expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
                 },
             );
+
+            user.dataValues.user_subscription = await this.database.models.UserSubscriptions.findOne({
+                attributes: ['package_id', 'expires_at'],
+                where: {
+                    user_id: id,
+                    status: {
+                        [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS],
+                    },
+                },
+            });
+
+            if (user.dataValues.user_subscription !== null) {
+                user.dataValues.user_subscription.dataValues.package_id =
+                    SUBSCRIPTION_PRODUCTS[user.dataValues.user_subscription.dataValues.package_id];
+            }
 
             return user;
         } catch (error) {

@@ -140,6 +140,11 @@ export default class MiscellaneousService {
             const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.finalizedData?.expireDate));
 
             return await this.database.transaction(async (transaction) => {
+                this.database.models.UserSubscriptions.update(
+                    { status: CANCELLED_PURCHASE_STATUS, cancel_at: new dateFnsUtc.UTCDate() },
+                    { where: { user_id: data.userId }, transaction: transaction },
+                );
+
                 const payment = await this.database.models.UserSubscriptions.create(
                     {
                         user_id: data.userId,

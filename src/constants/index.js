@@ -188,3 +188,8 @@ export const CANCELLED_PURCHASE_STATUS = 'canceled';
 export const GOOGLE_PAY_PAYMENT_RECEIVED = 1;
 
 export const GOOGLE_PAY_FREE_TRIAL = 2;
+
+export const SUBSCRIPTION_PRODUCTS = {
+    pelvic_floor_pro_weekly_subscription: 'Pelvic Floor Pro Weekly Subscription',
+    pelvic_floor_pro_yearly_subscription: 'Pelvic Floor Pro Yearly Premium',
+};
