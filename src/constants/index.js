@@ -177,7 +177,7 @@ export const CONTACT_SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
 
 export const GOOGLE_PAYMENT_PLATFORM = 'google_play';
 
-export const APPLE_PAYMENT_PLATFORM = 'apple_pay';
+export const APPLE_PAYMENT_PLATFORM = 'app_store';
 
 export const PAID_PURCHASE_STATUS = 'purchased';
 

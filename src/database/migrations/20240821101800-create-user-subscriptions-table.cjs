@@ -21,12 +21,7 @@ module.exports = createMigration({
             type: DataTypes.STRING(100),
         },
         package_id: {
-            type: DataTypes.INTEGER,
-            comment: 'see subscription_packages table',
-            references: {
-                model: 'subscription_packages',
-                key: 'id',
-            },
+            type: DataTypes.STRING(100),
         },
         price: {
             type: DataTypes.DOUBLE(20, 2),

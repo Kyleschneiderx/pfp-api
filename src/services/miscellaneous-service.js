@@ -8,6 +8,7 @@ import {
     EXPIRED_PURCHASE_STATUS,
     CANCELLED_PURCHASE_STATUS,
     GOOGLE_PAYMENT_PLATFORM,
+    APPLE_PAYMENT_PLATFORM,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -149,6 +150,8 @@ export default class MiscellaneousService {
                         platform: data.receipt?.finalizedData?.platform,
                         expires_at: expiresAt,
                         reference: data.receipt?.finalizedData?.reference,
+                        original_reference: data.receipt?.finalizedData?.originalReference,
+                        package_id: data.receipt?.finalizedData?.productId,
                     },
                     { transaction: transaction },
                 );
@@ -180,8 +183,8 @@ export default class MiscellaneousService {
                         [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS],
                     },
                     expires_at: {
-                        [Sequelize.Op.gt]: dateFns.sub(new dateFnsUtc.UTCDate(), { minutes: 5 }),
-                        [Sequelize.Op.lte]: new dateFnsUtc.UTCDate(),
+                        [Sequelize.Op.gt]: dateFns.sub(new dateFnsUtc.UTCDate(), { minutes: 20 }),
+                        [Sequelize.Op.lte]: dateFns.sub(new dateFnsUtc.UTCDate(), { minutes: 10 }),
                     },
                 },
             });
@@ -217,6 +220,41 @@ export default class MiscellaneousService {
                             };
 
                             isDowngradeUser = true;
+                        } else {
+                            updateSubscription = {
+                                expires_at: new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiryTimeMillis)),
+                            };
+                        }
+                    } else if (subscription.platform === APPLE_PAYMENT_PLATFORM) {
+                        let latestTransaction;
+
+                        try {
+                            [latestTransaction] = await this.inAppPurchase.verifyApplePurchase(receipt['verificationData.localVerificationData']);
+                        } catch (error) {
+                            /** empty */
+                        }
+
+                        if (
+                            latestTransaction.originalTransactionId === receipt.original_reference &&
+                            latestTransaction.transactionId === receipt.reference
+                        ) {
+                            if (latestTransaction.revocationReason !== undefined) {
+                                updateSubscription = {
+                                    status: CANCELLED_PURCHASE_STATUS,
+                                    cancel_at: latestTransaction.revocationDate
+                                        ? new dateFnsUtc.UTCDate(Number(latestTransaction.revocationDate))
+                                        : null,
+                                };
+                            } else {
+                                updateSubscription = {
+                                    status: EXPIRED_PURCHASE_STATUS,
+                                };
+                            }
+                        } else {
+                            updateSubscription = {
+                                reference: latestTransaction.transactionId,
+                                expires_at: new dateFnsUtc.UTCDate(Number(latestTransaction.expiresDate)),
+                            };
                         }
                     }
 

@@ -7,22 +7,16 @@ export default class InAppPurchase {
         this.googleApis = googleApis;
     }
 
-    async verifyApplePurchase(data) {
+    async verifyApplePurchase(receipt) {
         if (this.appleAppStoreServerLib === undefined && this.appleAppStoreClient === undefined)
             throw new Error('Apple app store server lib and app store client is required.');
 
         try {
             const receiptUtil = new this.appleAppStoreServerLib.ReceiptUtility();
-
-            const transactionId = receiptUtil.extractTransactionIdFromAppReceipt(data.receipt);
-
+            console.log(receipt);
+            const transactionId = receiptUtil.extractTransactionIdFromAppReceipt(receipt);
+            console.log(transactionId);
             if (transactionId === null) return null;
-
-            const transactionHistoryRequest = {
-                sort: this.appleAppStoreServerLib.DESCENDING,
-                revoked: false,
-                productTypes: [this.appleAppStoreServerLib.ProductType.CONSUMABLE],
-            };
 
             let response = null;
 
@@ -31,18 +25,25 @@ export default class InAppPurchase {
             do {
                 const revisionToken = response !== null && response.revision !== null ? response.revision : null;
 
-                response = await this.appleAppStoreClient.getTransactionHistory(transactionId, revisionToken, transactionHistoryRequest);
+                // eslint-disable-next-line no-await-in-loop
+                response = await this.appleAppStoreClient.getTransactionHistory(transactionId, revisionToken, {
+                    sort: this.appleAppStoreServerLib.DESCENDING,
+                    revoked: false,
+                    productTypes: [this.appleAppStoreServerLib.ProductType.AUTO_RENEWABLE],
+                });
+
+                console.log(response);
 
                 if (response.signedTransactions) {
                     transactions = transactions.concat(response.signedTransactions);
                 }
             } while (response.hasMore);
 
-            console.log(transactions);
-
             return transactions;
         } catch (error) {
             this.logger.error('Failed to verify apple purchase.', error);
+
+            console.log(error);
 
             throw new Error('Failed to verify apple purchase.', { cause: error });
         }
