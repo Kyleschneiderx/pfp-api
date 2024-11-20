@@ -43,7 +43,7 @@ export default ({ inAppPurchase }) =>
                     reference: value['verificationData.localVerificationData'].orderId,
                     originalReference: null,
                     platform: value['verificationData.source'],
-                    productId: value.productId,
+                    productId: value.productID,
                 };
             } else if (value['verificationData.source'] === APPLE_PAYMENT_PLATFORM) {
                 // let verifiedReceipt;
@@ -67,7 +67,7 @@ export default ({ inAppPurchase }) =>
                     // reference: latestTransaction.transactionId,
                     // originalReference: latestTransaction.originalTransactionId,
                     platform: value['verificationData.source'],
-                    productId: value.productId,
+                    productId: value.productID,
                 };
             } else {
                 throw new Error('Invalid payment platform.');
