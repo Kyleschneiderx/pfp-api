@@ -27,12 +27,21 @@ export default class InAppPurchase {
 
                 // eslint-disable-next-line no-await-in-loop
                 response = await this.appleAppStoreClient.getTransactionHistory(transactionId, revisionToken, {
-                    sort: this.appleAppStoreServerLib.DESCENDING,
+                    sort: this.appleAppStoreServerLib.Order.DESCENDING,
                     revoked: false,
                     productTypes: [this.appleAppStoreServerLib.ProductType.AUTO_RENEWABLE],
                 });
 
                 if (response.signedTransactions) {
+                    response.signedTransactions = response.signedTransactions.map((tx) => {
+                        try {
+                            tx = JSON.parse(Buffer.from(tx.split('.')[1], 'base64').toString());
+                        } catch (error) {
+                            /** empty */
+                        }
+
+                        return tx;
+                    });
                     transactions = transactions.concat(response.signedTransactions);
                 }
             } while (response.hasMore);

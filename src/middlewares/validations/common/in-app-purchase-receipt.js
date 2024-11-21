@@ -56,15 +56,7 @@ export default ({ inAppPurchase }) =>
                     throw new Error('Failed to verify purchase receipt.', { cause: error });
                 }
 
-                let latestTransaction = Buffer.from(verifiedReceipt[0].split('.')[1], 'base64').toString();
-
-                try {
-                    latestTransaction = JSON.parse(latestTransaction);
-                } catch (error) {
-                    /** empty */
-                }
-
-                console.log(latestTransaction);
+                const latestTransaction = verifiedReceipt[0];
 
                 req.body.receipt.finalizedData = {
                     purchaseDate: latestTransaction.purchaseDate,
