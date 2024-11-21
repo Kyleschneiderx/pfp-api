@@ -13,9 +13,9 @@ export default class InAppPurchase {
 
         try {
             const receiptUtil = new this.appleAppStoreServerLib.ReceiptUtility();
-            console.log(receipt);
+
             const transactionId = receiptUtil.extractTransactionIdFromAppReceipt(receipt);
-            console.log(transactionId);
+
             if (transactionId === null) return null;
 
             let response = null;
@@ -27,14 +27,21 @@ export default class InAppPurchase {
 
                 // eslint-disable-next-line no-await-in-loop
                 response = await this.appleAppStoreClient.getTransactionHistory(transactionId, revisionToken, {
-                    sort: this.appleAppStoreServerLib.DESCENDING,
+                    sort: this.appleAppStoreServerLib.Order.DESCENDING,
                     revoked: false,
                     productTypes: [this.appleAppStoreServerLib.ProductType.AUTO_RENEWABLE],
                 });
 
-                console.log(response);
-
                 if (response.signedTransactions) {
+                    response.signedTransactions = response.signedTransactions.map((tx) => {
+                        try {
+                            tx = JSON.parse(Buffer.from(tx.split('.')[1], 'base64').toString());
+                        } catch (error) {
+                            /** empty */
+                        }
+
+                        return tx;
+                    });
                     transactions = transactions.concat(response.signedTransactions);
                 }
             } while (response.hasMore);
@@ -42,8 +49,6 @@ export default class InAppPurchase {
             return transactions;
         } catch (error) {
             this.logger.error('Failed to verify apple purchase.', error);
-
-            console.log(error);
 
             throw new Error('Failed to verify apple purchase.', { cause: error });
         }
@@ -83,6 +88,29 @@ export default class InAppPurchase {
             console.log(error.response.data.error);
 
             throw new Error('Failed to verify google purchase.', { cause: error });
+        }
+    }
+
+    async cancelGooglePurchase(data) {
+        if (this.googleApis === undefined && this.googleAuthClient === undefined)
+            throw new Error('Google apis module and google auth client is required.');
+
+        this.googleApis.google.options({ auth: this.googleAuthClient });
+
+        try {
+            const cancelResponse = await this.googleApis.google.androidpublisher({ version: 'v3' }).purchases.subscriptions.cancel({
+                packageName: data.packageName,
+                subscriptionId: data.productId,
+                token: data.purchaseToken,
+            });
+
+            return cancelResponse.data;
+        } catch (error) {
+            this.logger.error('Failed to cancel google purchase.', error);
+
+            console.log(error.response.data.error);
+
+            throw new Error('Failed to cancel google purchase.', { cause: error });
         }
     }
 }

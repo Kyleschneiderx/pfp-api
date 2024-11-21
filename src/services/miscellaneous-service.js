@@ -1,5 +1,3 @@
-import { v4 as uuid } from 'uuid';
-import * as dateFns from 'date-fns';
 import * as dateFnsUtc from '@date-fns/utc';
 import { Sequelize } from 'sequelize';
 import {
@@ -180,102 +178,224 @@ export default class MiscellaneousService {
         }
     }
 
+    async _expireGoogleSubscription(subscription, verifiedReceipt) {
+        let updateSubscription = null;
+
+        let isDowngradeUser = false;
+
+        if (verifiedReceipt.paymentState === undefined) {
+            if (verifiedReceipt.cancelReason !== undefined) {
+                updateSubscription = {
+                    status: CANCELLED_PURCHASE_STATUS,
+                    cancel_at: verifiedReceipt.userCancellationTimeMillis
+                        ? new dateFnsUtc.UTCDate(Number(verifiedReceipt.userCancellationTimeMillis))
+                        : null,
+                };
+            } else {
+                updateSubscription = {
+                    status: EXPIRED_PURCHASE_STATUS,
+                };
+            }
+
+            isDowngradeUser = true;
+        } else {
+            updateSubscription = {
+                expires_at: new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiryTimeMillis)),
+            };
+        }
+
+        if (updateSubscription) {
+            await this.database.models.UserSubscriptions.update(updateSubscription, { where: { id: subscription.id } });
+        }
+
+        if (isDowngradeUser) {
+            await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: subscription.user_id } });
+        }
+    }
+
+    async _expireAppleSubscription(subscription, verifiedReceipt) {
+        let updateSubscription = null;
+
+        let isDowngradeUser = false;
+
+        if (verifiedReceipt.originalTransactionId === subscription.original_reference && verifiedReceipt.transactionId === subscription.reference) {
+            if (verifiedReceipt.revocationReason !== undefined) {
+                updateSubscription = {
+                    status: CANCELLED_PURCHASE_STATUS,
+                    cancel_at: verifiedReceipt.revocationDate ? new dateFnsUtc.UTCDate(Number(verifiedReceipt.revocationDate)) : null,
+                };
+
+                isDowngradeUser = true;
+            } else {
+                updateSubscription = {
+                    status: EXPIRED_PURCHASE_STATUS,
+                };
+
+                isDowngradeUser = true;
+            }
+        } else {
+            updateSubscription = {
+                reference: verifiedReceipt.transactionId,
+                expires_at: new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate)),
+            };
+        }
+
+        if (updateSubscription) {
+            await this.database.models.UserSubscriptions.update(updateSubscription, { where: { id: subscription.id } });
+        }
+
+        if (isDowngradeUser) {
+            await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: subscription.user_id } });
+        }
+    }
+
     async expireUserSubscriptions() {
         try {
-            const subscriptions = await this.database.models.UserSubscriptions.findAll({
+            const overallSubscriptions = [];
+            const appleSubscriptions = await this.database.models.CheckSubscriptionQueues.findOne({
                 where: {
-                    status: {
-                        [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS],
-                    },
-                    expires_at: {
-                        [Sequelize.Op.gt]: dateFns.sub(new dateFnsUtc.UTCDate(), { minutes: 20 }),
-                        [Sequelize.Op.lte]: dateFns.sub(new dateFnsUtc.UTCDate(), { minutes: 10 }),
-                    },
+                    platform: APPLE_PAYMENT_PLATFORM,
+                    is_pending: true,
                 },
+                order: [['id', 'ASC']],
             });
+            if (appleSubscriptions) {
+                appleSubscriptions.is_pending = false;
 
-            await Promise.all(
-                subscriptions.map(async (subscription) => {
-                    const receipt = JSON.parse(subscription.response);
+                await appleSubscriptions.save();
 
-                    let updateSubscription = null;
+                overallSubscriptions.push(appleSubscriptions);
+            }
 
-                    let isDowngradeUser = false;
+            const androidSubscriptions = await this.database.models.CheckSubscriptionQueues.findOne({
+                where: {
+                    platform: GOOGLE_PAYMENT_PLATFORM,
+                    is_pending: true,
+                },
+                order: [['id', 'ASC']],
+            });
+            if (androidSubscriptions) {
+                androidSubscriptions.is_pending = false;
 
-                    if (subscription.platform === GOOGLE_PAYMENT_PLATFORM) {
-                        const verifiedReceipt = await this.inAppPurchase.verifyGooglePurchase({
-                            packageName: receipt['verificationData.localVerificationData'].packageName,
-                            productId: receipt['verificationData.localVerificationData'].productId,
-                            purchaseToken: receipt['verificationData.localVerificationData'].purchaseToken,
-                            orderId: receipt['verificationData.localVerificationData'].orderId,
-                        });
+                await androidSubscriptions.save();
 
-                        if (verifiedReceipt.cancelReason !== undefined) {
-                            updateSubscription = {
-                                status: CANCELLED_PURCHASE_STATUS,
-                                cancel_at: verifiedReceipt.userCancellationTimeMillis
-                                    ? new dateFnsUtc.UTCDate(Number(verifiedReceipt.userCancellationTimeMillis))
-                                    : null,
-                            };
+                overallSubscriptions.push(androidSubscriptions);
+            }
 
-                            isDowngradeUser = true;
-                        } else if (verifiedReceipt.paymentState === undefined) {
-                            updateSubscription = {
-                                status: EXPIRED_PURCHASE_STATUS,
-                            };
+            if (overallSubscriptions.length) {
+                await Promise.all(
+                    overallSubscriptions.map(async (queue) => {
+                        queue.subscriptions = JSON.parse(queue.subscriptions);
 
-                            isDowngradeUser = true;
-                        } else {
-                            updateSubscription = {
-                                expires_at: new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiryTimeMillis)),
-                            };
-                        }
-                    } else if (subscription.platform === APPLE_PAYMENT_PLATFORM) {
-                        let latestTransaction;
+                        await Promise.all(
+                            queue.subscriptions.map(async (subscription) => {
+                                const receipt = subscription.response;
 
-                        try {
-                            [latestTransaction] = await this.inAppPurchase.verifyApplePurchase(receipt['verificationData.localVerificationData']);
-                        } catch (error) {
-                            /** empty */
-                        }
+                                if (subscription.platform === GOOGLE_PAYMENT_PLATFORM) {
+                                    const verifiedReceipt = await this.inAppPurchase.verifyGooglePurchase({
+                                        packageName: receipt['verificationData.localVerificationData'].packageName,
+                                        productId: receipt['verificationData.localVerificationData'].productId,
+                                        purchaseToken: receipt['verificationData.localVerificationData'].purchaseToken,
+                                        orderId: receipt['verificationData.localVerificationData'].orderId,
+                                    });
 
-                        if (
-                            latestTransaction.originalTransactionId === receipt.original_reference &&
-                            latestTransaction.transactionId === receipt.reference
-                        ) {
-                            if (latestTransaction.revocationReason !== undefined) {
-                                updateSubscription = {
-                                    status: CANCELLED_PURCHASE_STATUS,
-                                    cancel_at: latestTransaction.revocationDate
-                                        ? new dateFnsUtc.UTCDate(Number(latestTransaction.revocationDate))
-                                        : null,
-                                };
-                            } else {
-                                updateSubscription = {
-                                    status: EXPIRED_PURCHASE_STATUS,
-                                };
-                            }
-                        } else {
-                            updateSubscription = {
-                                reference: latestTransaction.transactionId,
-                                expires_at: new dateFnsUtc.UTCDate(Number(latestTransaction.expiresDate)),
-                            };
-                        }
-                    }
+                                    await this._expireGoogleSubscription(subscription, verifiedReceipt);
+                                } else if (subscription.platform === APPLE_PAYMENT_PLATFORM) {
+                                    let latestTransaction;
 
-                    if (updateSubscription) {
-                        await this.database.models.UserSubscriptions.update(updateSubscription, { where: { id: subscription.id } });
-                    }
+                                    try {
+                                        [latestTransaction] = await this.inAppPurchase.verifyApplePurchase(
+                                            receipt['verificationData.localVerificationData'],
+                                        );
+                                    } catch (error) {
+                                        /** empty */
+                                    }
 
-                    if (isDowngradeUser) {
-                        await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: subscription.user_id } });
-                    }
-                }),
-            );
+                                    await this._expireAppleSubscription(subscription, latestTransaction);
+                                }
+                            }),
+                        );
+                    }),
+                );
+            }
+
+            if (androidSubscriptions) {
+                await androidSubscriptions.destroy({ force: true });
+            }
+
+            if (appleSubscriptions) {
+                await appleSubscriptions.destroy({ force: true });
+            }
         } catch (error) {
             this.logger.error('Failed to expire user subscriptions', error);
 
             throw new exceptions.InternalServerError('Failed to expire user subscriptions', error);
+        }
+    }
+
+    /**
+     * Generate a queue of subscription to be check
+     *
+     * @returns {Promise<void>}
+     */
+    async queueSubscriptionCheck() {
+        const subscriptionQueue = async (platform, limit) => {
+            const filter = {
+                where: {
+                    platform: platform,
+                    status: {
+                        [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS],
+                    },
+                },
+            };
+
+            const count = await this.database.models.UserSubscriptions.count(filter);
+
+            const maxPage = Math.ceil(count / limit);
+
+            const queues = (
+                await Promise.all(
+                    [...Array(maxPage).keys()].map(async (queryPage) => {
+                        let subscriptions = await this.database.models.UserSubscriptions.findAll({
+                            ...filter,
+                            raw: true,
+                            limit: limit,
+                            offset: (queryPage + 1) * limit - limit,
+                        });
+                        if (!subscriptions) {
+                            return [];
+                        }
+
+                        subscriptions = await Promise.all(
+                            subscriptions.map((subscription) => {
+                                try {
+                                    subscription.response = JSON.parse(subscription.response);
+                                } catch (error) {
+                                    /** empty */
+                                }
+
+                                return subscription;
+                            }),
+                        );
+
+                        return {
+                            subscriptions: JSON.stringify(subscriptions),
+                            platform: platform,
+                            is_pending: true,
+                        };
+                    }),
+                )
+            ).flat();
+
+            await this.database.models.CheckSubscriptionQueues.bulkCreate(queues);
+        };
+
+        try {
+            await Promise.all([subscriptionQueue(GOOGLE_PAYMENT_PLATFORM, 10), subscriptionQueue(APPLE_PAYMENT_PLATFORM, 20)]);
+        } catch (error) {
+            this.logger.error('Failed to queue subscription check', error);
+
+            throw new exceptions.InternalServerError('Failed to queue subscription check', error);
         }
     }
 }

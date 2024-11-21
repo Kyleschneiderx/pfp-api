@@ -1,13 +1,13 @@
 export default ({ logger, miscellaneousService }) => {
-    const name = 'Scan Expired Subscription';
+    const name = 'Queue Subscription Check';
 
     return {
         name: name,
-        schedule: '*/5 * * * * *',
+        schedule: '*/1 * * * *',
         process: async () => {
             logger.info(`Starting task [${name}]`);
             try {
-                await miscellaneousService.expireUserSubscriptions();
+                await miscellaneousService.queueSubscriptionCheck();
             } catch (error) {
                 logger.error(`[${name}] task failed`, error);
             }

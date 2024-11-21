@@ -46,26 +46,26 @@ export default ({ inAppPurchase }) =>
                     productId: value.productID,
                 };
             } else if (value['verificationData.source'] === APPLE_PAYMENT_PLATFORM) {
-                // let verifiedReceipt;
-                // try {
-                //     verifiedReceipt = await inAppPurchase.verifyApplePurchase(value['verificationData.localVerificationData']);
-                //     if (!verifiedReceipt) {
-                //         throw new Error('No transaction available.');
-                //     }
-                // } catch (error) {
-                //     throw new Error('Failed to verify purchase receipt.', { cause: error });
-                // }
+                let verifiedReceipt;
+                try {
+                    verifiedReceipt = await inAppPurchase.verifyApplePurchase(value['verificationData.localVerificationData']);
+                    if (!verifiedReceipt) {
+                        throw new Error('No transaction available.');
+                    }
+                } catch (error) {
+                    throw new Error('Failed to verify purchase receipt.', { cause: error });
+                }
 
-                // const latestTransaction = verifiedReceipt[0];
+                const latestTransaction = verifiedReceipt[0];
 
                 req.body.receipt.finalizedData = {
-                    // purchaseDate: latestTransaction.purchaseDate,
-                    // expireDate: latestTransaction.expiresDate,
-                    // amount: latestTransaction.price / 1000,
-                    // currency: latestTransaction.currency,
+                    purchaseDate: latestTransaction.purchaseDate,
+                    expireDate: latestTransaction.expiresDate,
+                    amount: latestTransaction.price / 1000,
+                    currency: latestTransaction.currency,
                     status: value.status,
-                    // reference: latestTransaction.transactionId,
-                    // originalReference: latestTransaction.originalTransactionId,
+                    reference: latestTransaction.transactionId,
+                    originalReference: latestTransaction.originalTransactionId,
                     platform: value['verificationData.source'],
                     productId: value.productID,
                 };
