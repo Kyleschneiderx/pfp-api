@@ -18,25 +18,33 @@ export default (sequelize, DataTypes) => {
             reference: {
                 type: DataTypes.STRING(100),
             },
+            original_reference: {
+                type: DataTypes.STRING(150),
+            },
             package_id: {
-                type: DataTypes.INTEGER,
-                comment: 'see subscription_packages table',
-                references: {
-                    model: 'subscription_packages',
-                    key: 'id',
-                },
+                type: DataTypes.STRING(150),
             },
             price: {
                 type: DataTypes.DOUBLE(20, 2),
             },
+            currency: {
+                type: DataTypes.STRING(10),
+                after: 'price',
+            },
             status: {
                 type: DataTypes.STRING(20),
+            },
+            platform: {
+                type: DataTypes.STRING(100),
             },
             response: {
                 type: DataTypes.TEXT('long'),
             },
             expires_at: {
-                type: DataTypes.DATEONLY,
+                type: DataTypes.DATE,
+            },
+            cancel_at: {
+                type: DataTypes.DATE,
             },
             created_at: {
                 type: DataTypes.DATE,
