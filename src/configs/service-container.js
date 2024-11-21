@@ -68,6 +68,7 @@ Object.assign(serviceContainer, {
         file: serviceContainer.file,
         helper: serviceContainer.helper,
         notificationService: serviceContainer.notificationService,
+        inAppPurchase: serviceContainer.inAppPurchase,
     }),
     authService: new services.AuthService({
         database: serviceContainer.database,

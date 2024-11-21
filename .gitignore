@@ -1,2 +1,12 @@
 node_modules
 .env
+.env.development
+.env.staging
+.env.production
+.scannerwork
+coverage
+logs/
+src/database/migrations/generate.sh
+src/database/seeders/generate.sh
+codereview.bat
+diagrams
