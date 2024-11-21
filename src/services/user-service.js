@@ -154,7 +154,7 @@ export default class UserService {
             subQuery: false,
             limit: filter.pageItems,
             offset: filter.page * filter.pageItems - filter.pageItems,
-            attributes: ['id', 'password', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at'],
+            attributes: ['id', 'password', 'email', 'last_login_at', 'verified_at', 'created_at', 'updated_at', 'google_id', 'apple_id'],
             include: [...this._defaultUsersRelation()],
             order: [['id', 'DESC']],
             where: {
@@ -199,7 +199,10 @@ export default class UserService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            row.dataValues.can_invite = !row.dataValues.password;
+            row.dataValues.can_invite = false;
+            if (row.dataValues.google_id !== null && row.dataValues.apple_id !== null) {
+                row.dataValues.can_invite = !row.dataValues.password;
+            }
 
             row.user_profile.photo = this.helper.generateProtectedUrl(
                 row.user_profile.photo,
@@ -210,6 +213,10 @@ export default class UserService {
             );
 
             delete row.dataValues.password;
+
+            delete row.dataValues.google_id;
+
+            delete row.dataValues.apple_id;
 
             return row;
         });
