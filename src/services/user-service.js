@@ -855,6 +855,15 @@ export default class UserService {
      */
     async removeUserSubscription(userId) {
         try {
+            await this.database.models.UserSubscriptions.update(
+                { status: CANCELLED_PURCHASE_STATUS, cancel_at: new dateFnsUtc.UTCDate() },
+                {
+                    where: {
+                        user_id: userId,
+                    },
+                },
+            );
+
             return await this.database.models.Users.update(
                 {
                     type_id: FREE_USER_TYPE_ID,
