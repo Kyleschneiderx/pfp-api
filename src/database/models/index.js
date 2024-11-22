@@ -34,3 +34,4 @@ export { default as UserDeviceTokens } from './user-device-tokens.js';
 export { default as SystemAuditDescriptions } from './system-audit-descriptions.js';
 export { default as SystemAudits } from './system-audits.js';
 export { default as UserNotificationSettings } from './user-notification-settings.js';
+export { default as CheckSubscriptionQueues } from './check-subscription-queues.js';
