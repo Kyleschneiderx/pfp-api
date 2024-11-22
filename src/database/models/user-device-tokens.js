@@ -40,5 +40,10 @@ export default (sequelize, DataTypes) => {
             ],
         },
     );
+    model.associate = () => {
+        const { Users, UserDeviceTokens } = sequelize.models;
+
+        UserDeviceTokens.belongsTo(Users, { as: 'user', foreignKey: 'user_id' });
+    };
     return model;
 };
