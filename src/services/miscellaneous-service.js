@@ -187,9 +187,7 @@ export default class MiscellaneousService {
             if (verifiedReceipt.cancelReason !== undefined) {
                 updateSubscription = {
                     status: CANCELLED_PURCHASE_STATUS,
-                    cancel_at: verifiedReceipt.userCancellationTimeMillis
-                        ? new dateFnsUtc.UTCDate(Number(verifiedReceipt.userCancellationTimeMillis))
-                        : null,
+                    cancel_at: new dateFnsUtc.UTCDate(),
                 };
             } else {
                 updateSubscription = {
