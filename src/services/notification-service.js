@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize';
 import * as dateFnsUtc from '@date-fns/utc';
 import * as dateFnsTz from 'date-fns-tz';
 import * as dateFns from 'date-fns';
-import { DATE_FORMAT, TIME_FORMAT } from '../constants/index.js';
+import { DATE_FORMAT, PREMIUM_USER_TYPE_ID, TIME_FORMAT } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class NotificationService {
@@ -24,6 +24,16 @@ export default class NotificationService {
             await Promise.all(
                 notifications.map(async (notification) => {
                     const userDeviceTokens = await this.database.models.UserDeviceTokens.findAll({
+                        include: [
+                            {
+                                model: this.database.models.Users,
+                                as: 'user',
+                                attributes: [],
+                                where: {
+                                    type_id: PREMIUM_USER_TYPE_ID,
+                                },
+                            },
+                        ],
                         where: { ...(notification.user_id && { user_id: notification.user_id }) },
                     });
 
@@ -84,15 +94,34 @@ export default class NotificationService {
     async createNotification(data) {
         data = Array.isArray(data) ? data : [data];
 
+        const dataToInsert = (
+            await Promise.all(
+                data.map(async (payload) => {
+                    const insertPayload = {
+                        user_id: payload.userId,
+                        description_id: payload.descriptionId,
+                        reference: payload.reference,
+                    };
+
+                    if (payload.userId === undefined) {
+                        return insertPayload;
+                    }
+
+                    if (!(await this.database.models.Users.count({ where: { user_id: payload.userId, type_id: PREMIUM_USER_TYPE_ID } }))) {
+                        return [];
+                    }
+
+                    return insertPayload;
+                }),
+            )
+        ).flat();
+        if (dataToInsert.legth === 0) {
+            return null;
+        }
+
         let notification = null;
         try {
-            notification = await this.database.models.Notifications.bulkCreate(
-                data.map((payload) => ({
-                    user_id: payload.userId,
-                    description_id: payload.descriptionId,
-                    reference: payload.reference,
-                })),
-            );
+            notification = await this.database.models.Notifications.bulkCreate(dataToInsert);
 
             this.sendPushNotification(notification);
         } catch (error) {
