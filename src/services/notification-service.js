@@ -107,7 +107,7 @@ export default class NotificationService {
                         return insertPayload;
                     }
 
-                    if (!(await this.database.models.Users.count({ where: { user_id: payload.userId, type_id: PREMIUM_USER_TYPE_ID } }))) {
+                    if (!(await this.database.models.Users.count({ where: { id: payload.userId, type_id: PREMIUM_USER_TYPE_ID } }))) {
                         return [];
                     }
 
