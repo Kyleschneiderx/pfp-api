@@ -179,7 +179,6 @@ export default class MiscellaneousService {
     }
 
     async _expireGoogleSubscription(subscription, verifiedReceipt) {
-        console.log(verifiedReceipt);
         let updateSubscription = null;
 
         let isDowngradeUser = false;
