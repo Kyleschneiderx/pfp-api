@@ -179,6 +179,7 @@ export default class MiscellaneousService {
     }
 
     async _expireGoogleSubscription(subscription, verifiedReceipt) {
+        console.log(verifiedReceipt);
         let updateSubscription = null;
 
         let isDowngradeUser = false;
@@ -303,7 +304,6 @@ export default class MiscellaneousService {
                                         packageName: receipt['verificationData.localVerificationData'].packageName,
                                         productId: receipt['verificationData.localVerificationData'].productId,
                                         purchaseToken: receipt['verificationData.localVerificationData'].purchaseToken,
-                                        orderId: receipt['verificationData.localVerificationData'].orderId,
                                     });
 
                                     await this._expireGoogleSubscription(subscription, verifiedReceipt);
