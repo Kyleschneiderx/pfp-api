@@ -179,6 +179,7 @@ export default class MiscellaneousService {
     }
 
     async _expireGoogleSubscription(subscription, verifiedReceipt) {
+        console.log(verifiedReceipt);
         let updateSubscription = null;
 
         let isDowngradeUser = false;
@@ -188,6 +189,8 @@ export default class MiscellaneousService {
                 status: CANCELLED_PURCHASE_STATUS,
                 cancel_at: new dateFnsUtc.UTCDate(),
             };
+
+            isDowngradeUser = true;
         } else if (verifiedReceipt.paymentState === undefined) {
             if (verifiedReceipt.cancelReason !== undefined) {
                 updateSubscription = {
@@ -303,7 +306,6 @@ export default class MiscellaneousService {
                                         packageName: receipt['verificationData.localVerificationData'].packageName,
                                         productId: receipt['verificationData.localVerificationData'].productId,
                                         purchaseToken: receipt['verificationData.localVerificationData'].purchaseToken,
-                                        orderId: receipt['verificationData.localVerificationData'].orderId,
                                     });
 
                                     await this._expireGoogleSubscription(subscription, verifiedReceipt);
