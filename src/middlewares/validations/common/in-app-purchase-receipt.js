@@ -40,7 +40,7 @@ export default ({ inAppPurchase }) =>
                     currency: verifiedReceipt.priceCurrencyCode,
                     status: value.status,
                     reference: value['verificationData.localVerificationData'].orderId,
-                    originalReference: null,
+                    originalReference: value['verificationData.localVerificationData'].orderId,
                     platform: value['verificationData.source'],
                     productId: value.productID,
                 };
