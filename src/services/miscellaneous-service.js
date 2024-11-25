@@ -183,7 +183,12 @@ export default class MiscellaneousService {
 
         let isDowngradeUser = false;
 
-        if (verifiedReceipt.paymentState === undefined) {
+        if (!verifiedReceipt.autoRenewing) {
+            updateSubscription = {
+                status: CANCELLED_PURCHASE_STATUS,
+                cancel_at: new dateFnsUtc.UTCDate(),
+            };
+        } else if (verifiedReceipt.paymentState === undefined) {
             if (verifiedReceipt.cancelReason !== undefined) {
                 updateSubscription = {
                     status: CANCELLED_PURCHASE_STATUS,
