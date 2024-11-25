@@ -198,6 +198,7 @@ export default class MiscellaneousService {
             isDowngradeUser = true;
         } else {
             updateSubscription = {
+                reference: verifiedReceipt.orderId,
                 expires_at: new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiryTimeMillis)),
             };
         }
@@ -248,9 +249,12 @@ export default class MiscellaneousService {
     }
 
     async expireUserSubscriptions() {
+        let appleSubscriptions;
+
+        let androidSubscriptions;
         try {
             const overallSubscriptions = [];
-            const appleSubscriptions = await this.database.models.CheckSubscriptionQueues.findOne({
+            appleSubscriptions = await this.database.models.CheckSubscriptionQueues.findOne({
                 where: {
                     platform: APPLE_PAYMENT_PLATFORM,
                     is_pending: true,
@@ -265,7 +269,7 @@ export default class MiscellaneousService {
                 overallSubscriptions.push(appleSubscriptions);
             }
 
-            const androidSubscriptions = await this.database.models.CheckSubscriptionQueues.findOne({
+            androidSubscriptions = await this.database.models.CheckSubscriptionQueues.findOne({
                 where: {
                     platform: GOOGLE_PAYMENT_PLATFORM,
                     is_pending: true,
@@ -325,6 +329,14 @@ export default class MiscellaneousService {
                 await appleSubscriptions.destroy({ force: true });
             }
         } catch (error) {
+            if (androidSubscriptions) {
+                await androidSubscriptions.destroy({ force: true });
+            }
+
+            if (appleSubscriptions) {
+                await appleSubscriptions.destroy({ force: true });
+            }
+
             this.logger.error('Failed to expire user subscriptions', error);
 
             throw new exceptions.InternalServerError('Failed to expire user subscriptions', error);
