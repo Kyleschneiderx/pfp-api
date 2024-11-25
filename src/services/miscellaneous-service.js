@@ -189,6 +189,8 @@ export default class MiscellaneousService {
                 status: CANCELLED_PURCHASE_STATUS,
                 cancel_at: new dateFnsUtc.UTCDate(),
             };
+
+            isDowngradeUser = true;
         } else if (verifiedReceipt.paymentState === undefined) {
             if (verifiedReceipt.cancelReason !== undefined) {
                 updateSubscription = {
