@@ -238,4 +238,12 @@ export default class UserController {
 
         return res.json({ msg: 'Password successfully set.', user: user });
     }
+
+    async handleVerifyUserType(req, res) {
+        const user = await this.userService.getUser({
+            userId: req.auth.user_id,
+        });
+
+        return res.json({ type_id: user.type_id });
+    }
 }

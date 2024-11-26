@@ -38,10 +38,10 @@ export default ({
         userController.handleGetUserRoute.bind(userController),
     );
 
-    router.delete(
-        '/:user_id/subscription',
+    router.get(
+        '/:user_id/account-type',
         [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
-        userController.handleRemoveUserSubscriptionRoute.bind(userController),
+        userController.handleVerifyUserType.bind(userController),
     );
 
     router.put(
