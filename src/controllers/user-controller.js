@@ -171,10 +171,6 @@ export default class UserController {
     }
 
     async handleUpdateUserSurveyRoute(req, res) {
-        if (!(await this.userService.isUserPremium(req.params.user_id))) {
-            throw new exceptions.Forbidden('You cannot access this content.');
-        }
-
         await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SUBMIT_SURVEY);
@@ -241,5 +237,21 @@ export default class UserController {
         delete user.dataValues.password;
 
         return res.json({ msg: 'Password successfully set.', user: user });
+    }
+
+    async handleVerifyUserType(req, res) {
+        const user = await this.userService.getUser({
+            userId: req.auth.user_id,
+        });
+
+        return res.json({ type_id: user.type_id });
+    }
+
+    async handleRemoveUserViaAppRoute(req, res) {
+        await this.userService.removeUserAccountViaApp(req.auth.user_id);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_ACCOUNT);
+
+        return res.json({ msg: 'Successfully removed account.' });
     }
 }

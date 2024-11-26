@@ -22,7 +22,6 @@ export default ({ inAppPurchase }) =>
                         packageName: value['verificationData.localVerificationData'].packageName,
                         productId: value['verificationData.localVerificationData'].productId,
                         purchaseToken: value['verificationData.localVerificationData'].purchaseToken,
-                        orderId: value['verificationData.localVerificationData'].orderId,
                     });
                 } catch (error) {
                     throw new Error('Failed to verify purchase receipt.', { cause: error });
@@ -41,7 +40,7 @@ export default ({ inAppPurchase }) =>
                     currency: verifiedReceipt.priceCurrencyCode,
                     status: value.status,
                     reference: value['verificationData.localVerificationData'].orderId,
-                    originalReference: null,
+                    originalReference: value['verificationData.localVerificationData'].orderId,
                     platform: value['verificationData.source'],
                     productId: value.productID,
                 };

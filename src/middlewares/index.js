@@ -4,3 +4,4 @@ export { default as validateInput } from './validate-input.js';
 export { default as verifyAuth } from './verify-auth.js';
 export { default as verifyAdmin } from './verify-admin.js';
 export { default as verifyUser } from './verify-user.js';
+export { default as verifyPremiumUser } from './verify-premium-user.js';

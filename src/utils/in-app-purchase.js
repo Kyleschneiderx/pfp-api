@@ -61,7 +61,6 @@ export default class InAppPurchase {
      * @param {string} data.packageName Product name
      * @param {string} data.productId Product id
      * @param {string} data.purchaseToken Purchase token
-     * @param {string} data.orderId Order Id
      * @returns
      */
     async verifyGooglePurchase(data) {
@@ -76,10 +75,6 @@ export default class InAppPurchase {
                 subscriptionId: data.productId,
                 token: data.purchaseToken,
             });
-
-            if (purchaseResponse.data.orderId !== data.orderId) {
-                throw new Error('Invalid order id');
-            }
 
             return purchaseResponse.data;
         } catch (error) {
@@ -107,8 +102,6 @@ export default class InAppPurchase {
             return cancelResponse.data;
         } catch (error) {
             this.logger.error('Failed to cancel google purchase.', error);
-
-            console.log(error.response.data.error);
 
             throw new Error('Failed to cancel google purchase.', { cause: error });
         }
