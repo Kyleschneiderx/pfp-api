@@ -246,4 +246,12 @@ export default class UserController {
 
         return res.json({ type_id: user.type_id });
     }
+
+    async handleRemoveUserViaAppRoute(req, res) {
+        await this.userService.removeUserAccountViaApp(req.auth.user_id);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.REMOVE_ACCOUNT);
+
+        return res.json({ msg: 'Successfully removed account.' });
+    }
 }

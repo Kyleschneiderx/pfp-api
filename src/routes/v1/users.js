@@ -33,6 +33,8 @@ export default ({
         userController.handleSetupPasswordRoute.bind(userController),
     );
 
+    router.delete('/delete-account', [verifyUser], userController.handleRemoveUserViaAppRoute.bind(userController));
+
     router.get(
         '/:user_id',
         validateInput([commonValidations.userAccessUserIdValidation({ userService })]),

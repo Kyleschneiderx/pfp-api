@@ -621,6 +621,57 @@ export default class UserService {
     }
 
     /**
+     * Remove user account using the app
+     * @param {number} userId User account user id
+     * @returns {boolean}
+     * @throws {InternalServerError} If failed to remove user account
+     */
+    async removeUserAccountViaApp(userId) {
+        try {
+            const user = await this.getUser({ userId: userId, withProfile: true });
+
+            if (user.user_profile.photo) {
+                await this.storage.delete(user.user_profile.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
+            }
+
+            return await Promise.all([
+                this.database.models.UserProfiles.update(
+                    {
+                        name: `deleted_user_${new Date().getTime()}`,
+                        contact_number: null,
+                        birthdate: null,
+                        description: null,
+                        photo: null,
+                        deleted_at: new dateFnsUtc.UTCDate(),
+                    },
+                    {
+                        where: {
+                            user_id: userId,
+                        },
+                    },
+                ),
+                this.database.models.Users.update(
+                    {
+                        email: `deleted_user_${new Date().getTime()}`,
+                        google_id: null,
+                        apple_id: null,
+                        deleted_at: new dateFnsUtc.UTCDate(),
+                    },
+                    {
+                        where: {
+                            id: userId,
+                        },
+                    },
+                ),
+            ]);
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to remove user account', error);
+        }
+    }
+
+    /**
      * Remove user account photo
      * @param {number} userId User account user id
      * @returns {boolean}
