@@ -6,6 +6,7 @@ import * as commonValidations from '../../middlewares/validations/common/index.j
 export default ({
     verifyAdmin,
     verifyUser,
+    verifyPremiumUser,
     userController,
     userService,
     file,
@@ -38,11 +39,19 @@ export default ({
         userController.handleGetUserRoute.bind(userController),
     );
 
+    router.put(
+        '/:user_id/survey',
+        [validateInput(validations.updateUserSurveyAnswerValidation({ userService, miscellaneousService })), verifyUser],
+        userController.handleUpdateUserSurveyRoute.bind(userController),
+    );
+
     router.get(
         '/:user_id/account-type',
         [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
         userController.handleVerifyUserType.bind(userController),
     );
+
+    router.use(verifyPremiumUser);
 
     router.put(
         '/:user_id/password',
@@ -72,12 +81,6 @@ export default ({
         '/:user_id/pf-plan-progress/stats',
         [validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService })), verifyUser],
         userController.handleGetUserPfPlanProgressStatisticsRoute.bind(userController),
-    );
-
-    router.put(
-        '/:user_id/survey',
-        [validateInput(validations.updateUserSurveyAnswerValidation({ userService, miscellaneousService })), verifyUser],
-        userController.handleUpdateUserSurveyRoute.bind(userController),
     );
 
     router.use(verifyAdmin);

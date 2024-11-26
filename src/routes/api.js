@@ -50,6 +50,8 @@ export default ({
         exceptions: ['/api/v1/users/signup'],
     });
 
+    const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
+
     router.use(
         fileUpload({
             limits: { fieldSize: 100 * 1024 * 1024 },
@@ -145,6 +147,7 @@ export default ({
             password: password,
             pfPlanService: pfPlanService,
             miscellaneousService: miscellaneousService,
+            verifyPremiumUser: verifyPremiumUser,
         }),
     );
 
@@ -169,6 +172,7 @@ export default ({
             exerciseService: exerciseService,
             selectionService: selectionService,
             file: file,
+            verifyPremiumUser: verifyPremiumUser,
         }),
     );
 
@@ -183,6 +187,7 @@ export default ({
             selectionService: selectionService,
             file: file,
             educationService: educationService,
+            verifyPremiumUser: verifyPremiumUser,
         }),
     );
 
@@ -196,6 +201,7 @@ export default ({
             selectionService: selectionService,
             file: file,
             pfPlanService: pfPlanService,
+            verifyPremiumUser: verifyPremiumUser,
         }),
     );
 
@@ -204,6 +210,7 @@ export default ({
         routeV1Notifications({
             verifyUser: middlewares.verifyUser,
             notificationController: notificationController,
+            verifyPremiumUser: verifyPremiumUser,
         }),
     );
 
