@@ -24,7 +24,6 @@ export default ({ userService, file }) => [
     body('contact_number')
         .trim()
         .optional()
-        .withMessage('Contact number is required.')
         .isString()
         .withMessage('Contact number should be string.')
         .isLength({ max: 20 })
