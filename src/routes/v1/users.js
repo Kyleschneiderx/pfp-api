@@ -53,14 +53,6 @@ export default ({
         userController.handleVerifyUserType.bind(userController),
     );
 
-    router.use(verifyPremiumUser);
-
-    router.put(
-        '/:user_id/password',
-        [validateInput(validations.changePasswordValidation({ userService, password })), verifyUser],
-        userController.handleChangePasswordRoute.bind(userController),
-    );
-
     router.put(
         '/:user_id/photo',
         [
@@ -71,6 +63,14 @@ export default ({
             verifyUser,
         ],
         userController.handleUploadUserPhotoRoute.bind(userController),
+    );
+
+    router.use(verifyPremiumUser);
+
+    router.put(
+        '/:user_id/password',
+        [validateInput(validations.changePasswordValidation({ userService, password })), verifyUser],
+        userController.handleChangePasswordRoute.bind(userController),
     );
 
     router.get(
