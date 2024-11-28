@@ -41,11 +41,11 @@ export default ({ inAppPurchase, miscellaneousService }) =>
                     throw new Error('Transaction already exist.');
                 }
 
-                // await inAppPurchase.acknowledgeGooglePurchase({
-                //     packageName: value['verificationData.localVerificationData'].packageName,
-                //     productId: value['verificationData.localVerificationData'].productId,
-                //     purchaseToken: value['verificationData.localVerificationData'].purchaseToken,
-                // });
+                await inAppPurchase.acknowledgeGooglePurchase({
+                    packageName: value['verificationData.localVerificationData'].packageName,
+                    productId: value['verificationData.localVerificationData'].productId,
+                    purchaseToken: value['verificationData.localVerificationData'].purchaseToken,
+                });
 
                 req.body.receipt.finalizedData = {
                     purchaseDate: verifiedReceipt.startTimeMillis,
