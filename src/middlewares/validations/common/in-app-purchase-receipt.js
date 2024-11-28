@@ -1,7 +1,7 @@
 import { body } from 'express-validator';
 import { APPLE_PAYMENT_PLATFORM, GOOGLE_PAY_FREE_TRIAL, GOOGLE_PAY_PAYMENT_RECEIVED, GOOGLE_PAYMENT_PLATFORM } from '../../../constants/index.js';
 
-export default ({ inAppPurchase }) =>
+export default ({ inAppPurchase, miscellaneousService }) =>
     body('receipt')
         .exists({ values: 'falsy' })
         .withMessage('Receipt is required.')
@@ -33,6 +33,20 @@ export default ({ inAppPurchase }) =>
                     throw new Error('Invalid payment status');
                 }
 
+                const existingPurchaseTransaction = await miscellaneousService.getPaymentByOrignalReference(
+                    value['verificationData.localVerificationData'].orderId,
+                );
+
+                if (existingPurchaseTransaction && existingPurchaseTransaction.user_id !== req.auth.user_id) {
+                    throw new Error('Transaction already exist.');
+                }
+
+                await inAppPurchase.acknowledgeGooglePurchase({
+                    packageName: value['verificationData.localVerificationData'].packageName,
+                    productId: value['verificationData.localVerificationData'].productId,
+                    purchaseToken: value['verificationData.localVerificationData'].purchaseToken,
+                });
+
                 req.body.receipt.finalizedData = {
                     purchaseDate: verifiedReceipt.startTimeMillis,
                     expireDate: verifiedReceipt.expiryTimeMillis,
@@ -56,6 +70,12 @@ export default ({ inAppPurchase }) =>
                 }
 
                 const latestTransaction = verifiedReceipt[0];
+
+                const existingPurchaseTransaction = await miscellaneousService.getPaymentByOrignalReference(latestTransaction.originalTransactionId);
+
+                if (existingPurchaseTransaction && existingPurchaseTransaction.user_id !== req.auth.user_id) {
+                    throw new Error('Transaction already exist.');
+                }
 
                 req.body.receipt.finalizedData = {
                     purchaseDate: latestTransaction.purchaseDate,
