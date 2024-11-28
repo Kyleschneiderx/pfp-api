@@ -185,6 +185,13 @@ export default class MiscellaneousService {
         }
     }
 
+    /**
+     * Get payment by purchase original reference
+     *
+     * @param {string} reference Purchase reference
+     * @returns {Promise<UserSubscriptions>}
+     * @throws {InternalServerError} If failed to get purchase by reference
+     */
     async getPaymentByOrignalReference(reference) {
         try {
             return await this.database.models.UserSubscriptions.findOne({ where: { original_reference: reference } });
@@ -266,6 +273,11 @@ export default class MiscellaneousService {
         }
     }
 
+    /**
+     * Process subscription checke
+     *
+     * @returns {Promise<void>}
+     */
     async expireUserSubscriptions() {
         let appleSubscriptions;
 
