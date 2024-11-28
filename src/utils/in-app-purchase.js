@@ -86,24 +86,24 @@ export default class InAppPurchase {
         }
     }
 
-    async cancelGooglePurchase(data) {
+    async acknowledgeGooglePurchase(data) {
         if (this.googleApis === undefined && this.googleAuthClient === undefined)
             throw new Error('Google apis module and google auth client is required.');
 
         this.googleApis.google.options({ auth: this.googleAuthClient });
 
         try {
-            const cancelResponse = await this.googleApis.google.androidpublisher({ version: 'v3' }).purchases.subscriptions.cancel({
+            const acknowledgeResponse = await this.googleApis.google.androidpublisher({ version: 'v3' }).purchases.subscriptions.acknowledge({
                 packageName: data.packageName,
                 subscriptionId: data.productId,
                 token: data.purchaseToken,
             });
 
-            return cancelResponse.data;
+            return acknowledgeResponse.data;
         } catch (error) {
-            this.logger.error('Failed to cancel google purchase.', error);
+            this.logger.error('Failed to acknowledge google purchase.', error);
 
-            throw new Error('Failed to cancel google purchase.', { cause: error });
+            throw new Error('Failed to acknowledge google purchase.', { cause: error });
         }
     }
 }
