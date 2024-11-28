@@ -14,7 +14,7 @@ export default ({ userService, file }) => [
     body('name').trim().exists({ values: 'falsy' }).withMessage('Name is required.').isString().isLength({ max: 150 }),
     body('birthdate')
         .trim()
-        .optional()
+        .if(body('birthdate').exists({ values: 'falsy' }))
         .isDate()
         .withMessage('Birthdate should be a valid date.')
         .isISO8601()
@@ -23,7 +23,7 @@ export default ({ userService, file }) => [
         .withMessage('Birthdate should be before today.'),
     body('contact_number')
         .trim()
-        .optional()
+        .if(body('contact_number').exists({ values: 'falsy' }))
         .isString()
         .withMessage('Contact number should be string.')
         .isLength({ max: 20 })
