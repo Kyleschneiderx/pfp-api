@@ -138,12 +138,12 @@ export default class MiscellaneousService {
         try {
             const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.finalizedData?.expireDate));
 
-            return await this.database.transaction(async (transaction) => {
-                let payment = await this.database.models.UserSubscriptions.findOne({
-                    where: { user_id: data.userId, original_reference: data.receipt?.finalizedData?.originalReference, status: PAID_PURCHASE_STATUS },
-                    order: [['id', 'DESC']],
-                });
+            let payment = await this.database.models.UserSubscriptions.findOne({
+                where: { user_id: data.userId, original_reference: data.receipt?.finalizedData?.originalReference, status: PAID_PURCHASE_STATUS },
+                order: [['id', 'DESC']],
+            });
 
+            return await this.database.transaction(async (transaction) => {
                 await this.database.models.UserSubscriptions.update(
                     { status: CANCELLED_PURCHASE_STATUS, cancel_at: new dateFnsUtc.UTCDate() },
                     { where: { user_id: data.userId }, transaction: transaction },
@@ -182,6 +182,16 @@ export default class MiscellaneousService {
             this.logger.error('Failed to create payment', error);
 
             throw new exceptions.InternalServerError('Failed to create payment', error);
+        }
+    }
+
+    async getPaymentByOrignalReference(reference) {
+        try {
+            return await this.database.models.UserSubscriptions.findOne({ where: { original_reference: reference } });
+        } catch (error) {
+            this.logger.error('Failed to get purchase by reference', error);
+
+            throw new exceptions.InternalServerError('Failed to get purchase by reference', error);
         }
     }
 
