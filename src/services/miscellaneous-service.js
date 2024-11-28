@@ -7,6 +7,7 @@ import {
     CANCELLED_PURCHASE_STATUS,
     GOOGLE_PAYMENT_PLATFORM,
     APPLE_PAYMENT_PLATFORM,
+    PAID_PURCHASE_STATUS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -138,13 +139,19 @@ export default class MiscellaneousService {
             const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.finalizedData?.expireDate));
 
             return await this.database.transaction(async (transaction) => {
-                this.database.models.UserSubscriptions.update(
+                let payment = await this.database.models.UserSubscriptions.findOne({
+                    where: { user_id: data.userId, original_reference: data.receipt?.finalizedData?.originalReference, status: PAID_PURCHASE_STATUS },
+                    order: [['id', 'DESC']],
+                });
+
+                await this.database.models.UserSubscriptions.update(
                     { status: CANCELLED_PURCHASE_STATUS, cancel_at: new dateFnsUtc.UTCDate() },
                     { where: { user_id: data.userId }, transaction: transaction },
                 );
 
-                const payment = await this.database.models.UserSubscriptions.create(
+                [payment] = await this.database.models.UserSubscriptions.upsert(
                     {
+                        id: payment?.id,
                         user_id: data.userId,
                         response: JSON.stringify(data.receipt),
                         price: data.receipt?.finalizedData?.amount,
@@ -229,12 +236,6 @@ export default class MiscellaneousService {
                 updateSubscription = {
                     status: CANCELLED_PURCHASE_STATUS,
                     cancel_at: verifiedReceipt.revocationDate ? new dateFnsUtc.UTCDate(Number(verifiedReceipt.revocationDate)) : null,
-                };
-
-                isDowngradeUser = true;
-            } else {
-                updateSubscription = {
-                    status: EXPIRED_PURCHASE_STATUS,
                 };
 
                 isDowngradeUser = true;
