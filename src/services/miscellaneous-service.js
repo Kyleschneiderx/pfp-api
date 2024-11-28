@@ -232,12 +232,6 @@ export default class MiscellaneousService {
                 };
 
                 isDowngradeUser = true;
-            } else {
-                updateSubscription = {
-                    status: EXPIRED_PURCHASE_STATUS,
-                };
-
-                isDowngradeUser = true;
             }
         } else {
             updateSubscription = {
