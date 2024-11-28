@@ -2,7 +2,7 @@ import express from 'express';
 import validateInput from '../../middlewares/validate-input.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ miscellaneousController, miscellaneousService, selectionService, inAppPurchase }) => {
+export default ({ miscellaneousController, miscellaneousService, inAppPurchase }) => {
     const router = express.Router();
 
     router.get('/privacy-policy', miscellaneousController.handleGetPrivacyPolicyRoute.bind(miscellaneousController));
