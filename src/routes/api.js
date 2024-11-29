@@ -48,6 +48,7 @@ export default ({
     const verifyAuth = middlewares.verifyAuth({
         jwt: jwt,
         exceptions: ['/api/v1/users/signup'],
+        userService: userService,
     });
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
