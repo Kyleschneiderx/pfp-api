@@ -222,7 +222,7 @@ export default class MiscellaneousService {
                 };
             } else {
                 updateSubscription = {
-                    status: EXPIRED_PURCHASE_STATUS,
+                    status: CANCELLED_PURCHASE_STATUS,
                 };
             }
 
@@ -249,12 +249,30 @@ export default class MiscellaneousService {
         let isDowngradeUser = false;
 
         if (verifiedReceipt.originalTransactionId === subscription.original_reference && verifiedReceipt.transactionId === subscription.reference) {
+            console.log(
+                subscription.expires_at,
+                new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate)),
+                new Date(subscription.expires_at).getTime(),
+                new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime(),
+                Number(new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime()) <=
+                    Number(new Date(subscription.expires_at).getTime()),
+            );
             if (verifiedReceipt.revocationReason !== undefined) {
                 updateSubscription = {
                     status: CANCELLED_PURCHASE_STATUS,
                     cancel_at: verifiedReceipt.revocationDate ? new dateFnsUtc.UTCDate(Number(verifiedReceipt.revocationDate)) : null,
                 };
 
+                isDowngradeUser = true;
+            }
+            if (
+                Number(new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime()) <=
+                Number(new Date(subscription.expires_at).getTime())
+            ) {
+                updateSubscription = {
+                    status: CANCELLED_PURCHASE_STATUS,
+                    cancel_at: new dateFnsUtc.UTCDate(),
+                };
                 isDowngradeUser = true;
             }
         } else {
@@ -279,6 +297,29 @@ export default class MiscellaneousService {
      * @returns {Promise<void>}
      */
     async expireUserSubscriptions() {
+        const platformProcessor = {
+            [GOOGLE_PAYMENT_PLATFORM]: async (subscription, receipt) => {
+                const verifiedReceipt = await this.inAppPurchase.verifyGooglePurchase({
+                    packageName: receipt['verificationData.localVerificationData'].packageName,
+                    productId: receipt['verificationData.localVerificationData'].productId,
+                    purchaseToken: receipt['verificationData.localVerificationData'].purchaseToken,
+                });
+
+                await this._expireGoogleSubscription(subscription, verifiedReceipt);
+            },
+            [APPLE_PAYMENT_PLATFORM]: async (subscription, receipt) => {
+                let latestTransaction;
+
+                try {
+                    [latestTransaction] = await this.inAppPurchase.verifyApplePurchase(receipt['verificationData.localVerificationData']);
+                } catch (error) {
+                    /** empty */
+                }
+
+                await this._expireAppleSubscription(subscription, latestTransaction);
+            },
+        };
+
         let appleSubscriptions;
 
         let androidSubscriptions;
@@ -321,29 +362,7 @@ export default class MiscellaneousService {
 
                         await Promise.all(
                             queue.subscriptions.map(async (subscription) => {
-                                const receipt = subscription.response;
-
-                                if (subscription.platform === GOOGLE_PAYMENT_PLATFORM) {
-                                    const verifiedReceipt = await this.inAppPurchase.verifyGooglePurchase({
-                                        packageName: receipt['verificationData.localVerificationData'].packageName,
-                                        productId: receipt['verificationData.localVerificationData'].productId,
-                                        purchaseToken: receipt['verificationData.localVerificationData'].purchaseToken,
-                                    });
-
-                                    await this._expireGoogleSubscription(subscription, verifiedReceipt);
-                                } else if (subscription.platform === APPLE_PAYMENT_PLATFORM) {
-                                    let latestTransaction;
-
-                                    try {
-                                        [latestTransaction] = await this.inAppPurchase.verifyApplePurchase(
-                                            receipt['verificationData.localVerificationData'],
-                                        );
-                                    } catch (error) {
-                                        /** empty */
-                                    }
-
-                                    await this._expireAppleSubscription(subscription, latestTransaction);
-                                }
+                                await platformProcessor[subscription.platform](subscription, subscription.response);
                             }),
                         );
                     }),
