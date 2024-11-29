@@ -259,7 +259,7 @@ export default class MiscellaneousService {
             }
             if (
                 Number(new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime()) <
-                Number(new Date(subscription.expires_at).getTime())
+                Number(new Date(new dateFnsUtc.UTCDate()).getTime())
             ) {
                 updateSubscription = {
                     status: CANCELLED_PURCHASE_STATUS,
