@@ -258,7 +258,7 @@ export default class MiscellaneousService {
                 isDowngradeUser = true;
             }
             if (
-                Number(new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime()) <=
+                Number(new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime()) <
                 Number(new Date(subscription.expires_at).getTime())
             ) {
                 updateSubscription = {
