@@ -48,7 +48,6 @@ export default class InAppPurchase {
 
             return transactions;
         } catch (error) {
-            console.log(error);
             this.logger.error('Failed to verify apple purchase.', error);
 
             throw new Error('Failed to verify apple purchase.', { cause: error });
