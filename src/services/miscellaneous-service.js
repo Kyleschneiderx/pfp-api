@@ -194,7 +194,7 @@ export default class MiscellaneousService {
      */
     async getPaymentByOrignalReference(reference) {
         try {
-            return await this.database.models.UserSubscriptions.findOne({ where: { original_reference: reference } });
+            return await this.database.models.UserSubscriptions.findOne({ where: { original_reference: reference, status: PAID_PURCHASE_STATUS } });
         } catch (error) {
             this.logger.error('Failed to get purchase by reference', error);
 
