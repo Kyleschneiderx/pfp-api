@@ -208,12 +208,16 @@ export default class MiscellaneousService {
         let isDowngradeUser = false;
 
         if (!verifiedReceipt.autoRenewing) {
-            updateSubscription = {
-                status: CANCELLED_PURCHASE_STATUS,
-                cancel_at: new dateFnsUtc.UTCDate(),
-            };
-
-            isDowngradeUser = true;
+            if (
+                Number(new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiryTimeMillis))).getTime()) <
+                Number(new Date(new dateFnsUtc.UTCDate()).getTime())
+            ) {
+                updateSubscription = {
+                    status: CANCELLED_PURCHASE_STATUS,
+                    cancel_at: new dateFnsUtc.UTCDate(),
+                };
+                isDowngradeUser = true;
+            }
         } else if (verifiedReceipt.paymentState === undefined) {
             if (verifiedReceipt.cancelReason !== undefined) {
                 updateSubscription = {
