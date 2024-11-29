@@ -249,14 +249,6 @@ export default class MiscellaneousService {
         let isDowngradeUser = false;
 
         if (verifiedReceipt.originalTransactionId === subscription.original_reference && verifiedReceipt.transactionId === subscription.reference) {
-            console.log(
-                subscription.expires_at,
-                new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate)),
-                new Date(subscription.expires_at).getTime(),
-                new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime(),
-                Number(new Date(new dateFnsUtc.UTCDate(Number(verifiedReceipt.expiresDate))).getTime()) <=
-                    Number(new Date(subscription.expires_at).getTime()),
-            );
             if (verifiedReceipt.revocationReason !== undefined) {
                 updateSubscription = {
                     status: CANCELLED_PURCHASE_STATUS,
