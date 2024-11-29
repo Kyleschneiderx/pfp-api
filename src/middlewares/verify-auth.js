@@ -1,7 +1,7 @@
 import Unauthorized from '../exceptions/unauthorized.js';
 
-export default ({ jwt, exceptions = [] }) =>
-    (req, res, next) => {
+export default ({ jwt, exceptions = [], userService }) =>
+    async (req, res, next) => {
         if (exceptions.includes(req.originalUrl)) return next();
 
         const { authorization } = req.headers;
@@ -20,6 +20,10 @@ export default ({ jwt, exceptions = [] }) =>
             const verifyToken = jwt.verify(token, process.env.JWT_SECRET);
 
             req.auth = verifyToken.user;
+
+            if (!(await userService.getUser({ userId: req.auth.user_id }))) {
+                throw new Error('User does not exist.');
+            }
 
             return next();
         } catch (error) {
