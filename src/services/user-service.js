@@ -533,8 +533,8 @@ export default class UserService {
 
             const userProfilesUpdatePayload = {
                 ...(data.name && { name: data.name }),
-                ...(data.contactNumber && { contact_number: data.contactNumber }),
-                ...(data.birthdate && { birthdate: data.birthdate }),
+                ...(data.contactNumber !== undefined && { contact_number: data.contactNumber }),
+                ...(data.birthdate !== undefined && { birthdate: data.birthdate }),
                 ...(data.description && { description: data.description }),
                 ...(storeResponse?.path && { photo: `${ASSET_URL}/${storeResponse?.path}` }),
             };
