@@ -7,6 +7,29 @@ export default class InAppPurchase {
         this.googleApis = googleApis;
     }
 
+    async fallbackVerifyApplePurchaseSandbox(receipt) {
+        const defaultAppleAppStoreClient = this.appleAppStoreClient;
+
+        this.appleAppStoreClient = new this.appleAppStoreServerLib.AppStoreServerAPIClient(
+            this.appleAppStoreClient.signingKey,
+            this.appleAppStoreClient.keyId,
+            this.appleAppStoreClient.issuerId,
+            this.appleAppStoreClient.bundleId,
+            this.appleAppStoreServerLib.Environment.SANDBOX,
+        );
+
+        let fallbackVerifyResponse;
+        try {
+            fallbackVerifyResponse = await this.verifyApplePurchase(receipt);
+        } catch (error) {
+            throw new Error('Failed to verify apple purchase.', { cause: error });
+        } finally {
+            this.appleAppStoreClient = defaultAppleAppStoreClient;
+        }
+
+        return fallbackVerifyResponse;
+    }
+
     async verifyApplePurchase(receipt) {
         if (this.appleAppStoreServerLib === undefined && this.appleAppStoreClient === undefined)
             throw new Error('Apple app store server lib and app store client is required.');
@@ -49,6 +72,14 @@ export default class InAppPurchase {
             return transactions;
         } catch (error) {
             this.logger.error('Failed to verify apple purchase.', error);
+
+            if (!this.appleAppStoreClient.urlBase.includes('sandbox')) {
+                try {
+                    return await this.fallbackVerifyApplePurchaseSandbox(receipt);
+                } catch (errorFallback) {
+                    throw new Error('Failed to verify apple purchase.', { cause: errorFallback });
+                }
+            }
 
             throw new Error('Failed to verify apple purchase.', { cause: error });
         }
