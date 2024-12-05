@@ -249,7 +249,7 @@ export default class UserService {
                 },
             });
 
-            user.dataValues.has_answered_survey = Boolean(await this.database.models.UserSurveyQuestionAnswers.count({ where: { user_id: id } }));
+            user.dataValues.has_answered_survey = await this.hasUserAnsweredSurvey(user.id);
 
             user.user_profile.photo = this.helper.generateProtectedUrl(
                 user.user_profile.photo,
@@ -929,6 +929,22 @@ export default class UserService {
             this.logger.error('Failed to remove user subscription', error);
 
             throw new exceptions.InternalServerError('Failed to remove user subscription', error);
+        }
+    }
+
+    /**
+     * Get user answer survey state
+     * @param {number} userId User account user id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to get user answer survey state
+     */
+    async hasUserAnsweredSurvey(userId) {
+        try {
+            return Boolean(await this.database.models.UserSurveyQuestionAnswers.count({ where: { user_id: userId } }));
+        } catch (error) {
+            this.logger.error('Failed to get user answer survey state', error);
+
+            throw new exceptions.InternalServerError('Failed to get user answer survey state', error);
         }
     }
 }
