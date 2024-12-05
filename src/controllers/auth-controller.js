@@ -21,6 +21,8 @@ export default class AuthController {
         delete req.user.dataValues.google_id;
         delete req.user.dataValues.apple_id;
 
+        req.user.dataValues.has_answered_survey = await this.userService.hasUserAnsweredSurvey(req.user.id);
+
         this.loggerService.logSystemAudit(req.user.id, SYSTEM_AUDITS.LOGIN);
 
         return res.json({
