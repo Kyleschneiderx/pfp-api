@@ -151,7 +151,12 @@ export default class MiscellaneousService {
             throw new exceptions.InternalServerError('Failed to get subscription by user id', error);
         }
 
-        if (!subscription) throw new exceptions.NotFound('No records found.');
+        if (!subscription) {
+            return {
+                package_id: null,
+                expires_at: null,
+            };
+        }
 
         return subscription;
     }
