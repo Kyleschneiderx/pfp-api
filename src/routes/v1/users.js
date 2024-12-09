@@ -53,6 +53,12 @@ export default ({
         userController.handleVerifyUserType.bind(userController),
     );
 
+    router.get(
+        '/:user_id/subscription',
+        [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
+        userController.handleVerifySubscription.bind(userController),
+    );
+
     router.put(
         '/:user_id/photo',
         [
