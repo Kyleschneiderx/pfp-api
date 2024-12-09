@@ -8,6 +8,7 @@ import {
     GOOGLE_PAYMENT_PLATFORM,
     APPLE_PAYMENT_PLATFORM,
     PAID_PURCHASE_STATUS,
+    SUBSCRIPTION_PRODUCTS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -157,6 +158,8 @@ export default class MiscellaneousService {
                 expires_at: null,
             };
         }
+
+        subscription.dataValues.package_id = SUBSCRIPTION_PRODUCTS[subscription.dataValues.package_id];
 
         return subscription;
     }
