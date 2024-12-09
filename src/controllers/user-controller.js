@@ -267,4 +267,23 @@ export default class UserController {
 
         return res.json(subscription);
     }
+
+    async handleSendOtpRoute(req, res) {
+        const user = await this.userService.getUser({
+            userId: req.auth.user_id,
+        });
+
+        const verificationCode = await this.verificationService.sendOtp(user.email);
+
+        return res.status(200).json({
+            msg: 'Successfully sent OTP to your email. Check your OTP to proceed with your action.',
+            ...(process.env.APP_ENV !== 'production' && { code: verificationCode.code }),
+        });
+    }
+
+    async handleVerifyOtp(req, res) {
+        await this.userService.updateUserVerifiedTime(req.auth.user_id);
+
+        return res.status(204).json();
+    }
 }
