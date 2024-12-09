@@ -1,3 +1,4 @@
+import * as dateFnsUtc from '@date-fns/utc';
 import {
     REPORT_DEFAULT_PAGE,
     REPORT_DEFAULT_ITEMS,
@@ -30,7 +31,7 @@ export default class UserController {
     }
 
     async handleUserSignupRoute(req, res) {
-        const user = await this.userService.createUserAccount({
+        const createUserPayload = {
             email: req.body.email,
             password: req.body.password,
             name: req.body.name,
@@ -40,8 +41,14 @@ export default class UserController {
             appleId: req.body.apple_id,
             photo: req.files?.photo,
             statusId: ACTIVE_STATUS_ID,
-            verified_at: new Date(),
-        });
+            verified_at: null,
+        };
+
+        if (req.body.google_id !== undefined || req.body.apple_id !== undefined) {
+            createUserPayload.verified_at = new dateFnsUtc.UTCDate();
+        }
+
+        const user = await this.userService.createUserAccount(createUserPayload);
 
         if (req.body.device_token !== undefined) {
             await this.notificationService.addUserDeviceToken(user.id, req.body.device_token);
