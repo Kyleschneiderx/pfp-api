@@ -126,6 +126,42 @@ export default class MiscellaneousService {
     }
 
     /**
+     * Get user subscription by user id
+     *
+     * @param {number} userId User account id
+     * @returns {Promise<UserSubscriptions>} UserSubscriptions instance
+     * @throws {InternalServerError} If failed to get subscription by user id
+     */
+    async getPaymentByUserId(userId) {
+        let subscription = null;
+        try {
+            subscription = await this.database.models.UserSubscriptions.findOne({
+                attributes: ['package_id', 'expires_at'],
+                where: {
+                    user_id: userId,
+                    status: {
+                        [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS],
+                    },
+                },
+                order: [['id', 'DESC']],
+            });
+        } catch (error) {
+            this.logger.error('Failed to get subscription by user id', error);
+
+            throw new exceptions.InternalServerError('Failed to get subscription by user id', error);
+        }
+
+        if (!subscription) {
+            return {
+                package_id: null,
+                expires_at: null,
+            };
+        }
+
+        return subscription;
+    }
+
+    /**
      * Create payment for user subscription
      *
      * @param {object} data

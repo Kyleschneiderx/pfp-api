@@ -267,6 +267,7 @@ export default class UserService {
                         [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS],
                     },
                 },
+                order: [['id', 'DESC']],
             });
 
             if (user.dataValues.user_subscription !== null) {

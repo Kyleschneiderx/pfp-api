@@ -254,4 +254,10 @@ export default class UserController {
 
         return res.json({ msg: 'Successfully removed account.' });
     }
+
+    async handleVerifySubscription(req, res) {
+        const subscription = await this.miscellaneousService.getPaymentByUserId(req.auth.user_id);
+
+        return res.json(subscription);
+    }
 }
