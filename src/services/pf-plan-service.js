@@ -777,9 +777,9 @@ export default class PfPlanService {
                 await this.storage.delete(pfPlan.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
             }
 
-            await this.database.models.PfPlanDailies.delete({ where: { pf_plan_id: id } });
+            await this.database.models.PfPlanDailies.destroy({ where: { pf_plan_id: id } });
 
-            await this.database.models.PfPlanDailyContents.delete({ where: { pf_plan_id: id } });
+            await this.database.models.PfPlanDailyContents.destroy({ where: { pf_plan_id: id } });
 
             return await pfPlan.destroy();
         } catch (error) {
