@@ -234,7 +234,7 @@ export default class MiscellaneousService {
     async getPaymentByOrignalReference(reference) {
         try {
             return await this.database.models.UserSubscriptions.findOne({
-                where: { original_reference: reference, status: { [Sequelize.Op.ne]: PAID_PURCHASE_STATUS } },
+                where: { original_reference: reference, status: { [Sequelize.Op.ne]: CANCELLED_PURCHASE_STATUS } },
             });
         } catch (error) {
             this.logger.error('Failed to get purchase by reference', error);
