@@ -312,14 +312,14 @@ export default class UserService {
      * @returns {Promise<void>}
      * @throws {InternalServerError} If failed to update user confirmation time
      */
-    async updateUserVerifiedTime(email) {
+    async updateUserVerifiedTime(userId) {
         try {
             return await this.database.models.Users.update(
                 {
                     verified_at: new Date(),
                     updated_at: new Date(),
                 },
-                { where: { email: email } },
+                { where: { id: userId } },
             );
         } catch (error) {
             this.logger.error(error.message, error);

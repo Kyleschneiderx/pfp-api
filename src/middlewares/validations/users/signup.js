@@ -1,26 +1,9 @@
 import { body } from 'express-validator';
 import * as commonValidation from '../common/index.js';
 
-export default ({ userService, file, verificationService, authService }) => [
+export default ({ userService, file, authService }) => [
     ...commonValidation.createUserValidation({ userService: userService, file: file }),
     ...commonValidation.passwordValidation({ isSignup: true }),
-    body('otp')
-        .trim()
-        .if(body('google_token').not().exists({ values: 'falsy' }))
-        .if(body('apple_token').not().exists({ values: 'falsy' }))
-        .exists({ values: 'falsy' })
-        .withMessage('OTP is required.')
-        .isString()
-        .withMessage('OTP should be string.')
-        .isLength({ min: 6, max: 6 })
-        .withMessage('OTP should be 6 characters long.')
-        .custom(async (value, { req }) => {
-            try {
-                await verificationService.verifyOtp(req.body.email, value);
-            } catch (error) {
-                throw new Error(JSON.parse(error.message));
-            }
-        }),
     body('google_token')
         .trim()
         .if(body('google_token').exists({ values: 'falsy' }))

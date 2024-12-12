@@ -41,6 +41,18 @@ export default ({
         userController.handleGetUserRoute.bind(userController),
     );
 
+    router.post(
+        '/:user_id/otp/verify',
+        [validateInput([commonValidations.oneTimePinValidation({ verificationService, userService })]), verifyUser],
+        userController.handleVerifyOtp.bind(userController),
+    );
+
+    router.post(
+        '/:user_id/otp',
+        [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
+        userController.handleSendOtpRoute.bind(userController),
+    );
+
     router.put(
         '/:user_id/survey',
         [validateInput(validations.updateUserSurveyAnswerValidation({ userService, miscellaneousService })), verifyUser],
