@@ -27,6 +27,6 @@ export default ({ jwt, exceptions = [], userService }) =>
 
             return next();
         } catch (error) {
-            throw new Unauthorized(error?.message);
+            throw new Unauthorized(`${String(error?.message).charAt(0).toUpperCase()}${String(error?.message).slice(1)}`);
         }
     };
