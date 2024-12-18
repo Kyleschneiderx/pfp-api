@@ -24,7 +24,10 @@ export default class EmailService {
             encoding: 'utf8',
         });
         if (template) {
-            template = template.replace(/{code}/g, data.code ?? '').replace(/{logo}/g, `${EMAIL_ASSETS_URL}/logo.png`);
+            template = this.helper.replacer(template, {
+                code: data.code ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
+            });
         }
 
         try {
@@ -56,8 +59,11 @@ export default class EmailService {
             encoding: 'utf8',
         });
         if (template) {
-            template = template.replace(/{link}/g, data.link ?? '');
-            template = template.replace(/{name}/g, data.receiver.name ?? '');
+            template = this.helper.replacer(template, {
+                link: data.link ?? '',
+                name: data.receiver.name ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
+            });
         }
 
         try {
@@ -93,6 +99,7 @@ export default class EmailService {
             template = this.helper.replacer(template, {
                 link: data.link ?? '',
                 name: data.receiver.name ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
             });
         }
 
@@ -132,6 +139,7 @@ export default class EmailService {
                 message: data.message ?? '',
                 name: data.name ?? '',
                 email: data.email ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
             });
         }
 
