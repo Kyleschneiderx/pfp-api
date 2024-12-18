@@ -1,5 +1,7 @@
 import express from 'express';
+import * as path from 'path';
 import fileUpload from 'express-fileupload';
+import { v4 as uuidv4 } from 'uuid';
 import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
@@ -73,6 +75,52 @@ export default ({
     );
 
     router.use('/assets', routeAsset({ helper: helper }));
+
+    router.use('/email-assets', express.static(path.join(__dirname, 'templates/assets')));
+
+    router.post('/v1/custom/exercise', async (req, res) => {
+        const fetchAsset = async (url) => {
+            try {
+                if (url.includes('drive.google')) {
+                    const id = url.split('/view')[0].split('/').pop();
+                    url = `https://drive.google.com/uc?export=download&id=${id}`;
+                }
+                const response = await fetch(url);
+                const contentType = response.headers.get('content-type');
+                const contentLength = response.headers.get('content-length');
+                const arrayBuffer = await response.arrayBuffer();
+
+                return {
+                    name: `${uuidv4()}.${file.getExtensionByMimeType(contentType)?.toLowerCase()}`,
+                    data: Buffer.from(arrayBuffer),
+                    mimetype: contentType,
+                    size: Number(contentLength),
+                };
+            } catch (error) {
+                throw new Error('Failed to process asset URL.');
+            }
+        };
+
+        const exercises = await Promise.all(
+            req.body.map(async (body) => {
+                const fetchResponse = await Promise.all([fetchAsset(body.photo), fetchAsset(body.video)]);
+
+                return exerciseService.createExercise({
+                    name: body.name,
+                    categoryId: 2,
+                    sets: body.sets,
+                    reps: body.reps,
+                    hold: body.hold,
+                    description: body.description,
+                    howTo: body.how_to,
+                    photo: fetchResponse[0],
+                    video: fetchResponse[1],
+                });
+            }),
+        );
+
+        res.status(201).json(exercises);
+    });
 
     router.use(
         middlewares.apiLogger({

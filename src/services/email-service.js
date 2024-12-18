@@ -1,4 +1,5 @@
 import * as exceptions from '../exceptions/index.js';
+import { EMAIL_ASSETS_URL } from '../constants/index.js';
 
 export default class EmailService {
     constructor({ logger, smtp, file, helper }) {
@@ -23,7 +24,10 @@ export default class EmailService {
             encoding: 'utf8',
         });
         if (template) {
-            template = template.replace(/{code}/g, data.code ?? '');
+            template = this.helper.replacer(template, {
+                code: data.code ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
+            });
         }
 
         try {
@@ -55,8 +59,11 @@ export default class EmailService {
             encoding: 'utf8',
         });
         if (template) {
-            template = template.replace(/{link}/g, data.link ?? '');
-            template = template.replace(/{name}/g, data.receiver.name ?? '');
+            template = this.helper.replacer(template, {
+                link: data.link ?? '',
+                name: data.receiver.name ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
+            });
         }
 
         try {
@@ -92,6 +99,7 @@ export default class EmailService {
             template = this.helper.replacer(template, {
                 link: data.link ?? '',
                 name: data.receiver.name ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
             });
         }
 
@@ -131,6 +139,7 @@ export default class EmailService {
                 message: data.message ?? '',
                 name: data.name ?? '',
                 email: data.email ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
             });
         }
 
