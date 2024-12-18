@@ -1,4 +1,5 @@
 import * as exceptions from '../exceptions/index.js';
+import { EMAIL_ASSETS_URL } from '../constants/index.js';
 
 export default class EmailService {
     constructor({ logger, smtp, file, helper }) {
@@ -23,7 +24,7 @@ export default class EmailService {
             encoding: 'utf8',
         });
         if (template) {
-            template = template.replace(/{code}/g, data.code ?? '');
+            template = template.replace(/{code}/g, data.code ?? '').replace(/{logo}/g, `${EMAIL_ASSETS_URL}/logo.png`);
         }
 
         try {
