@@ -185,6 +185,12 @@ export default class UserController {
         return res.json({ msg: 'Survey successfully submitted' });
     }
 
+    async handleGetUserSurveyRoute(req, res) {
+        const surveyAnswers = await this.miscellaneousService.getUserSurveyAnswers(req.params.user_id);
+
+        return res.json(surveyAnswers);
+    }
+
     async handleVerifySsoExist(req, res) {
         return res.status(204).send();
     }

@@ -105,6 +105,12 @@ export default ({
 
     router.use(verifyAdmin);
 
+    router.get(
+        '/:user_id/survey',
+        [validateInput([commonValidations.userIdValidation({ userService })])],
+        userController.handleGetUserSurveyRoute.bind(userController),
+    );
+
     router.post(
         '/:user_id/invite',
         validateInput([validations.sendInviteValidation({ userService })]),
