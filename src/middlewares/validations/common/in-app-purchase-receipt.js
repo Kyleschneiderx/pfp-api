@@ -10,6 +10,8 @@ export default ({ inAppPurchase, miscellaneousService }) => {
                 productId: value['verificationData.localVerificationData'].productId,
                 purchaseToken: value['verificationData.localVerificationData'].purchaseToken,
             });
+
+            console.log(verifiedReceipt);
         } catch (error) {
             throw new Error('Failed to verify purchase receipt.', { cause: error });
         }
@@ -27,12 +29,6 @@ export default ({ inAppPurchase, miscellaneousService }) => {
         if (existingPurchaseTransaction && existingPurchaseTransaction.user_id !== req.auth.user_id) {
             throw new Error('Transaction already exist.');
         }
-
-        await inAppPurchase.acknowledgeGooglePurchase({
-            packageName: value['verificationData.localVerificationData'].packageName,
-            productId: value['verificationData.localVerificationData'].productId,
-            purchaseToken: value['verificationData.localVerificationData'].purchaseToken,
-        });
 
         return {
             purchaseDate: verifiedReceipt.startTimeMillis,
