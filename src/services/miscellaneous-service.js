@@ -127,6 +127,36 @@ export default class MiscellaneousService {
     }
 
     /**
+     * Get user survey answers
+     * @returns {Promise<SurveyQuestions[]>} SurveyQuestions instance
+     * @throws {InternalServerError} If failed to get user survey answer
+     */
+    async getUserSurveyAnswers(userId) {
+        try {
+            return this.database.models.SurveyQuestions.findAll({
+                attributes: { exclude: ['deleted_at', 'created_at', 'updated_at'] },
+                include: [
+                    {
+                        model: this.database.models.UserSurveyQuestionAnswers,
+                        as: 'user_survey_question_answer',
+                        attributes: ['yes_no', 'if_yes_how_much_bother'],
+                        required: false,
+                        where: {
+                            user_id: userId,
+                        },
+                    },
+                ],
+                where: {},
+                order: [['id', 'ASC']],
+            });
+        } catch (error) {
+            this.logger.error('Failed to get user survey answers', error);
+
+            throw new exceptions.InternalServerError('Failed to get user survey answers', error);
+        }
+    }
+
+    /**
      * Get user subscription by user id
      *
      * @param {number} userId User account id

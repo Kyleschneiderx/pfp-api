@@ -26,5 +26,12 @@ export default (sequelize, DataTypes) => {
             indexes: [],
         },
     );
+    model.associate = () => {
+        const { SurveyQuestions, UserSurveyQuestionAnswers } = sequelize.models;
+
+        SurveyQuestions.hasMany(UserSurveyQuestionAnswers, { as: 'user_survey_question_answers', foreignKey: 'question_id' });
+
+        SurveyQuestions.hasOne(UserSurveyQuestionAnswers, { as: 'user_survey_question_answer', foreignKey: 'question_id' });
+    };
     return model;
 };
