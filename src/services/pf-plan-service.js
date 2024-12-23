@@ -1205,10 +1205,12 @@ export default class PfPlanService {
      * Get pf plan details including all exercises in it
      *
      * @param {number} userPfPlan UserPfPlans model instance
+     * @param {object} options
+     * @param {object} options.authenticatedUser Authenticated user
      * @returns {Promise<PfPlans>} PfPlans instance
      * @throws {InternalServerError} If failed to get PF plan details
      */
-    async getPfPlanProgress(userPfPlan) {
+    async getPfPlanProgress(userPfPlan, options) {
         try {
             const userPfPlanProgress = await this.database.models.UserPfPlanProgress.findAll({
                 where: { pf_plan_id: userPfPlan.pf_plan_id, user_id: userPfPlan.user_id },
@@ -1230,28 +1232,39 @@ export default class PfPlanService {
                 nest: true,
                 subQuery: false,
                 attributes: {
-                    exclude: ['deleted_at', 'status_id'],
+                    exclude: [
+                        ...['deleted_at', 'status_id'],
+                        ...(options?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID ? [] : ['content']),
+                    ],
                 },
                 include: [
                     ...this._defaultPfPlansRelation(),
-                    {
-                        model: this.database.models.PfPlanDailies,
-                        as: 'pf_plan_dailies',
-                        required: false,
-                        attributes: {
-                            exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
-                        },
-                        include: [...this._defaultPfPlanDailiesRelation(userPfPlan.user_id)],
-                    },
+                    ...(options?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [
+                              {
+                                  model: this.database.models.PfPlanDailies,
+                                  as: 'pf_plan_dailies',
+                                  required: false,
+                                  attributes: {
+                                      exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
+                                  },
+                                  include: [...this._defaultPfPlanDailiesRelation(userPfPlan.user_id)],
+                              },
+                          ]
+                        : []),
                 ],
                 order: [
-                    [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'day', 'ASC'],
-                    [
-                        { model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' },
-                        { model: this.database.models.PfPlanDailyContents, as: 'pf_plan_daily_contents' },
-                        'arrangement',
-                        'ASC',
-                    ],
+                    ...(options?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                        ? [
+                              [{ model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' }, 'day', 'ASC'],
+                              [
+                                  { model: this.database.models.PfPlanDailies, as: 'pf_plan_dailies' },
+                                  { model: this.database.models.PfPlanDailyContents, as: 'pf_plan_daily_contents' },
+                                  'arrangement',
+                                  'ASC',
+                              ],
+                          ]
+                        : []),
                 ],
                 where: {
                     id: userPfPlan.pf_plan_id,
@@ -1278,75 +1291,77 @@ export default class PfPlanService {
                 userLatestPfPlanProgress?.unfulfilled,
             );
 
-            pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
-                pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
-                    if (pfPlanDailyContent.dataValues.exercise) {
-                        pfPlanDailyContent.dataValues.exercise.sets = pfPlanDailyContent.sets;
+            if (pfPlan.dataValues.pf_plan_dailies) {
+                pfPlan.dataValues.pf_plan_dailies = pfPlan.dataValues.pf_plan_dailies.map((pfPlanDaily) => {
+                    pfPlanDaily.dataValues.contents = pfPlanDaily.pf_plan_daily_contents.map((pfPlanDailyContent) => {
+                        if (pfPlanDailyContent.dataValues.exercise) {
+                            pfPlanDailyContent.dataValues.exercise.sets = pfPlanDailyContent.sets;
 
-                        pfPlanDailyContent.dataValues.exercise.reps = pfPlanDailyContent.reps;
+                            pfPlanDailyContent.dataValues.exercise.reps = pfPlanDailyContent.reps;
 
-                        pfPlanDailyContent.dataValues.exercise.hold = pfPlanDailyContent.hold;
+                            pfPlanDailyContent.dataValues.exercise.hold = pfPlanDailyContent.hold;
 
-                        pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
-                            pfPlanDailyContent.exercise?.photo,
-                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                            {
-                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                            },
+                            pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
+                                pfPlanDailyContent.exercise?.photo,
+                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                                {
+                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                                },
+                            );
+
+                            pfPlanDailyContent.dataValues.exercise.video = this.helper.generateProtectedUrl(
+                                pfPlanDailyContent.exercise?.video,
+                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                                {
+                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                                },
+                            );
+                        }
+
+                        delete pfPlanDailyContent.dataValues.sets;
+
+                        delete pfPlanDailyContent.dataValues.reps;
+
+                        delete pfPlanDailyContent.dataValues.hold;
+
+                        if (pfPlanDailyContent.dataValues.education) {
+                            pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
+                                pfPlanDailyContent.education?.photo,
+                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                                {
+                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                                },
+                            );
+
+                            pfPlanDailyContent.dataValues.education.media_upload = this.helper.generateProtectedUrl(
+                                pfPlanDailyContent.education?.media_upload,
+                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
+                                {
+                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+                                },
+                            );
+                        }
+
+                        pfPlanDailyContent.dataValues.content_progress = this._extractPfPlanDefaultContentProgress(
+                            pfPlanDaily.day,
+                            dayDifference,
+                            pfPlanDailyContent.user_pf_plan_daily_progress[0],
                         );
 
-                        pfPlanDailyContent.dataValues.exercise.video = this.helper.generateProtectedUrl(
-                            pfPlanDailyContent.exercise?.video,
-                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                            {
-                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                            },
-                        );
-                    }
+                        delete pfPlanDailyContent.dataValues.user_pf_plan_daily_progress;
 
-                    delete pfPlanDailyContent.dataValues.sets;
+                        return pfPlanDailyContent;
+                    });
 
-                    delete pfPlanDailyContent.dataValues.reps;
+                    const dayProgress = userPfPlanProgressObject?.[pfPlanDaily.day];
 
-                    delete pfPlanDailyContent.dataValues.hold;
+                    pfPlanDaily.dataValues.day_progress = this._extractPfPlanDefaultDailyProgress(pfPlanDaily.day, dayDifference, dayProgress);
 
-                    if (pfPlanDailyContent.dataValues.education) {
-                        pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
-                            pfPlanDailyContent.education?.photo,
-                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                            {
-                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                            },
-                        );
+                    delete pfPlanDaily.dataValues.pf_plan_daily_contents;
 
-                        pfPlanDailyContent.dataValues.education.media_upload = this.helper.generateProtectedUrl(
-                            pfPlanDailyContent.education?.media_upload,
-                            `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                            {
-                                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                            },
-                        );
-                    }
-
-                    pfPlanDailyContent.dataValues.content_progress = this._extractPfPlanDefaultContentProgress(
-                        pfPlanDaily.day,
-                        dayDifference,
-                        pfPlanDailyContent.user_pf_plan_daily_progress[0],
-                    );
-
-                    delete pfPlanDailyContent.dataValues.user_pf_plan_daily_progress;
-
-                    return pfPlanDailyContent;
+                    return pfPlanDaily;
                 });
-
-                const dayProgress = userPfPlanProgressObject?.[pfPlanDaily.day];
-
-                pfPlanDaily.dataValues.day_progress = this._extractPfPlanDefaultDailyProgress(pfPlanDaily.day, dayDifference, dayProgress);
-
-                delete pfPlanDaily.dataValues.pf_plan_daily_contents;
-
-                return pfPlanDaily;
-            });
+            }
 
             pfPlan.dataValues.start_at = startPlan;
 
