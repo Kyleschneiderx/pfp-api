@@ -83,18 +83,18 @@ export default ({
         userController.handleUploadUserPhotoRoute.bind(userController),
     );
 
+    router.get(
+        '/:user_id/pf-plan-progress',
+        [validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService }))],
+        userController.handleGetUserPfPlanProgressRoute.bind(userController),
+    );
+
     router.use(verifyPremiumUser);
 
     router.put(
         '/:user_id/password',
         [validateInput(validations.changePasswordValidation({ userService, password })), verifyUser],
         userController.handleChangePasswordRoute.bind(userController),
-    );
-
-    router.get(
-        '/:user_id/pf-plan-progress',
-        [validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService })), verifyUser],
-        userController.handleGetUserPfPlanProgressRoute.bind(userController),
     );
 
     router.get(
