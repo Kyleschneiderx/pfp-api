@@ -30,6 +30,36 @@ export default class InAppPurchase {
         return fallbackVerifyResponse;
     }
 
+    async _processsApplePurchaseSignedTransaction(transactionId, response) {
+        let transactions = [];
+
+        do {
+            const revisionToken = response !== null && response.revision !== null ? response.revision : null;
+
+            // eslint-disable-next-line no-await-in-loop
+            response = await this.appleAppStoreClient.getTransactionHistory(transactionId, revisionToken, {
+                sort: this.appleAppStoreServerLib.Order.DESCENDING,
+                revoked: false,
+                productTypes: [this.appleAppStoreServerLib.ProductType.AUTO_RENEWABLE],
+            });
+
+            if (response.signedTransactions) {
+                response.signedTransactions = response.signedTransactions.map((tx) => {
+                    try {
+                        tx = JSON.parse(Buffer.from(tx.split('.')[1], 'base64').toString());
+                    } catch (error) {
+                        /** empty */
+                    }
+
+                    return tx;
+                });
+                transactions = transactions.concat(response.signedTransactions);
+            }
+        } while (response.hasMore);
+
+        return transactions;
+    }
+
     async verifyApplePurchase(receipt) {
         if (this.appleAppStoreServerLib === undefined && this.appleAppStoreClient === undefined)
             throw new Error('Apple app store server lib and app store client is required.');
@@ -41,33 +71,9 @@ export default class InAppPurchase {
 
             if (transactionId === null) return null;
 
-            let response = null;
+            const response = null;
 
-            let transactions = [];
-
-            do {
-                const revisionToken = response !== null && response.revision !== null ? response.revision : null;
-
-                // eslint-disable-next-line no-await-in-loop
-                response = await this.appleAppStoreClient.getTransactionHistory(transactionId, revisionToken, {
-                    sort: this.appleAppStoreServerLib.Order.DESCENDING,
-                    revoked: false,
-                    productTypes: [this.appleAppStoreServerLib.ProductType.AUTO_RENEWABLE],
-                });
-
-                if (response.signedTransactions) {
-                    response.signedTransactions = response.signedTransactions.map((tx) => {
-                        try {
-                            tx = JSON.parse(Buffer.from(tx.split('.')[1], 'base64').toString());
-                        } catch (error) {
-                            /** empty */
-                        }
-
-                        return tx;
-                    });
-                    transactions = transactions.concat(response.signedTransactions);
-                }
-            } while (response.hasMore);
+            const transactions = await this._processsApplePurchaseSignedTransaction(transactionId, response);
 
             return transactions;
         } catch (error) {
