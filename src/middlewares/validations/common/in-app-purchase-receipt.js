@@ -62,6 +62,10 @@ export default ({ inAppPurchase, miscellaneousService }) => {
             throw new Error('Transaction already exist.');
         }
 
+        if (latestTransaction.expiresDate < new Date().getTime()) {
+            throw new Error('Transaction already expired.');
+        }
+
         return {
             purchaseDate: latestTransaction.purchaseDate,
             expireDate: latestTransaction.expiresDate,

@@ -54,6 +54,7 @@ export default class InAppPurchase {
                     return tx;
                 });
                 transactions = transactions.concat(response.signedTransactions);
+                break;
             }
         } while (response.hasMore);
 
