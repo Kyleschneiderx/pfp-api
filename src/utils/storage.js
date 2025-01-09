@@ -20,17 +20,21 @@ export default class Storage {
     async store(name, data, path, options = {}) {
         if (data === undefined) return {};
 
-        if (name === undefined) {
-            name = uuid();
-        }
-
         try {
-            let extension = this.file.extractExtension(name);
+            let extension = false;
 
-            if (name === undefined && options?.contentType !== undefined) {
+            if (name !== undefined && options?.contentType === undefined) {
+                extension = this.file.extractExtension(name);
+            }
+
+            if (options?.contentType !== undefined) {
                 extension = this.file.getExtensionByMimeType(options?.contentType);
+            }
 
-                name = `${name}.${extension}`;
+            if (!extension) throw new Error('Failed to get extension from file name or content type.');
+
+            if (name === undefined) {
+                name = `${uuid()}.${extension}`;
             }
 
             const fileName = `${uuid()}.${extension}`;
@@ -111,6 +115,7 @@ export default class Storage {
                 },
             );
         } catch (error) {
+            console.log(error);
             this.logger.error('Failed to get signed url.');
 
             throw new Error('Failed to get signed url.', { cause: error });
