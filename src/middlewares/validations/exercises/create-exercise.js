@@ -32,21 +32,27 @@ export default ({ selectionService, file, exerciseService }) => [
         .withMessage('Number of sets is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Sets should be numeric.'),
+        .withMessage('Sets should be numeric.')
+        .isInt({ gt: 0 })
+        .withMessage('Sets should be greater than 0.'),
     body('reps')
         .trim()
         .exists({ values: 'falsy' })
         .withMessage('Number of reps is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Reps should be numeric.'),
+        .withMessage('Reps should be numeric.')
+        .isInt({ gt: 0 })
+        .withMessage('Reps should be greater than 0.'),
     body('hold')
         .trim()
         .exists({ values: 'falsy' })
         .withMessage('Number of hold is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Hold should be numeric.'),
+        .withMessage('Hold should be numeric.')
+        .isInt({ gt: 0 })
+        .withMessage('Hold should be greater than 0.'),
     body('description').trim().optional().isString().withMessage('Description should be string.'),
     body('how_to').trim().optional().isString().withMessage('How to should be string.'),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
