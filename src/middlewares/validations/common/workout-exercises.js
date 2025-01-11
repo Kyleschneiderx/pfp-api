@@ -9,19 +9,25 @@ export default ({ exerciseService }) => [
         .withMessage('Number of sets is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Sets should be numeric'),
+        .withMessage('Sets should be numeric')
+        .isInt({ gt: 0 })
+        .withMessage('Sets should be greater than 0.'),
     body('exercises.*.reps')
         .trim()
         .exists({ values: 'falsy' })
         .withMessage('Number of reps is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Reps should be numeric'),
+        .withMessage('Reps should be numeric')
+        .isInt({ gt: 0 })
+        .withMessage('Reps should be greater than 0.'),
     body('exercises.*.hold')
         .trim()
-        .exists()
+        .exists({ values: 'falsy' })
         .withMessage('Number of hold is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Hold should be numeric'),
+        .withMessage('Hold should be numeric')
+        .isInt({ gt: 0 })
+        .withMessage('Hold should be greater than 0.'),
 ];
