@@ -64,9 +64,7 @@ export default ({ exerciseService, educationService, pfPlanService }) => [
         .withMessage('Number of hold is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Hold should be numeric')
-        .isInt({ gt: 0 })
-        .withMessage('Hold should be greater than 0.'),
+        .withMessage('Hold should be numeric'),
     educationIdValidation({
         educationService,
         isBody: true,
