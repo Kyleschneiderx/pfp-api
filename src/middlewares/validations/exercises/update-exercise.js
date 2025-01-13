@@ -56,7 +56,9 @@ export default ({ selectionService, file, exerciseService }) => [
         .withMessage('Number of hold is required.')
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Hold should be numeric.'),
+        .withMessage('Hold should be numeric.')
+        .isInt({ gt: 0 })
+        .withMessage('Hold should be greater than 0.'),
     body('description').trim().optional().isString().withMessage('Description should be string.'),
     body('how_to').trim().optional().isString().withMessage('How to should be string.'),
     ...commonValidation.photoValidation({ field: 'photo', file: file }),
