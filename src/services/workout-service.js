@@ -458,7 +458,7 @@ export default class WorkoutService {
                 await this.storage.delete(workout.photo.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
             }
 
-            await this.database.models.WorkoutExercises.delete({ where: { workout_id: id } });
+            await this.database.models.WorkoutExercises.destroy({ where: { workout_id: id } });
 
             return await workout.destroy();
         } catch (error) {
