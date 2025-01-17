@@ -55,6 +55,7 @@ export default class Storage {
                 s3: s3Response,
             };
         } catch (error) {
+            console.log(error);
             this.logger.error('Failed to store file.');
 
             throw new Error('Failed to store file.', { cause: error });
