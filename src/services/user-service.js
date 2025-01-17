@@ -350,9 +350,8 @@ export default class UserService {
     async createUserAccount(data) {
         let storeResponse;
         try {
-            console.log('data.photo?.data', data.photo?.data);
             const resizeData = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
-            console.log('resizeData', resizeData);
+
             storeResponse = await this.storage.store(data.photo?.name, resizeData, USER_PHOTO_PATH, {
                 contentType: data.photo?.mimetype,
                 s3: { bucket: process.env.S3_BUCKET_NAME },
