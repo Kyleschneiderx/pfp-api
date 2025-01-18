@@ -100,23 +100,25 @@ export default class PfPlanService {
                     },
                 ],
                 where: {
-                    education_id: {
-                        [Sequelize.Op.or]: [
-                            {
-                                [Sequelize.Op.eq]: null,
-                            },
-                            {
-                                [Sequelize.Op.in]: Sequelize.literal(
-                                    `(${this.database.dialect.queryGenerator
-                                        .selectQuery('educations', {
-                                            attributes: ['id'],
-                                            where: { status_id: PUBLISHED_EDUCATION_STATUS_ID },
-                                        })
-                                        .slice(0, -1)})`,
-                                ),
-                            },
-                        ],
-                    },
+                    ...(userId && {
+                        education_id: {
+                            [Sequelize.Op.or]: [
+                                {
+                                    [Sequelize.Op.eq]: null,
+                                },
+                                {
+                                    [Sequelize.Op.in]: Sequelize.literal(
+                                        `(${this.database.dialect.queryGenerator
+                                            .selectQuery('educations', {
+                                                attributes: ['id'],
+                                                where: { status_id: PUBLISHED_EDUCATION_STATUS_ID },
+                                            })
+                                            .slice(0, -1)})`,
+                                    ),
+                                },
+                            ],
+                        },
+                    }),
                 },
             },
         ];
@@ -622,7 +624,7 @@ export default class PfPlanService {
                         attributes: {
                             exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
                         },
-                        include: [...this._defaultPfPlanDailiesRelation()],
+                        include: [...this._defaultPfPlanDailiesRelation(filter.authenticatedUser.user_id)],
                     },
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [
@@ -720,6 +722,8 @@ export default class PfPlanService {
                                 },
                             );
                         }
+
+                        delete pfPlanDailyContent.dataValues.user_pf_plan_daily_progress;
 
                         delete pfPlanDailyContent.dataValues.sets;
 
