@@ -99,27 +99,6 @@ export default class PfPlanService {
                         where: {},
                     },
                 ],
-                where: {
-                    ...(userId && {
-                        education_id: {
-                            [Sequelize.Op.or]: [
-                                {
-                                    [Sequelize.Op.eq]: null,
-                                },
-                                {
-                                    [Sequelize.Op.in]: Sequelize.literal(
-                                        `(${this.database.dialect.queryGenerator
-                                            .selectQuery('educations', {
-                                                attributes: ['id'],
-                                                where: { status_id: PUBLISHED_EDUCATION_STATUS_ID },
-                                            })
-                                            .slice(0, -1)})`,
-                                    ),
-                                },
-                            ],
-                        },
-                    }),
-                },
             },
         ];
     }
@@ -1106,23 +1085,6 @@ export default class PfPlanService {
                         where: {
                             pf_plan_id: pfPlanId,
                             pf_plan_daily_id: data.content.pf_plan_daily_id,
-                            education_id: {
-                                [Sequelize.Op.or]: [
-                                    {
-                                        [Sequelize.Op.eq]: null,
-                                    },
-                                    {
-                                        [Sequelize.Op.in]: Sequelize.literal(
-                                            `(${this.database.dialect.queryGenerator
-                                                .selectQuery('educations', {
-                                                    attributes: ['id'],
-                                                    where: { status_id: PUBLISHED_EDUCATION_STATUS_ID },
-                                                })
-                                                .slice(0, -1)})`,
-                                        ),
-                                    },
-                                ],
-                            },
                         },
                     }),
                 ]);
