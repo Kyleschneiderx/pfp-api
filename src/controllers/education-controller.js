@@ -51,9 +51,6 @@ export default class EducationController {
     async handleGetEducationRoute(req, res) {
         const education = await this.educationService.getEducationDetails(req.params.id, {
             authenticatedUser: req.auth,
-            ...(ADMIN_ACCOUNT_TYPE_ID !== req.auth.account_type_id && {
-                statusId: PUBLISHED_EDUCATION_STATUS_ID,
-            }),
         });
 
         return res.json(education);
