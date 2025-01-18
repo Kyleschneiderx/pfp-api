@@ -15,10 +15,7 @@ export default ({ educationService, field = 'id', isBody = false, isRequired = t
     rule.withMessage('Education id is required.')
         .customSanitizer((value) => Number(value))
         .custom(async (value, { req }) => {
-            const isEducationExist =
-                req.auth.account_type_id !== ADMIN_ACCOUNT_TYPE_ID || isPublishedOnly
-                    ? await educationService.isPublishedEducationExistById(value)
-                    : await educationService.isEducationExistById(value);
+            const isEducationExist = await educationService.isEducationExistById(value);
 
             if (!isEducationExist) {
                 throw new Error('Education does not exist.');
