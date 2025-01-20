@@ -20,6 +20,11 @@ export default ({ userService }) => [
                 throw new Error('Account does not exist.');
             }
 
+            if (req.user.google_id || req.user.apple_id) {
+                const platform = req.user.google_id ? 'Google' : 'Apple';
+                throw new Error(`This account was used to login using ${platform}.`);
+            }
+
             return true;
         }),
 ];

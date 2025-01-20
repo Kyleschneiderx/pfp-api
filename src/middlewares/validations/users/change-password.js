@@ -12,6 +12,14 @@ export default ({ userService, password }) => {
                 req.user = await userService.getUser({ userId: req.params.user_id });
                 return value;
             })
+            .custom((value, { req }) => {
+                if (req.user.google_id || req.user.apple_id) {
+                    const platform = req.user.google_id ? 'Google' : 'Apple';
+                    throw new Error(`This account was used to login using ${platform}.`);
+                }
+
+                return true;
+            })
             .if(body('old_password').custom((value, { req }) => req.auth.account_type_id === USER_ACCOUNT_TYPE_ID))
             .exists({ value: 'falsy' })
             .withMessage('Old password is required.')
