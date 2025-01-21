@@ -7,6 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import express from 'express';
 import compression from 'compression';
+import http from 'http';
 import errorHandler from './middlewares/error-handler.js';
 import apiRoute from './routes/api.js';
 import serviceContainer from './configs/service-container.js';
@@ -79,7 +80,13 @@ app.get('/', (req, res) => {
     res.send('Hello');
 });
 
-const server = app.listen(process.env.APP_PORT, () => {
+const server = http.createServer(app);
+
+server.keepAliveTimeout = 60 * 1000 * 5;
+
+server.headersTimeout = 60 * 1000 * 10;
+
+server.listen(process.env.APP_PORT, () => {
     serviceContainer.scheduler.run(
         tasks({
             logger: serviceContainer.logger,
@@ -92,7 +99,3 @@ const server = app.listen(process.env.APP_PORT, () => {
 
     serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}`);
 });
-
-server.keepAliveTimeout = 60 * 1000 * 5;
-
-server.headersTimeout = 60 * 1000 * 10;
