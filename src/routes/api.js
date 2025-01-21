@@ -57,7 +57,7 @@ export default ({
 
     router.use(
         fileUpload({
-            limits: { fieldSize: 100 * 1024 * 1024 },
+            limits: { fieldSize: 1100 * 1024 * 1024 },
         }),
     );
 
