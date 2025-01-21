@@ -69,6 +69,7 @@ app.use(
         miscellaneousService: serviceContainer.miscellaneousService,
         notificationController: serviceContainer.notificationController,
         inAppPurchase: serviceContainer.inAppPurchase,
+        storage: serviceContainer.storage,
     }),
 );
 
