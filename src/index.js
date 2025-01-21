@@ -79,7 +79,7 @@ app.get('/', (req, res) => {
     res.send('Hello');
 });
 
-app.listen(process.env.APP_PORT, () => {
+const server = app.listen(process.env.APP_PORT, () => {
     serviceContainer.scheduler.run(
         tasks({
             logger: serviceContainer.logger,
@@ -92,3 +92,7 @@ app.listen(process.env.APP_PORT, () => {
 
     serviceContainer.logger.info(`App is running at: ${process.env.APP_URL}`);
 });
+
+server.keepAliveTimeout = 60 * 1000 * 5;
+
+server.headersTimeout = 60 * 1000 * 5;

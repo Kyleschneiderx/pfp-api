@@ -132,13 +132,9 @@ export default class Storage {
                         )
                         .then((d) => d),
                 );
-
-                console.log(uploadParts.length);
             }
 
             const uploadPartsResult = await Promise.all(uploadParts);
-
-            console.log(uploadPartsResult);
 
             const s3Response = await this.driver.send(
                 new this.s3.CompleteMultipartUploadCommand({
