@@ -62,6 +62,121 @@ export default class Storage {
     }
 
     /**
+     * Store file to storage
+     *
+     * @param {string} name File name
+     * @param {string} data File data. Buffer | Filepath
+     * @param {string} path Base path where to store file
+     * @param {object=} options
+     */
+    async storeMultipart(name, data, path, options = {}) {
+        if (data === undefined) return {};
+
+        let uploadId;
+
+        let key;
+
+        try {
+            let extension = false;
+
+            if (name !== undefined && options?.contentType === undefined) {
+                extension = this.file.extractExtension(name);
+            }
+
+            if (options?.contentType !== undefined) {
+                extension = this.file.getExtensionByMimeType(options?.contentType);
+            }
+
+            if (!extension) throw new Error('Failed to get extension from file name or content type.');
+
+            if (name === undefined) {
+                name = `${uuid()}.${extension}`;
+            }
+
+            const fileName = `${uuid()}.${extension}`;
+
+            key = `${path}/${fileName}`;
+
+            const multipartUpload = await this.driver.send(
+                new this.s3.CreateMultipartUploadCommand({
+                    Bucket: options?.s3?.bucket,
+                    Key: key,
+                    ContentType: options?.contentType,
+                }),
+            );
+
+            const minimumPart = 100 * 1024 * 1024;
+
+            const partSize = Math.max(Math.ceil(data.length / 100), minimumPart);
+
+            const numberParts = Math.ceil(data.length / partSize);
+
+            const uploadParts = [];
+
+            uploadId = multipartUpload.UploadId;
+
+            for (let i = 0; i < numberParts; i += 1) {
+                const start = i * partSize;
+                const end = Math.min(start + partSize, data.length);
+
+                uploadParts.push(
+                    this.driver
+                        .send(
+                            new this.s3.UploadPartCommand({
+                                Bucket: options?.s3?.bucket,
+                                Key: key,
+                                UploadId: uploadId,
+                                Body: data.slice(start, end),
+                                PartNumber: i + 1,
+                            }),
+                        )
+                        .then((d) => d),
+                );
+
+                console.log(uploadParts.length);
+            }
+
+            const uploadPartsResult = await Promise.all(uploadParts);
+
+            console.log(uploadPartsResult);
+
+            const s3Response = await this.driver.send(
+                new this.s3.CompleteMultipartUploadCommand({
+                    Bucket: options?.s3?.bucket,
+                    Key: key,
+                    UploadId: uploadId,
+                    MultipartUpload: {
+                        Parts: uploadPartsResult.map(({ ETag }, i) => ({
+                            ETag,
+                            PartNumber: i + 1,
+                        })),
+                    },
+                }),
+            );
+
+            return {
+                originalFilename: name,
+                fileName: fileName,
+                path: key,
+                s3: s3Response,
+            };
+        } catch (error) {
+            if (uploadId) {
+                await this.driver.send(
+                    new this.s3.AbortMultipartUploadCommand({
+                        Bucket: options?.s3?.bucket,
+                        Key: key,
+                        UploadId: uploadId,
+                    }),
+                );
+            }
+            this.logger.error('Failed to store file.');
+
+            throw new Error('Failed to store file.', { cause: error });
+        }
+    }
+
+    /**
      * Remove file from storage
      *
      * @param {string[]|string} path Path to file
