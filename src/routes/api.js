@@ -15,7 +15,6 @@ import routeV1Miscellaneous from './v1/miscellaneous.js';
 import routeV1Notifications from './v1/notifications.js';
 import routeAsset from './assets.js';
 import * as middlewares from '../middlewares/index.js';
-import { EXERCISE_VIDEO_PATH } from '../constants/index.js';
 
 export default ({
     apiLogger,
@@ -45,7 +44,6 @@ export default ({
     miscellaneousService,
     notificationController,
     inAppPurchase,
-    storage,
 }) => {
     const router = express.Router();
 
