@@ -32,7 +32,7 @@ export default class ExerciseService {
                     }),
                 ]) ?? [undefined]),
                 ...((files.video && [
-                    this.storage.store(files.video.name, files.video.data, EXERCISE_VIDEO_PATH, {
+                    this.storage.storeMultipart(files.video.name, files.video.data, EXERCISE_VIDEO_PATH, {
                         contentType: files.video.mimetype,
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
