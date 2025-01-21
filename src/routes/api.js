@@ -15,6 +15,7 @@ import routeV1Miscellaneous from './v1/miscellaneous.js';
 import routeV1Notifications from './v1/notifications.js';
 import routeAsset from './assets.js';
 import * as middlewares from '../middlewares/index.js';
+import { EXERCISE_VIDEO_PATH } from '../constants/index.js';
 
 export default ({
     apiLogger,
@@ -44,6 +45,7 @@ export default ({
     miscellaneousService,
     notificationController,
     inAppPurchase,
+    storage,
 }) => {
     const router = express.Router();
 
@@ -73,6 +75,14 @@ export default ({
             limit: '100mb',
         }),
     );
+
+    router.post('/v1/custom/upload', async (req, res) => {
+        const { files } = req;
+
+        res.json({
+            body: req.body,
+        });
+    });
 
     router.use('/assets', routeAsset({ helper: helper }));
 
