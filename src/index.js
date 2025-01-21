@@ -95,4 +95,4 @@ const server = app.listen(process.env.APP_PORT, () => {
 
 server.keepAliveTimeout = 60 * 1000 * 5;
 
-server.headersTimeout = 60 * 1000 * 5;
+server.headersTimeout = 60 * 1000 * 10;
