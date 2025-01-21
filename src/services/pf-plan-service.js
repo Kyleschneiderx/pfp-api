@@ -1137,9 +1137,8 @@ export default class PfPlanService {
                 },
             });
 
-            const userPfPlanDailyWithSkip = await this.database.models.UserPfPlanDailyProgress.findAll({
-                where: { user_id: data.userId, pf_plan_id: pfPlanId, is_skip: true },
-                group: ['pf_plan_id', 'day'],
+            const userPfPlanDailyWithSkip = await this.database.models.UserPfPlanProgress.findAll({
+                where: { user_id: data.userId, pf_plan_id: pfPlanId, has_skip: true },
             });
 
             [userPfPlanProgress] = await this.database.models.UserPfPlanProgress.upsert({
