@@ -45,7 +45,7 @@ export default class EducationService {
                     }),
                 ]) ?? [undefined]),
                 ...((files.media && [
-                    this.storage.store(files.media.name, files.media.data, EDUCATION_MEDIA_PATH, {
+                    this.storage.storeMultipart(files.media.name, files.media.data, EDUCATION_MEDIA_PATH, {
                         contentType: files.media.mimetype,
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
