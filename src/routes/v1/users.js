@@ -89,13 +89,13 @@ export default ({
         userController.handleGetUserPfPlanProgressRoute.bind(userController),
     );
 
-    router.use(verifyPremiumUser);
-
     router.put(
         '/:user_id/password',
         [validateInput(validations.changePasswordValidation({ userService, password })), verifyUser],
         userController.handleChangePasswordRoute.bind(userController),
     );
+
+    router.use(verifyPremiumUser);
 
     router.get(
         '/:user_id/pf-plan-progress/stats',
