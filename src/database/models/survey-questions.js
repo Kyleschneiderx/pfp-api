@@ -10,6 +10,14 @@ export default (sequelize, DataTypes) => {
             question: {
                 type: DataTypes.TEXT,
             },
+            group_id: {
+                type: DataTypes.INTEGER,
+                comment: 'see survey_question_groups table',
+                references: {
+                    model: 'survey_question_groups',
+                    key: 'id',
+                },
+            },
             created_at: {
                 type: DataTypes.DATE,
             },
@@ -23,15 +31,23 @@ export default (sequelize, DataTypes) => {
         {
             sequelize,
             tableName: 'survey_questions',
-            indexes: [],
+            indexes: [
+                {
+                    name: 'survey_questions_group_id',
+                    using: 'BTREE',
+                    fields: [{ name: 'group_id' }],
+                },
+            ],
         },
     );
     model.associate = () => {
-        const { SurveyQuestions, UserSurveyQuestionAnswers } = sequelize.models;
+        const { SurveyQuestions, UserSurveyQuestionAnswers, SurveyQuestionGroups } = sequelize.models;
 
         SurveyQuestions.hasMany(UserSurveyQuestionAnswers, { as: 'user_survey_question_answers', foreignKey: 'question_id' });
 
         SurveyQuestions.hasOne(UserSurveyQuestionAnswers, { as: 'user_survey_question_answer', foreignKey: 'question_id' });
+
+        SurveyQuestions.belongsTo(SurveyQuestionGroups, { as: 'survey_question_group', foreignKey: 'group_id' });
     };
     return model;
 };

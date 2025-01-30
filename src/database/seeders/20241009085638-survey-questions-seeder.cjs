@@ -15,7 +15,7 @@ module.exports = {
             },
             {
                 id: 3,
-                question: 'Do you usually have a bulge or something falling out that you can see or fell in the vaginal area?',
+                question: 'Do you usually have a bulge or something falling out that you can see or feel in the vaginal area?',
                 created_at: new Date(),
                 updated_at: new Date(),
             },
@@ -81,7 +81,7 @@ module.exports = {
             },
             {
                 id: 14,
-                question: 'Does part of your stool ever pass through the rectum and bulge outside during or after a bowel movement?',
+                question: 'Does part of your bowel ever pass through the rectum and bulge outside during or after a bowel movement?',
                 created_at: new Date(),
                 updated_at: new Date(),
             },
@@ -118,7 +118,7 @@ module.exports = {
             },
             {
                 id: 20,
-                question: 'Do you usually experience pain of discomfort in the lower abdomen or genital region?',
+                question: 'Do you usually experience pain or discomfort in the lower abdomen or genital region?',
                 created_at: new Date(),
                 updated_at: new Date(),
             },

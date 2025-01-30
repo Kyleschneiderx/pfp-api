@@ -1,6 +1,6 @@
 export default (sequelize, DataTypes) => {
     const model = sequelize.define(
-        'UserSurveyQuestionAnswers',
+        'UserSurveyQuestionAnswerScores',
         {
             id: {
                 autoIncrement: true,
@@ -15,20 +15,9 @@ export default (sequelize, DataTypes) => {
                     key: 'id',
                 },
             },
-            question_id: {
+            question_group_id: {
                 type: DataTypes.INTEGER,
-                comment: 'see survey_questions table',
-                references: {
-                    model: 'survey_questions',
-                    key: 'id',
-                },
-            },
-            yes_no: {
-                type: DataTypes.TEXT,
-            },
-            if_yes_how_much_bother: {
-                type: DataTypes.TEXT,
-                comment: 'If yes, how much does it bother you?',
+                comment: 'see survey_question_groups table',
             },
             score: {
                 type: DataTypes.INTEGER,
@@ -45,25 +34,21 @@ export default (sequelize, DataTypes) => {
         },
         {
             sequelize,
-            tableName: 'user_survey_question_answers',
+            tableName: 'user_survey_question_answer_scores',
             indexes: [
                 {
-                    name: 'user_survey_question_answers_user_id',
+                    name: 'user_survey_question_answer_scores_1',
                     using: 'BTREE',
                     fields: [{ name: 'user_id' }],
                 },
                 {
-                    name: 'user_survey_question_answers_question_id',
+                    name: 'user_survey_question_answer_scores_2',
                     using: 'BTREE',
-                    fields: [{ name: 'question_id' }],
-                },
-                {
-                    name: 'user_survey_question_answers_user_id_question_id',
-                    using: 'BTREE',
-                    fields: [{ name: 'user_id' }, { name: 'question_id' }],
+                    fields: [{ name: 'user_id' }, { name: 'question_group_id' }],
                 },
             ],
         },
     );
+
     return model;
 };
