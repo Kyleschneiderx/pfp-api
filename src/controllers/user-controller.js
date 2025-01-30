@@ -178,11 +178,11 @@ export default class UserController {
     }
 
     async handleUpdateUserSurveyRoute(req, res) {
-        await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
+        const scores = await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SUBMIT_SURVEY);
 
-        return res.json({ msg: 'Survey successfully submitted' });
+        return res.json(scores);
     }
 
     async handleGetUserSurveyRoute(req, res) {

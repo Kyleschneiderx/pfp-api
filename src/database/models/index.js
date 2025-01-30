@@ -35,3 +35,6 @@ export { default as SystemAuditDescriptions } from './system-audit-descriptions.
 export { default as SystemAudits } from './system-audits.js';
 export { default as UserNotificationSettings } from './user-notification-settings.js';
 export { default as CheckSubscriptionQueues } from './check-subscription-queues.js';
+export { default as SurveyQuestionGroups } from './survey-question-groups.js';
+export { default as SurveyQuestionAnswerScores } from './survey-question-answer-scores.js';
+export { default as UserSurveyQuestionAnswerScores } from './user-survey-question-answer-scores.js';
