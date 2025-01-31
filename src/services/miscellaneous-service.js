@@ -105,12 +105,20 @@ export default class MiscellaneousService {
      */
     async updateUserSurveyAnswer(userId, answers) {
         try {
-            const [surveyQuestions, surveyQuestionAnswerScores, recordedAnswersResult, recordedAnswerByGroupResult] = await Promise.all([
-                this.database.models.SurveyQuestions.findAll({}),
-                this.database.models.SurveyQuestionAnswerScores.findAll({}),
-                this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
-                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId } }),
-            ]);
+            const [surveyQuestionGroupDetailList, surveyQuestions, surveyQuestionAnswerScores, recordedAnswersResult, recordedAnswerByGroupResult] =
+                await Promise.all([
+                    this.database.models.SurveyQuestionGroups.findAll({}),
+                    this.database.models.SurveyQuestions.findAll({}),
+                    this.database.models.SurveyQuestionAnswerScores.findAll({}),
+                    this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
+                    this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId } }),
+                ]);
+
+            const surveyQuestionGroupDetails = {};
+
+            surveyQuestionGroupDetailList.forEach((item) => {
+                surveyQuestionGroupDetails[item.id] = item;
+            });
 
             const surveyQuestionGroups = {};
 
@@ -186,8 +194,8 @@ export default class MiscellaneousService {
 
                 return {
                     total: userTotalScore,
-                    group: Object.keys(userAnswerByGroupScores).map((group) => ({
-                        question_group_id: Number(group),
+                    groups: Object.keys(userAnswerByGroupScores).map((group) => ({
+                        group: surveyQuestionGroupDetails[group],
                         score: userAnswerByGroupScores[group],
                     })),
                 };
