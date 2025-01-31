@@ -56,7 +56,19 @@ export default class MiscellaneousService {
      */
     async getSurveyQuestions() {
         try {
-            return this.database.models.SurveyQuestions.findAll({ attributes: { exclude: ['deleted_at'] }, where: {}, order: [['id', 'ASC']] });
+            return this.database.models.SurveyQuestions.findAll({
+                attributes: { exclude: ['deleted_at', 'group_id'] },
+                include: [
+                    {
+                        model: this.database.models.SurveyQuestionGroups,
+                        as: 'survey_question_group',
+                        attributes: ['id', 'value', 'description'],
+                        where: {},
+                    },
+                ],
+                where: {},
+                order: [['id', 'ASC']],
+            });
         } catch (error) {
             this.logger.error('Failed to get survey questions', error);
 
@@ -93,7 +105,32 @@ export default class MiscellaneousService {
      */
     async updateUserSurveyAnswer(userId, answers) {
         try {
-            const recordedAnswersResult = await this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } });
+            const [surveyQuestionGroupDetailList, surveyQuestions, surveyQuestionAnswerScores, recordedAnswersResult, recordedAnswerByGroupResult] =
+                await Promise.all([
+                    this.database.models.SurveyQuestionGroups.findAll({}),
+                    this.database.models.SurveyQuestions.findAll({}),
+                    this.database.models.SurveyQuestionAnswerScores.findAll({}),
+                    this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
+                    this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId } }),
+                ]);
+
+            const surveyQuestionGroupDetails = {};
+
+            surveyQuestionGroupDetailList.forEach((item) => {
+                surveyQuestionGroupDetails[item.id] = item;
+            });
+
+            const surveyQuestionGroups = {};
+
+            surveyQuestions.forEach((item) => {
+                surveyQuestionGroups[item.id] = item.group_id;
+            });
+
+            const answerScoresLegend = {};
+
+            surveyQuestionAnswerScores.forEach((item) => {
+                answerScoresLegend[item.key] = item.score;
+            });
 
             const recordedAnswers = {};
 
@@ -101,16 +138,52 @@ export default class MiscellaneousService {
                 recordedAnswers[item.question_id] = item;
             });
 
+            const recordedAnswerByGroupScores = {};
+
+            recordedAnswerByGroupResult.forEach((item) => {
+                recordedAnswerByGroupScores[item.question_group_id] = item;
+            });
+
             return await this.database.transaction(async (transaction) => {
+                let userTotalScore = 0;
+
+                const userAnswerByGroupScores = {};
+
                 await Promise.all(
-                    answers.map(async (answer) =>
-                        this.database.models.UserSurveyQuestionAnswers.upsert(
+                    answers.map(async (answer) => {
+                        answer.if_yes_how_much_bother = answer.if_yes_how_much_bother?.toLowerCase();
+
+                        const answerScore = answer.yes_no === 'no' ? 0 : (answerScoresLegend[answer.if_yes_how_much_bother.replace(/\s/g, '_')] ?? 0);
+
+                        userTotalScore += answerScore;
+
+                        userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] =
+                            (userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] ?? 0) + answerScore;
+
+                        return this.database.models.UserSurveyQuestionAnswers.upsert(
                             {
                                 id: recordedAnswers[answer.question_id]?.id,
                                 user_id: userId,
                                 question_id: answer.question_id,
                                 yes_no: answer.yes_no,
-                                if_yes_how_much_bother: answer.if_yes_how_much_bother,
+                                if_yes_how_much_bother: answer.yes_no === 'no' ? '' : answer.if_yes_how_much_bother,
+                                score: answerScore,
+                            },
+                            {
+                                transaction: transaction,
+                            },
+                        );
+                    }),
+                );
+
+                await Promise.all(
+                    Object.keys(userAnswerByGroupScores).map(async (group) =>
+                        this.database.models.UserSurveyQuestionAnswerScores.upsert(
+                            {
+                                id: recordedAnswerByGroupScores[group]?.id,
+                                user_id: userId,
+                                question_group_id: group,
+                                score: userAnswerByGroupScores[group],
                             },
                             {
                                 transaction: transaction,
@@ -118,6 +191,14 @@ export default class MiscellaneousService {
                         ),
                     ),
                 );
+
+                return {
+                    total: userTotalScore,
+                    groups: Object.keys(userAnswerByGroupScores).map((group) => ({
+                        group: surveyQuestionGroupDetails[group],
+                        score: userAnswerByGroupScores[group],
+                    })),
+                };
             });
         } catch (error) {
             this.logger.error('Failed to answer survey', error);
