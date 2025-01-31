@@ -143,6 +143,8 @@ export default class MiscellaneousService {
 
                 await Promise.all(
                     answers.map(async (answer) => {
+                        answer.if_yes_how_much_bother = answer.if_yes_how_much_bother?.toLowerCase();
+
                         const answerScore = answer.yes_no === 'no' ? 0 : (answerScoresLegend[answer.if_yes_how_much_bother.replace(/\s/g, '_')] ?? 0);
 
                         userTotalScore += answerScore;
