@@ -2,6 +2,7 @@ import express from 'express';
 import * as path from 'path';
 import fileUpload from 'express-fileupload';
 import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs';
 import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
@@ -44,6 +45,7 @@ export default ({
     miscellaneousService,
     notificationController,
     inAppPurchase,
+    openAiChat,
 }) => {
     const router = express.Router();
 
@@ -73,6 +75,104 @@ export default ({
             limit: '100mb',
         }),
     );
+
+    router.get('/chatbot', async (req, res) => {
+        let conversation;
+
+        try {
+            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        try {
+            conversation = JSON.parse(conversation);
+        } catch (error) {
+            /** empty */
+        }
+
+        if (conversation === undefined || conversation.length === 0) {
+            conversation = [
+                {
+                    role: 'developer',
+                    content:
+                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+                },
+                {
+                    role: 'assistant',
+                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
+                },
+            ];
+        }
+
+        return res.json({ messages: conversation });
+    });
+
+    router.post('/chatbot', async (req, res) => {
+        let conversation;
+
+        try {
+            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        try {
+            conversation = JSON.parse(conversation);
+        } catch (error) {
+            /** empty */
+        }
+
+        if (conversation === undefined || conversation.length === 0) {
+            conversation = [
+                {
+                    role: 'developer',
+                    content:
+                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+                },
+                {
+                    role: 'assistant',
+                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
+                },
+            ];
+        }
+        const response = await openAiChat(
+            [
+                ...conversation,
+                {
+                    role: 'user',
+                    content: req.body.message,
+                },
+            ],
+            {
+                user: '4',
+            },
+        );
+
+        fs.writeFileSync(
+            'chatbot.log',
+            JSON.stringify(
+                [
+                    ...conversation,
+                    {
+                        role: 'user',
+                        content: req.body.message,
+                    },
+                    { role: 'assistant', content: response.choices[0]?.message?.content },
+                ],
+                null,
+                2,
+            ),
+        );
+
+        return res.json({ message: response.choices[0]?.message?.content });
+    });
+
+    router.delete('/chatbot', async (req, res) => {
+        fs.writeFileSync('chatbot.log', '');
+
+        return res.status(204).send();
+    });
 
     router.post('/v1/custom/upload', async (req, res) => {
         const { files } = req;
