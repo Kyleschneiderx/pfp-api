@@ -7,6 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import express from 'express';
 import compression from 'compression';
+import * as fs from 'fs';
 import errorHandler from './middlewares/error-handler.js';
 import apiRoute from './routes/api.js';
 import serviceContainer from './configs/service-container.js';
@@ -70,6 +71,7 @@ app.use(
         notificationController: serviceContainer.notificationController,
         inAppPurchase: serviceContainer.inAppPurchase,
         storage: serviceContainer.storage,
+        openAiChat: serviceContainer.openAiChat,
     }),
 );
 
@@ -79,7 +81,13 @@ app.get('/', (req, res) => {
     res.send('Hello');
 });
 
-const server = app.listen(process.env.APP_PORT, () => {
+app.get('/chat-demo', (req, res) => {
+    const contents = fs.readFileSync('./src/templates/chat-demo.html', { encoding: 'utf8' });
+
+    res.send(contents);
+});
+
+const server = app.listen(process.env.APP_PORT, async () => {
     serviceContainer.scheduler.run(
         tasks({
             logger: serviceContainer.logger,
