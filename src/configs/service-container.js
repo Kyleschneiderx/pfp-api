@@ -6,6 +6,7 @@ import googleAuthClient, { googleApis } from '../common/googleapis/index.js';
 import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import revenuecat from '../common/revenuecat/index.js';
 import facebookPixel from '../common/facebook-business/index.js';
+import { openAiChat } from '../common/open-router/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
 import * as utils from '../utils/index.js';
@@ -44,6 +45,7 @@ const serviceContainer = {
     scheduler: new utils.Scheduler({ logger: logger }),
     revenuecat: revenuecat,
     facebookPixel: facebookPixel,
+    openAiChat: openAiChat,
 };
 
 Object.assign(serviceContainer, {
