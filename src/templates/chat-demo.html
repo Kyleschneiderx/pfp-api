@@ -16,6 +16,11 @@
             margin: 0;
         }
 
+        .container {
+            display: flex;
+            justify-content: center;
+        }
+
         .chat-container {
             width: 800px;
             height: 600px;
@@ -26,6 +31,8 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             padding: 15px;
         }
+
+        
 
         .chat-box {
             flex: 1;
@@ -87,6 +94,55 @@
             background-color: #ccc;
         }
 
+        .settings-container {
+            width: 300px;
+            height: 300px;
+            background-color: white;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-left: 20px;
+            overflow: hidden;
+        }
+
+        .settings-container .container-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .settings-box {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 0;
+            overflow: hidden;
+        }
+
+        .settings-box textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+            resize: none;
+        }
+
+        .settings-box button {
+            padding: 10px 15px;
+            background-color: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .settings-box button:disabled {
+            background-color: #ccc;
+        }
+
         .reset-button {
             background-color: #ff4e4e;
             padding: 10px 20px;
@@ -100,6 +156,12 @@
 
         .reset-button:hover {
             background-color: #e04d4d;
+        }
+
+        .settings-container .alert {
+            margin: 5px 0;
+            font-size: 14px;
+            padding: 10px;
         }
 
         .loading-dots {
@@ -143,32 +205,49 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js"></script>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-box" id="chatBox">
-            <!-- Messages will appear here -->
-             <!-- <div class="message user">User test</div>
-             <div class="message bot">bot test</div>
-             <div class="message">system test</div> -->
-             <!-- <div class="loading-dots">
-                <span></span><span></span><span></span>
-              </div> -->
-              
-              
+    <div class="container">
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox">
+                <!-- Messages will appear here -->
+                 <!-- <div class="message user">User test</div>
+                 <div class="message bot">bot test</div>
+                 <div class="message">system test</div> -->
+                 <!-- <div class="loading-dots">
+                    <span></span><span></span><span></span>
+                  </div> -->
+                  
+                  
+            </div>
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Type a message..." />
+                <button id="sendButton">Send</button>
+            </div>
+            <button class="reset-button" id="resetButton">Reset Chat</button>
         </div>
-        <div class="input-box">
-            <input type="text" id="userInput" placeholder="Type a message..." />
-            <button id="sendButton">Send</button>
+        <div class="settings-container">
+            <span class="container-title">Settings</span>
+            
+            <div class="settings-box">
+                <textarea type="text" rows="20" id="prompt" placeholder="Type a prompt..." ></textarea>
+                <button id="updateButton">Update</button>
+            </div>
         </div>
-        <button class="reset-button" id="resetButton">Reset Chat</button>
     </div>
+    
 
     <script>
         const userInput = document.getElementById('userInput');
         const sendButton = document.getElementById('sendButton');
         const chatBox = document.getElementById('chatBox');
         const resetButton = document.getElementById('resetButton');
+        const promptInput = document.getElementById('prompt');
+        const updateButton = document.getElementById('updateButton');
+        const alert = document.createElement('div');
+        alert.classList.add('alert');
 
         getMessages();
+
+        getPrompt();
 
         sendButton.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
@@ -177,6 +256,35 @@
             }
         });
         resetButton.addEventListener('click', resetChat);
+
+        updateButton.addEventListener('click', async () => {
+            const prompt = promptInput.value.trim();
+            if (prompt === '') return;
+
+            try{
+                const response = await fetch('../api/chatbot/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+                const data = await response.json();
+
+                alert.style = 'background-color: #4bb543; color: white';
+                alert.innerHTML = `<span>${data.message}</span>`;
+                
+                getPrompt();
+
+            }catch(error){
+                alert.style = 'background-color: #ff4e4e; color: white';
+                alert.innerHTML = '<span>Error updating prompt</span>';
+                
+                console.error(error);
+            }finally{
+                document.querySelector('.settings-container .container-title').insertAdjacentElement('afterend', alert);
+            }
+        });
 
         function convertMarkdownToHtml(markdown) {
             const converter = new showdown.Converter();
@@ -196,6 +304,20 @@
                     }
                 });
 
+
+            }catch(error){
+                console.error(error);
+            }
+        }
+
+        async function getPrompt(){
+            try{
+                const response = await fetch('../api/chatbot/settings');
+                const data = await response.json();
+                
+                const prompt = data.prompt;
+
+                promptInput.value = prompt;
 
             }catch(error){
                 console.error(error);
