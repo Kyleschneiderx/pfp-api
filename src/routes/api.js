@@ -77,6 +77,14 @@ export default ({
     );
 
     router.get('/chatbot', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
         let conversation;
 
         try {
@@ -95,8 +103,7 @@ export default ({
             conversation = [
                 {
                     role: 'developer',
-                    content:
-                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+                    content: prompt ?? '',
                 },
                 {
                     role: 'assistant',
@@ -109,6 +116,14 @@ export default ({
     });
 
     router.post('/chatbot', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
         let conversation;
 
         try {
@@ -127,8 +142,7 @@ export default ({
             conversation = [
                 {
                     role: 'developer',
-                    content:
-                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+                    content: prompt,
                 },
                 {
                     role: 'assistant',
@@ -172,6 +186,24 @@ export default ({
         fs.writeFileSync('chatbot.log', '');
 
         return res.status(204).send();
+    });
+
+    router.get('/chatbot/settings', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        return res.json({ prompt: prompt ?? '' });
+    });
+
+    router.put('/chatbot/settings', async (req, res) => {
+        fs.writeFileSync('chatbot-settings.log', req.body.prompt);
+
+        return res.json({ message: 'Settings updated.' });
     });
 
     router.post('/v1/custom/upload', async (req, res) => {
