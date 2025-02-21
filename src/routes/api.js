@@ -103,7 +103,9 @@ export default ({
             conversation = [
                 {
                     role: 'developer',
-                    content: prompt ?? '',
+                    content:
+                        prompt ??
+                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
                 },
                 {
                     role: 'assistant',
@@ -142,7 +144,9 @@ export default ({
             conversation = [
                 {
                     role: 'developer',
-                    content: prompt,
+                    content:
+                        prompt ??
+                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
                 },
                 {
                     role: 'assistant',
@@ -197,7 +201,11 @@ export default ({
             /** empty */
         }
 
-        return res.json({ prompt: prompt ?? '' });
+        return res.json({
+            prompt:
+                prompt ??
+                'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+        });
     });
 
     router.put('/chatbot/settings', async (req, res) => {
