@@ -7,7 +7,7 @@ export default (validations) => async (req, res, next) => {
     for (const validation of validations) {
         // eslint-disable-next-line no-await-in-loop
         const result = await validation.run(req);
-
+        console.log(result);
         if (result.errors.length) {
             if (result.errors[0].nestedErrors !== undefined && result.errors[0].nestedErrors.length !== 0) {
                 throw new exceptions.BadRequest(result.errors[0].nestedErrors[0][0]);
