@@ -156,4 +156,48 @@ export default class EmailService {
             throw new exceptions.InternalServerError('Failed to send contact support email.', error);
         }
     }
+
+    /**
+     * Send feedback email to admin
+     *
+     * @param {object} data Email data
+     * @param {object} data.receiver Email receiver
+     * @param {string} data.receiver.address Email receiver address
+     * @param {string} data.receiver.name Email receiver name
+     * @param {string} data.email Customer email
+     * @param {string} data.name Customer name
+     * @param {string} data.rating App rating
+     * @param {string} data.ratingReason App rating reason
+     * @param {string} data.usefulFeature Useful feature
+     * @param {string} data.enhancement Enhancement suggestion
+     * @returns {Promise<object>} Nodemailer send object
+     * @throws {InternalServerError} If failed to feedback support email
+     */
+    async sendFeedbackEmail(data) {
+        let template = this.file.readFile(`${__dirname}/templates/feedback.html`, {
+            encoding: 'utf8',
+        });
+        if (template) {
+            template = this.helper.replacer(template, {
+                rating: data.rating ?? 0,
+                ratingReason: data.ratingReason ?? '',
+                usefulFeature: data.usefulFeature ?? '',
+                enhancement: data.enhancement ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
+            });
+        }
+
+        try {
+            return await this.smtp.send({
+                from: `${process.env.SMTP_SENDER_NAME} <${process.env.SMTP_SENDER_EMAIL}>`,
+                to: data.receiver,
+                subject: `[${process.env.APP_NAME}] App Feedback`,
+                html: template,
+            });
+        } catch (error) {
+            this.logger.error('Failed to send feedback email.', error);
+
+            throw new exceptions.InternalServerError('Failed to send feedback email.', error);
+        }
+    }
 }
