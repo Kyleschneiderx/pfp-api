@@ -9,6 +9,7 @@ import {
     APPLE_PAYMENT_PLATFORM,
     PAID_PURCHASE_STATUS,
     SUBSCRIPTION_PRODUCTS,
+    PAGES_TO_TRACK,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -602,6 +603,113 @@ export default class MiscellaneousService {
             this.logger.error('Failed to queue subscription check', error);
 
             throw new exceptions.InternalServerError('Failed to queue subscription check', error);
+        }
+    }
+
+    /**
+     * Record device visit to pages
+     *
+     * @param {object} data
+     * @param {string} data.deviceId Device unique id
+     * @param {string} data.page Page visited
+     * @returns {Promise<PageVisits>}
+     * @throws {InternalServerError} Failed to record page visit
+     */
+    async createPageVisit(data) {
+        try {
+            const pageVisited = await this.database.models.PageVisits.findOne({
+                where: {
+                    device_id: data.deviceId,
+                    page: data.page,
+                },
+            });
+            if (pageVisited) {
+                return pageVisited;
+            }
+
+            const totalPageVisit = await this.database.models.PageVisits.count({
+                where: {
+                    page: data.page,
+                },
+            });
+
+            return this.database.models.PageVisits.create({ device_id: data.deviceId, page: data.page, total: totalPageVisit + 1 });
+        } catch (error) {
+            this.logger.error('Failed to record page visit.', error);
+
+            throw new exceptions.InternalServerError('Failed to record page visit.', error);
+        }
+    }
+
+    /**
+     * Get page visits statistics
+     *
+     * @returns {<Promise<{
+     *  total: number,
+     *  pages: {
+     *     page: string,
+     *     label: string,
+     *     total: number,
+     *     percentage: number
+     *  }[]
+     * }>}
+     * @throws {InternalServerError} Failed to get page visit stats
+     *
+     */
+    async getPageVisitStats() {
+        try {
+            const stats = await this.database.models.PageVisits.findAll({
+                attributes: {
+                    exclude: [],
+                },
+                where: {
+                    id: {
+                        [Sequelize.Op.in]: Sequelize.literal(
+                            `(${this.database.dialect.queryGenerator
+                                .selectQuery('page_visits', {
+                                    attributes: [[Sequelize.fn('Max', Sequelize.col('id')), 'id']],
+                                    group: ['page'],
+                                })
+                                .slice(0, -1)})`,
+                        ),
+                    },
+                },
+            });
+
+            let welcomeScreenPage;
+
+            const pagesToTrack = {};
+
+            Object.keys(PAGES_TO_TRACK).forEach((key) => {
+                if (PAGES_TO_TRACK[key] !== PAGES_TO_TRACK.WELCOME) {
+                    pagesToTrack[PAGES_TO_TRACK[key]] = {
+                        label: key,
+                        total: 0,
+                    };
+                }
+            });
+
+            stats.forEach((stat) => {
+                if (stat.page !== PAGES_TO_TRACK.WELCOME) {
+                    pagesToTrack[stat.page].total = stat.total;
+                } else {
+                    welcomeScreenPage = stat;
+                }
+            });
+
+            return {
+                total: welcomeScreenPage?.total ?? 0,
+                pages: Object.keys(pagesToTrack).map((page) => ({
+                    page: page,
+                    label: pagesToTrack[page].label,
+                    total: pagesToTrack[page].total,
+                    percentage: welcomeScreenPage?.total ? Math.round((pagesToTrack[page].total / welcomeScreenPage.total) * 100) : 0,
+                })),
+            };
+        } catch (error) {
+            this.logger.error('Failed to get page visit stats.', error);
+
+            throw new exceptions.InternalServerError('Failed to get page visit stats.', error);
         }
     }
 }

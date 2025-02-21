@@ -302,8 +302,6 @@ export default ({
         }),
     );
 
-    router.use(verifyAuth);
-
     router.use(
         '/v1/misc',
         routeV1Miscellaneous({
@@ -311,8 +309,11 @@ export default ({
             miscellaneousService: miscellaneousService,
             selectionService: selectionService,
             inAppPurchase: inAppPurchase,
+            verifyAuth: verifyAuth,
         }),
     );
+
+    router.use(verifyAuth);
 
     router.use(
         '/v1/selections',
