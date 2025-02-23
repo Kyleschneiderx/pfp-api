@@ -26,14 +26,15 @@ app.use(
 );
 
 app.use(
-    helmet(
-        process.env.APP_ENV !== 'production'
+    helmet({
+        ...(process.env.APP_ENV !== 'production'
             ? {
                   strictTransportSecurity: false,
                   contentSecurityPolicy: false,
               }
-            : {},
-    ),
+            : {}),
+        crossOriginEmbedderPolicy: false,
+    }),
 );
 
 app.use(compression());
