@@ -180,6 +180,15 @@ export default class EmailService {
         if (template) {
             template = this.helper.replacer(template, {
                 rating: data.rating ?? 0,
+                stars: Array.from(Array(10).keys())
+                    .map((_, index) => {
+                        if (index < data.rating) {
+                            return '<td style="color: #FFD700; font-size: 25px;">&#9733;</td>';
+                        }
+
+                        return '<td style="color: #606060; font-size: 25px;">&#9733;</td>';
+                    })
+                    .join(''),
                 ratingReason: data.ratingReason ?? '',
                 usefulFeature: data.usefulFeature ?? '',
                 enhancement: data.enhancement ?? '',
