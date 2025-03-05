@@ -766,6 +766,16 @@ export default class MiscellaneousService {
 
             const { event } = data;
 
+            const allowedEvents = [
+                REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE,
+                REVENUECAT_WEBHOOK_EVENTS.RENEWAL,
+                REVENUECAT_WEBHOOK_EVENTS.CANCELLATION,
+                REVENUECAT_WEBHOOK_EVENTS.EXPIRATION,
+            ];
+            if (!allowedEvents.includes(event.type)) {
+                return;
+            }
+
             const skipEvents = [REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE];
 
             if (skipEvents.includes(event.type)) {
