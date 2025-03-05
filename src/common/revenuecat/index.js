@@ -80,6 +80,10 @@ export class RevenueCat {
         return `${ENVIRONMENTS[this.environment]}${customerId}`;
     }
 
+    parseCustomerId(customerId) {
+        return Number(customerId.replace(ENVIRONMENTS[this.environment]));
+    }
+
     async getEntitlement(entitlementId) {
         try {
             const response = await this._client('GET', `/projects/${this.projectId}/entitlements/${entitlementId}`);
