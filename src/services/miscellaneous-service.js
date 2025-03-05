@@ -374,6 +374,25 @@ export default class MiscellaneousService {
         }
     }
 
+    /**
+     * Get payment by purchase reference
+     *
+     * @param {string} reference Purchase reference
+     * @returns {Promise<UserSubscriptions>}
+     * @throws {InternalServerError} If failed to get purchase by reference
+     */
+    async getPaymentByReference(reference) {
+        try {
+            return await this.database.models.UserSubscriptions.findOne({
+                where: { reference: reference, status: ACTIVE_PURCHASE_STATUS },
+            });
+        } catch (error) {
+            this.logger.error('Failed to get purchase by reference', error);
+
+            throw new exceptions.InternalServerError('Failed to get purchase by reference', error);
+        }
+    }
+
     async _expireGoogleSubscription(subscription, verifiedReceipt) {
         let updateSubscription = null;
 
@@ -756,7 +775,7 @@ export default class MiscellaneousService {
             const appUserId = this.revenuecat.parseCustomerId(event.app_user_id);
 
             const userSubscription = await this.database.models.UserSubscriptions.findOne({
-                where: { user_id: appUserId, status: ACTIVE_PURCHASE_STATUS },
+                where: { user_id: appUserId, original_reference: event.original_transaction_id, status: ACTIVE_PURCHASE_STATUS },
                 order: [['id', 'DESC']],
             });
 
