@@ -11,6 +11,7 @@ import {
     PAGES_TO_TRACK,
     BILLING_RETRY_PURCHASE_STATUS,
     INCOMPLETE_PURCHASE_STATUS,
+    ACTIVE_PURCHASE_STATUS,
 } from '../constants/index.js';
 import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REVENUECAT_CANCELLATION_REASON } from '../common/revenuecat/index.js';
 import * as exceptions from '../exceptions/index.js';
@@ -329,7 +330,7 @@ export default class MiscellaneousService {
                         platform: data.receipt?.platform,
                         expires_at: expiresAt,
                         reference: data.receipt?.reference,
-                        original_reference: data.receipt?.originalReference,
+                        original_reference: payment.original_reference ?? data.receipt?.originalReference,
                         package_id: data.receipt?.productId,
                     },
                     { transaction: transaction },
@@ -739,6 +740,7 @@ export default class MiscellaneousService {
      * @throws {InternalServerError} Failed to process RevenueCat webhook.
      */
     async processRevenuecatWebhook(data) {
+        console.log(data);
         try {
             this.database.models.RevenuecatWebhooks.create({
                 data: JSON.stringify(data),
@@ -752,8 +754,10 @@ export default class MiscellaneousService {
                 return;
             }
 
+            const appUserId = this.revenuecat.parseCustomerId(event.app_user_id);
+
             const userSubscription = await this.database.models.UserSubscriptions.findOne({
-                where: { original_reference: event.origin_transaction_id },
+                where: { user_id: appUserId, status: ACTIVE_PURCHASE_STATUS },
                 order: [['id', 'DESC']],
             });
 

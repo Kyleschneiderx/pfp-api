@@ -1,4 +1,5 @@
 import { check } from 'express-validator';
+import { ACTIVE_PURCHASE_STATUS } from '../../../constants/index.js';
 
 export default ({ revenuecat }) =>
     check('purchase').custom(async (value, { req }) => {
@@ -18,9 +19,9 @@ export default ({ revenuecat }) =>
             req.body.receipt = {
                 expireDate: subscription.current_period_ends_at,
                 purchaseDate: subscription.starts_at,
-                amount: subscription.total_revenue_in_usd.commission,
+                amount: subscription.total_revenue_in_usd.gross,
                 currency: subscription.total_revenue_in_usd.currency,
-                status: subscription.status,
+                status: ACTIVE_PURCHASE_STATUS,
                 reference: subscription.store_subscription_identifier,
                 originalReference: subscription.store_subscription_identifier,
                 platform: subscription.store,
