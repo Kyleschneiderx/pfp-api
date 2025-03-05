@@ -329,7 +329,7 @@ export default class MiscellaneousService {
                         platform: data.receipt?.platform,
                         expires_at: expiresAt,
                         reference: data.receipt?.reference,
-                        original_reference: payment.original_reference ?? data.receipt?.originalReference,
+                        original_reference: payment?.original_reference ?? data.receipt?.originalReference,
                         package_id: data.receipt?.productId,
                     },
                     { transaction: transaction },
