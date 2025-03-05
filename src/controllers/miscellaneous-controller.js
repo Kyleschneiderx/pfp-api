@@ -24,6 +24,7 @@ export default class MiscellaneousController {
         const payment = await this.miscellaneousService.createPayment({
             userId: req.auth.user_id,
             receipt: req.body.receipt,
+            subscription: req.body.subscription,
         });
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_SUBSCRIPTION_PAYMENT);

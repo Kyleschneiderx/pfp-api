@@ -2,7 +2,7 @@ import express from 'express';
 import validateInput from '../../middlewares/validate-input.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ miscellaneousController, miscellaneousService, inAppPurchase }) => {
+export default ({ miscellaneousController, revenuecat }) => {
     const router = express.Router();
 
     router.get('/privacy-policy', miscellaneousController.handleGetPrivacyPolicyRoute.bind(miscellaneousController));
@@ -13,7 +13,7 @@ export default ({ miscellaneousController, miscellaneousService, inAppPurchase }
 
     router.post(
         '/payment',
-        validateInput([commonValidations.inAppPurchaseReceiptValidation({ inAppPurchase, miscellaneousService })]),
+        validateInput([commonValidations.purchaseSubscription({ revenuecat })]),
         miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController),
     );
 

@@ -9,14 +9,18 @@ import {
     APPLE_PAYMENT_PLATFORM,
     PAID_PURCHASE_STATUS,
     SUBSCRIPTION_PRODUCTS,
+    UNKNOWN_PURCHASE_STATUS,
+    BILLING_RETRY_PURCHASE_STATUS,
+    INCOMPLETE_PURCHASE_STATUS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
-    constructor({ logger, database, inAppPurchase }) {
+    constructor({ logger, database, inAppPurchase, revenuecat }) {
         this.database = database;
         this.logger = logger;
         this.inAppPurchase = inAppPurchase;
+        this.revenuecat = revenuecat;
     }
 
     /**
@@ -279,23 +283,34 @@ export default class MiscellaneousService {
      * Create payment for user subscription
      *
      * @param {object} data
-     * @param {userId} data.userId User account id
-     * @param {SubscriptionPackages} data.package SubscriptionPackages instance
+     * @param {number} data.userId User account id
+     * @param {object} data.receipt Purchase receipt details
+     * @param {object} data.subscription Subscription details
      * @returns {Promise<UserSubscriptions>} UserSubscriptions instance
      * @throws {InternalServerError} If failed to create payment
      */
     async createPayment(data) {
+        console.log(data.receipt);
         try {
-            const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.finalizedData?.expireDate));
+            const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.expireDate));
 
             let payment = await this.database.models.UserSubscriptions.findOne({
-                where: { user_id: data.userId, original_reference: data.receipt?.finalizedData?.originalReference, status: PAID_PURCHASE_STATUS },
+                where: {
+                    user_id: data.userId,
+                    original_reference: data.receipt?.originalReference,
+                    status: {
+                        [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, BILLING_RETRY_PURCHASE_STATUS, INCOMPLETE_PURCHASE_STATUS],
+                    },
+                },
                 order: [['id', 'DESC']],
             });
 
             return await this.database.transaction(async (transaction) => {
                 await this.database.models.UserSubscriptions.update(
-                    { status: CANCELLED_PURCHASE_STATUS, cancel_at: new dateFnsUtc.UTCDate() },
+                    {
+                        status: EXPIRED_PURCHASE_STATUS,
+                        cancel_at: new dateFnsUtc.UTCDate(),
+                    },
                     { where: { user_id: data.userId }, transaction: transaction },
                 );
 
@@ -303,15 +318,15 @@ export default class MiscellaneousService {
                     {
                         id: payment?.id,
                         user_id: data.userId,
-                        response: JSON.stringify(data.receipt),
-                        price: data.receipt?.finalizedData?.amount,
-                        currency: data.receipt?.finalizedData?.currency,
-                        status: data.receipt?.finalizedData?.status,
-                        platform: data.receipt?.finalizedData?.platform,
+                        response: JSON.stringify(data.subscription),
+                        price: data.receipt?.amount,
+                        currency: data.receipt?.currency,
+                        status: data.receipt?.status,
+                        platform: data.receipt?.platform,
                         expires_at: expiresAt,
-                        reference: data.receipt?.finalizedData?.reference,
-                        original_reference: data.receipt?.finalizedData?.originalReference,
-                        package_id: data.receipt?.finalizedData?.productId,
+                        reference: data.receipt?.reference,
+                        original_reference: data.receipt?.originalReference,
+                        package_id: data.receipt?.productId,
                     },
                     { transaction: transaction },
                 );
