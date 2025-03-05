@@ -183,6 +183,14 @@ export const PAID_PURCHASE_STATUS = 'purchased';
 
 export const EXPIRED_PURCHASE_STATUS = 'expired';
 
+export const ACTIVE_PURCHASE_STATUS = 'active';
+
+export const BILLING_RETRY_PURCHASE_STATUS = 'in_billing_retry';
+
+export const UNKNOWN_PURCHASE_STATUS = 'unknown';
+
+export const INCOMPLETE_PURCHASE_STATUS = 'incomplete';
+
 export const CANCELLED_PURCHASE_STATUS = 'canceled';
 
 export const GOOGLE_PAY_PAYMENT_RECEIVED = 1;

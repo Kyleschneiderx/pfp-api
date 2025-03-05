@@ -10,6 +10,7 @@ import compression from 'compression';
 import * as fs from 'fs';
 import errorHandler from './middlewares/error-handler.js';
 import apiRoute from './routes/api.js';
+import webhookRoute from './routes/webhook.js';
 import serviceContainer from './configs/service-container.js';
 import tasks from './tasks/index.js';
 
@@ -40,6 +41,13 @@ app.use(
 );
 
 app.use(compression());
+
+app.use(
+    '/webhook',
+    webhookRoute({
+        helper: serviceContainer.helper,
+    }),
+);
 
 app.use(
     '/api',
@@ -74,6 +82,7 @@ app.use(
         notificationController: serviceContainer.notificationController,
         inAppPurchase: serviceContainer.inAppPurchase,
         storage: serviceContainer.storage,
+        revenuecat: serviceContainer.revenuecat,
         openAiChat: serviceContainer.openAiChat,
     }),
 );
