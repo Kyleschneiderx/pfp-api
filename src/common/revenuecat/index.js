@@ -81,7 +81,7 @@ export class RevenueCat {
     }
 
     parseCustomerId(customerId) {
-        return Number(customerId.replace(ENVIRONMENTS[this.environment]));
+        return Number(customerId.replace(ENVIRONMENTS[this.environment], ''));
     }
 
     async getEntitlement(entitlementId) {
