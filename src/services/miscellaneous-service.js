@@ -688,9 +688,12 @@ export default class MiscellaneousService {
             const updateUserSubscriptionPayload = {
                 reference: event.transaction_id,
                 package_id: event.product_id.includes(':') ? event.product_id.split(':')[0] : event.product_id,
-                price: event.price,
                 expires_at: new dateFnsUtc.UTCDate(Number(event.expiration_at_ms)),
             };
+
+            if (event.type !== REVENUECAT_WEBHOOK_EVENTS.RENEWAL) {
+                updateUserSubscriptionPayload.price = event.price;
+            }
 
             if (event.type !== REVENUECAT_WEBHOOK_EVENTS.RENEWAL) {
                 updateUserSubscriptionPayload.cancel_at = new dateFnsUtc.UTCDate();
