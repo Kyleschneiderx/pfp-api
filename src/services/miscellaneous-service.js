@@ -632,7 +632,6 @@ export default class MiscellaneousService {
      * @throws {InternalServerError} Failed to process RevenueCat webhook.
      */
     async processRevenuecatWebhook(data) {
-        console.log(data);
         try {
             this.database.models.RevenuecatWebhooks.create({
                 data: JSON.stringify(data),
