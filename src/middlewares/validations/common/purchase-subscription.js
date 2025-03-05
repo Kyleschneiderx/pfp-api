@@ -1,12 +1,18 @@
 import { check } from 'express-validator';
 import { ACTIVE_PURCHASE_STATUS } from '../../../constants/index.js';
 
-export default ({ revenuecat }) =>
+export default ({ revenuecat, miscellaneousService }) =>
     check('purchase').custom(async (value, { req }) => {
         try {
             const customerSubscriptions = await revenuecat.getCustomerSubscriptions(req.auth.user_id);
 
             const subscription = customerSubscriptions.items[0];
+
+            const existingPurchaseTransaction = await miscellaneousService.getPaymentByReference(subscription.store_subscription_identifier);
+
+            if (existingPurchaseTransaction && existingPurchaseTransaction.user_id !== req.auth.user_id) {
+                throw new Error('Transaction already exist.');
+            }
 
             const product = await revenuecat.getProduct(subscription.product_id);
 
