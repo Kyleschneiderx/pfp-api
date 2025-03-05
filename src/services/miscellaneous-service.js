@@ -7,12 +7,11 @@ import {
     CANCELLED_PURCHASE_STATUS,
     GOOGLE_PAYMENT_PLATFORM,
     APPLE_PAYMENT_PLATFORM,
-    PAID_PURCHASE_STATUS,
     SUBSCRIPTION_PRODUCTS,
-    UNKNOWN_PURCHASE_STATUS,
     BILLING_RETRY_PURCHASE_STATUS,
     INCOMPLETE_PURCHASE_STATUS,
 } from '../constants/index.js';
+import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REVENUECAT_CANCELLATION_REASON } from '../common/revenuecat/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
@@ -290,16 +289,20 @@ export default class MiscellaneousService {
      * @throws {InternalServerError} If failed to create payment
      */
     async createPayment(data) {
-        console.log(data.receipt);
         try {
             const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.expireDate));
 
             let payment = await this.database.models.UserSubscriptions.findOne({
                 where: {
                     user_id: data.userId,
-                    original_reference: data.receipt?.originalReference,
+                    reference: data.receipt?.reference,
                     status: {
-                        [Sequelize.Op.notIn]: [EXPIRED_PURCHASE_STATUS, BILLING_RETRY_PURCHASE_STATUS, INCOMPLETE_PURCHASE_STATUS],
+                        [Sequelize.Op.notIn]: [
+                            EXPIRED_PURCHASE_STATUS,
+                            BILLING_RETRY_PURCHASE_STATUS,
+                            INCOMPLETE_PURCHASE_STATUS,
+                            CANCELLED_PURCHASE_STATUS,
+                        ],
                     },
                 },
                 order: [['id', 'DESC']],
@@ -308,7 +311,7 @@ export default class MiscellaneousService {
             return await this.database.transaction(async (transaction) => {
                 await this.database.models.UserSubscriptions.update(
                     {
-                        status: EXPIRED_PURCHASE_STATUS,
+                        status: CANCELLED_PURCHASE_STATUS,
                         cancel_at: new dateFnsUtc.UTCDate(),
                     },
                     { where: { user_id: data.userId }, transaction: transaction },
@@ -617,6 +620,69 @@ export default class MiscellaneousService {
             this.logger.error('Failed to queue subscription check', error);
 
             throw new exceptions.InternalServerError('Failed to queue subscription check', error);
+        }
+    }
+
+    /**
+     * Process RevenueCat webhooks
+     *
+     * @param {object} data
+     * @returns {Promise<void>}
+     * @throws {InternalServerError} Failed to process RevenueCat webhook.
+     */
+    async processRevenuecatWebhook(data) {
+        try {
+            this.database.models.RevenuecatWebhooks.create({
+                data: JSON.stringify(data),
+            });
+
+            const { event } = data;
+
+            const skipEvents = [REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE];
+
+            if (skipEvents.includes(event.type)) {
+                return;
+            }
+
+            const userSubscription = await this.database.models.UserSubscriptions.findOne({
+                where: { original_reference: event.origin_transaction_id },
+                order: [['id', 'DESC']],
+            });
+
+            if (!userSubscription) {
+                throw new exceptions.InternalServerError('Reference does not exist.');
+            }
+
+            const updateUserSubscriptionPayload = {
+                reference: event.transaction_id,
+                package_id: event.product_id.includes(':') ? event.product_id.split(':')[0] : event.product_id,
+                price: event.price,
+                expires_at: new dateFnsUtc.UTCDate(Number(event.expiration_at_ms)),
+            };
+
+            if (event.type !== REVENUECAT_WEBHOOK_EVENTS.RENEWAL) {
+                updateUserSubscriptionPayload.cancel_at = new dateFnsUtc.UTCDate();
+                updateUserSubscriptionPayload.status = EXPIRED_PURCHASE_STATUS;
+                if (event.type === REVENUECAT_WEBHOOK_EVENTS.CANCELLATION) {
+                    if (
+                        [REVENUECAT_CANCELLATION_REASON.DEVELOPER_INITIATED, REVENUECAT_CANCELLATION_REASON.CUSTOMER_SUPPORT].includes(
+                            event.cancel_reason,
+                        )
+                    ) {
+                        updateUserSubscriptionPayload.status = CANCELLED_PURCHASE_STATUS;
+                    }
+                }
+            }
+
+            this.database.models.UserSubscriptions.update(updateUserSubscriptionPayload, { where: { id: userSubscription.id } });
+
+            if ([EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS].includes(updateUserSubscriptionPayload.status)) {
+                await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: userSubscription.user_id } });
+            }
+        } catch (error) {
+            this.logger.error('Failed to process RevenueCat webhook.', error);
+
+            throw new exceptions.InternalServerError('Failed to process RevenueCat webhook.', error);
         }
     }
 }

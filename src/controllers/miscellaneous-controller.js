@@ -49,4 +49,10 @@ export default class MiscellaneousController {
             msg: 'Successfully post message to support.',
         });
     }
+
+    async handleRevenuecatWebhookRoute(req, res) {
+        await this.miscellaneousService.processRevenuecatWebhook(req.body);
+
+        return res.json({ msg: 'Successfully processed webhook.' });
+    }
 }

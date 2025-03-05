@@ -38,3 +38,4 @@ export { default as CheckSubscriptionQueues } from './check-subscription-queues.
 export { default as SurveyQuestionGroups } from './survey-question-groups.js';
 export { default as SurveyQuestionAnswerScores } from './survey-question-answer-scores.js';
 export { default as UserSurveyQuestionAnswerScores } from './user-survey-question-answer-scores.js';
+export { default as RevenuecatWebhooks } from './revenuecat-webhooks.js';
