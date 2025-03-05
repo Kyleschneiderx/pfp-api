@@ -18,7 +18,7 @@ export default ({ revenuecat }) =>
             req.body.receipt = {
                 expireDate: subscription.current_period_ends_at,
                 purchaseDate: subscription.starts_at,
-                amount: subscription.total_revenue_in_usd.gross,
+                amount: subscription.total_revenue_in_usd.commission,
                 currency: subscription.total_revenue_in_usd.currency,
                 status: subscription.status,
                 reference: subscription.store_subscription_identifier,

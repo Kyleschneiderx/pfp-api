@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import helmet from 'helmet';
+import fileUpload from 'express-fileupload';
 import express from 'express';
 import compression from 'compression';
 import * as fs from 'fs';
@@ -43,9 +44,28 @@ app.use(
 app.use(compression());
 
 app.use(
+    fileUpload({
+        limits: { fieldSize: 1100 * 1024 * 1024 },
+    }),
+);
+
+app.use(
+    express.json({
+        limit: '100mb',
+    }),
+);
+
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: '100mb',
+    }),
+);
+
+app.use(
     '/webhook',
     webhookRoute({
-        helper: serviceContainer.helper,
+        miscellaneousController: serviceContainer.miscellaneousController,
     }),
 );
 
