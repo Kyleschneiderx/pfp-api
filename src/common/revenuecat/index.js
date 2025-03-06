@@ -179,7 +179,7 @@ export class RevenueCat {
     async getCustomerSubscriptions(customerId, options = {}) {
         customerId = this._environmentalizeCustomerId(customerId);
 
-        // options.environment = this.environment.toLowerCase();
+        options.environment = this.environment.toLowerCase();
 
         try {
             const response = await this._client('GET', `/projects/${this.projectId}/customers/${customerId}/subscriptions`, options);
@@ -193,7 +193,7 @@ export class RevenueCat {
     async getCustomerPurchases(customerId, options = {}) {
         customerId = this._environmentalizeCustomerId(customerId);
 
-        // options.environment = this.environment.toLowerCase();
+        options.environment = this.environment.toLowerCase();
 
         try {
             const response = await this._client('GET', `/projects/${this.projectId}/customers/${customerId}/purchases`, options);

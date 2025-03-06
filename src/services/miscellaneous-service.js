@@ -353,7 +353,7 @@ export default class MiscellaneousService {
      * @returns {Promise<UserSubscriptions>}
      * @throws {InternalServerError} If failed to get purchase by reference
      */
-    async getPaymentByOrignalReference(reference) {
+    async getPaymentByOriginalReference(reference) {
         try {
             return await this.database.models.UserSubscriptions.findOne({
                 where: { original_reference: reference, status: ACTIVE_PURCHASE_STATUS },
