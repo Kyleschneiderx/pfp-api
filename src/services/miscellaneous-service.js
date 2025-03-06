@@ -679,14 +679,14 @@ export default class MiscellaneousService {
             };
 
             if (event.type !== REVENUECAT_WEBHOOK_EVENTS.EXPIRATION) {
-                updateUserSubscriptionPayload.price = event.price;
+                updateUserSubscriptionPayload.price = event.price_in_purchased_currency;
             }
 
             if (event.type === REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE) {
                 updateUserSubscriptionPayload.response = JSON.stringify(event);
             }
 
-            if (event.type !== REVENUECAT_WEBHOOK_EVENTS.RENEWAL) {
+            if (![REVENUECAT_WEBHOOK_EVENTS.RENEWAL, REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE].includes(event.type)) {
                 updateUserSubscriptionPayload.cancel_at = new dateFnsUtc.UTCDate();
                 updateUserSubscriptionPayload.status = EXPIRED_PURCHASE_STATUS;
                 if (event.type === REVENUECAT_WEBHOOK_EVENTS.CANCELLATION) {
