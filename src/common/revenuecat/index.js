@@ -86,7 +86,7 @@ export class RevenueCat {
 
     async getEntitlement(entitlementId) {
         try {
-            const response = await this._client('GET', `/projects/${this.projectId}/entitlements/${entitlementId}`);
+            const response = await this._client('GET', `/projects/${this.projectId}/entitlements/${entitlementId}`, { expand: 'product' });
 
             return response.data;
         } catch (error) {
@@ -179,10 +179,24 @@ export class RevenueCat {
     async getCustomerSubscriptions(customerId, options = {}) {
         customerId = this._environmentalizeCustomerId(customerId);
 
-        options.environment = this.environment.toLowerCase();
+        // options.environment = this.environment.toLowerCase();
 
         try {
             const response = await this._client('GET', `/projects/${this.projectId}/customers/${customerId}/subscriptions`, options);
+
+            return response.data;
+        } catch (error) {
+            throw new Error(`[Client] ${error.message}`, { cause: error });
+        }
+    }
+
+    async getCustomerPurchases(customerId, options = {}) {
+        customerId = this._environmentalizeCustomerId(customerId);
+
+        // options.environment = this.environment.toLowerCase();
+
+        try {
+            const response = await this._client('GET', `/projects/${this.projectId}/customers/${customerId}/purchases`, options);
 
             return response.data;
         } catch (error) {

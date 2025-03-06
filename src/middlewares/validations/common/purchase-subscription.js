@@ -1,41 +1,19 @@
-import { check } from 'express-validator';
-import { ACTIVE_PURCHASE_STATUS } from '../../../constants/index.js';
+import { body } from 'express-validator';
 
-export default ({ revenuecat, miscellaneousService }) =>
-    check('purchase').custom(async (value, { req }) => {
-        try {
-            const customerSubscriptions = await revenuecat.getCustomerSubscriptions(req.auth.user_id);
+export default ({ miscellaneousService }) =>
+    body('reference')
+        .exists({ value: 'falsy' })
+        .withMessage('Reference is required.')
+        .custom(async (value, { req }) => {
+            try {
+                const existingPurchaseTransaction = await miscellaneousService.getPaymentByOriginalReference(value);
 
-            const subscription = customerSubscriptions.items[0];
-
-            const existingPurchaseTransaction = await miscellaneousService.getPaymentByReference(subscription.store_subscription_identifier);
-
-            if (existingPurchaseTransaction && existingPurchaseTransaction.user_id !== req.auth.user_id) {
-                throw new Error('Transaction already exist.');
+                if (existingPurchaseTransaction && existingPurchaseTransaction.user_id !== req.auth.user_id) {
+                    throw new Error('Transaction already exist.');
+                }
+            } catch (error) {
+                throw new Error('Failed to verify subscription.', { cause: error });
             }
 
-            const product = await revenuecat.getProduct(subscription.product_id);
-
-            if (!subscription.gives_access) {
-                throw new Error('Invalid subscription.');
-            }
-
-            req.body.subscription = subscription;
-
-            req.body.receipt = {
-                expireDate: subscription.current_period_ends_at,
-                purchaseDate: subscription.starts_at,
-                amount: subscription.total_revenue_in_usd.gross,
-                currency: subscription.total_revenue_in_usd.currency,
-                status: ACTIVE_PURCHASE_STATUS,
-                reference: subscription.store_subscription_identifier,
-                originalReference: subscription.store_subscription_identifier,
-                platform: subscription.store,
-                productId: product.store_identifier.includes(':') ? product.store_identifier.split(':')[0] : product.store_identifier,
-            };
-        } catch (error) {
-            throw new Error('Failed to verify subscription.', { cause: error });
-        }
-
-        return true;
-    });
+            return true;
+        });
