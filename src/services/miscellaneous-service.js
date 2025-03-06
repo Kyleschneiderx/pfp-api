@@ -284,19 +284,16 @@ export default class MiscellaneousService {
      *
      * @param {object} data
      * @param {number} data.userId User account id
-     * @param {object} data.receipt Purchase receipt details
-     * @param {object} data.subscription Subscription details
+     * @param {object} data.reference Purchase reference
      * @returns {Promise<UserSubscriptions>} UserSubscriptions instance
      * @throws {InternalServerError} If failed to create payment
      */
     async createPayment(data) {
         try {
-            const expiresAt = new dateFnsUtc.UTCDate(Number(data.receipt?.expireDate));
-
             let payment = await this.database.models.UserSubscriptions.findOne({
                 where: {
                     user_id: data.userId,
-                    reference: data.receipt?.reference,
+                    reference: data?.reference,
                     status: {
                         [Sequelize.Op.notIn]: [
                             EXPIRED_PURCHASE_STATUS,
@@ -322,15 +319,9 @@ export default class MiscellaneousService {
                     {
                         id: payment?.id,
                         user_id: data.userId,
-                        response: JSON.stringify(data.subscription),
-                        price: data.receipt?.amount,
-                        currency: data.receipt?.currency,
-                        status: data.receipt?.status,
-                        platform: data.receipt?.platform,
-                        expires_at: expiresAt,
-                        reference: data.receipt?.reference,
-                        original_reference: payment?.original_reference ?? data.receipt?.originalReference,
-                        package_id: data.receipt?.productId,
+                        reference: data?.reference,
+                        status: ACTIVE_PURCHASE_STATUS,
+                        original_reference: data?.reference,
                     },
                     { transaction: transaction },
                 );
@@ -364,7 +355,7 @@ export default class MiscellaneousService {
     async getPaymentByOrignalReference(reference) {
         try {
             return await this.database.models.UserSubscriptions.findOne({
-                where: { original_reference: reference, status: { [Sequelize.Op.ne]: CANCELLED_PURCHASE_STATUS } },
+                where: { original_reference: reference, status: ACTIVE_PURCHASE_STATUS },
             });
         } catch (error) {
             this.logger.error('Failed to get purchase by reference', error);
@@ -668,12 +659,6 @@ export default class MiscellaneousService {
                 return;
             }
 
-            const skipEvents = [REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE];
-
-            if (skipEvents.includes(event.type)) {
-                return;
-            }
-
             const appUserId = this.revenuecat.parseCustomerId(event.app_user_id);
 
             const userSubscription = await this.database.models.UserSubscriptions.findOne({
@@ -688,11 +673,17 @@ export default class MiscellaneousService {
             const updateUserSubscriptionPayload = {
                 reference: event.transaction_id,
                 package_id: event.product_id.includes(':') ? event.product_id.split(':')[0] : event.product_id,
+                platform: event?.store?.toLowerCase(),
                 expires_at: new dateFnsUtc.UTCDate(Number(event.expiration_at_ms)),
+                currency: event.currency,
             };
 
-            if (event.type !== REVENUECAT_WEBHOOK_EVENTS.RENEWAL) {
+            if (event.type !== REVENUECAT_WEBHOOK_EVENTS.EXPIRATION) {
                 updateUserSubscriptionPayload.price = event.price;
+            }
+
+            if (event.type === REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE) {
+                updateUserSubscriptionPayload.response = JSON.stringify(event);
             }
 
             if (event.type !== REVENUECAT_WEBHOOK_EVENTS.RENEWAL) {
