@@ -55,14 +55,6 @@ export default ({
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
 
-    router.post('/v1/custom/upload', async (req, res) => {
-        const { files } = req;
-
-        res.json({
-            body: req.body,
-        });
-    });
-
     router.use('/assets', routeAsset({ helper: helper }));
 
     router.use('/email-assets', express.static(path.join(__dirname, 'templates/assets')));
