@@ -1,5 +1,4 @@
 import { param, body } from 'express-validator';
-import { ADMIN_ACCOUNT_TYPE_ID } from '../../../constants/index.js';
 
 export default ({ educationService, field = 'id', isBody = false, isRequired = true, isPublishedOnly = false }) => {
     let rule = param(field);
