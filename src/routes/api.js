@@ -42,7 +42,6 @@ export default ({
     miscellaneousController,
     miscellaneousService,
     notificationController,
-    inAppPurchase,
     revenuecat,
 }) => {
     const router = express.Router();
