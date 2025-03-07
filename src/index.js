@@ -5,10 +5,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import helmet from 'helmet';
+import fileUpload from 'express-fileupload';
 import express from 'express';
 import compression from 'compression';
 import errorHandler from './middlewares/error-handler.js';
 import apiRoute from './routes/api.js';
+import webhookRoute from './routes/webhook.js';
 import serviceContainer from './configs/service-container.js';
 import tasks from './tasks/index.js';
 
@@ -39,6 +41,32 @@ app.use(
 );
 
 app.use(compression());
+
+app.use(
+    fileUpload({
+        limits: { fieldSize: 1100 * 1024 * 1024 },
+    }),
+);
+
+app.use(
+    express.json({
+        limit: '100mb',
+    }),
+);
+
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: '100mb',
+    }),
+);
+
+app.use(
+    '/webhook',
+    webhookRoute({
+        miscellaneousController: serviceContainer.miscellaneousController,
+    }),
+);
 
 app.use(
     '/api',
@@ -73,6 +101,7 @@ app.use(
         notificationController: serviceContainer.notificationController,
         inAppPurchase: serviceContainer.inAppPurchase,
         storage: serviceContainer.storage,
+        revenuecat: serviceContainer.revenuecat,
     }),
 );
 

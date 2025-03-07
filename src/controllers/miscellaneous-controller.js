@@ -23,7 +23,7 @@ export default class MiscellaneousController {
     async handleCreatePaymentRoute(req, res) {
         const payment = await this.miscellaneousService.createPayment({
             userId: req.auth.user_id,
-            receipt: req.body.receipt,
+            reference: req.body.reference,
         });
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_SUBSCRIPTION_PAYMENT);
@@ -81,5 +81,11 @@ export default class MiscellaneousController {
         return res.json({
             msg: 'Successfully send feedback.',
         });
+    }
+
+    async handleRevenuecatWebhookRoute(req, res) {
+        await this.miscellaneousService.processRevenuecatWebhook(req.body);
+
+        return res.json({ msg: 'Successfully processed webhook.' });
     }
 }

@@ -1,6 +1,5 @@
 import express from 'express';
 import * as path from 'path';
-import fileUpload from 'express-fileupload';
 import { v4 as uuidv4 } from 'uuid';
 import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
@@ -43,7 +42,7 @@ export default ({
     miscellaneousController,
     miscellaneousService,
     notificationController,
-    inAppPurchase,
+    revenuecat,
 }) => {
     const router = express.Router();
 
@@ -54,33 +53,6 @@ export default ({
     });
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
-
-    router.use(
-        fileUpload({
-            limits: { fieldSize: 1100 * 1024 * 1024 },
-        }),
-    );
-
-    router.use(
-        express.json({
-            limit: '100mb',
-        }),
-    );
-
-    router.use(
-        express.urlencoded({
-            extended: true,
-            limit: '100mb',
-        }),
-    );
-
-    router.post('/v1/custom/upload', async (req, res) => {
-        const { files } = req;
-
-        res.json({
-            body: req.body,
-        });
-    });
 
     router.use('/assets', routeAsset({ helper: helper }));
 
@@ -175,8 +147,7 @@ export default ({
         routeV1Miscellaneous({
             miscellaneousController: miscellaneousController,
             miscellaneousService: miscellaneousService,
-            selectionService: selectionService,
-            inAppPurchase: inAppPurchase,
+            revenuecat: revenuecat,
             verifyAuth: verifyAuth,
         }),
     );

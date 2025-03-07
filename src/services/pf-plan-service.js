@@ -13,7 +13,6 @@ import {
     DRAFT_PF_PLAN_STATUS_ID,
     PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS,
     DATE_FORMAT,
-    PUBLISHED_EDUCATION_STATUS_ID,
     TIME_FORMAT,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';

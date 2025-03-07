@@ -3,7 +3,7 @@ import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/miscellaneous/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ miscellaneousController, miscellaneousService, inAppPurchase, verifyAuth }) => {
+export default ({ miscellaneousController, miscellaneousService, revenuecat, verifyAuth }) => {
     const router = express.Router();
 
     router.post('/page-tracking', miscellaneousController.handlePageTrackingRoute.bind(miscellaneousController));
@@ -18,7 +18,7 @@ export default ({ miscellaneousController, miscellaneousService, inAppPurchase, 
 
     router.post(
         '/payment',
-        validateInput([commonValidations.inAppPurchaseReceiptValidation({ inAppPurchase, miscellaneousService })]),
+        validateInput([commonValidations.purchaseSubscription({ revenuecat, miscellaneousService })]),
         miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController),
     );
 
