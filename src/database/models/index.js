@@ -39,3 +39,4 @@ export { default as SurveyQuestionGroups } from './survey-question-groups.js';
 export { default as SurveyQuestionAnswerScores } from './survey-question-answer-scores.js';
 export { default as UserSurveyQuestionAnswerScores } from './user-survey-question-answer-scores.js';
 export { default as PageVisits } from './page-visits.js';
+export { default as RevenuecatWebhooks } from './revenuecat-webhooks.js';
