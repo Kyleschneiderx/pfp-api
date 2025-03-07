@@ -16,6 +16,8 @@ export default ({
 }) => {
     const router = express.Router();
 
+    router.get('/recommend', [validateInput(validations.getPfPlansValidation())], pfPlanController.handleGetPfPlansRoute.bind(pfPlanController));
+
     router.get(
         '/',
         [validateInput(validations.getPfPlansValidation()), verifyPremiumUser],
