@@ -2,8 +2,12 @@ import express from 'express';
 import validateInput from '../../middlewares/validate-input.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ miscellaneousController, miscellaneousService, inAppPurchase }) => {
+export default ({ miscellaneousController, miscellaneousService, inAppPurchase, verifyAuth }) => {
     const router = express.Router();
+
+    router.post('/page-tracking', miscellaneousController.handlePageTrackingRoute.bind(miscellaneousController));
+
+    router.use(verifyAuth);
 
     router.get('/privacy-policy', miscellaneousController.handleGetPrivacyPolicyRoute.bind(miscellaneousController));
 
@@ -18,6 +22,8 @@ export default ({ miscellaneousController, miscellaneousService, inAppPurchase }
     );
 
     router.post('/contact-support', miscellaneousController.handleSendContactSupportRoute.bind(miscellaneousController));
+
+    router.get('/page-tracking/stats', miscellaneousController.handlePageTrackingStatsRoute.bind(miscellaneousController));
 
     return router;
 };
