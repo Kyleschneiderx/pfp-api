@@ -48,4 +48,21 @@ export default class MiscellaneousController {
             msg: 'Successfully post message to support.',
         });
     }
+
+    async handlePageTrackingRoute(req, res) {
+        await this.miscellaneousService.createPageVisit({
+            deviceId: req.body.device_id,
+            page: req.body.page,
+        });
+
+        return res.json({
+            msg: 'Successfully recorded page visit.',
+        });
+    }
+
+    async handlePageTrackingStatsRoute(req, res) {
+        const stats = await this.miscellaneousService.getPageVisitStats();
+
+        return res.json(stats);
+    }
 }

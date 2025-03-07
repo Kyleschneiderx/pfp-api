@@ -195,3 +195,12 @@ export const SUBSCRIPTION_PRODUCTS = {
 };
 
 export const EMAIL_ASSETS_URL = `${process.env.APP_URL}/api/email-assets`;
+
+export const PAGES_TO_TRACK = {
+    WELCOME: 'welcomeScreen',
+    LOGIN: 'loginScreen',
+    SIGNUP: 'signupScreen',
+    QUESTIONNAIRE: 'questionnaireScreen',
+    PAYWALL: 'paywallScreen',
+    HOME: 'homeScreen',
+};
