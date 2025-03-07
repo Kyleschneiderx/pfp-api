@@ -65,4 +65,21 @@ export default class MiscellaneousController {
 
         return res.json(stats);
     }
+
+    async handleSendFeedbackRoute(req, res) {
+        await this.emailService.sendFeedbackEmail({
+            receiver: {
+                name: CONTACT_SUPPORT_NAME,
+                address: CONTACT_SUPPORT_EMAIL,
+            },
+            rating: req.body.rating ?? 0,
+            ratingReason: req.body.rating_reason ?? '',
+            usefulFeature: req.body.useful_feature ?? '',
+            enhancement: req.body.enhancement ?? '',
+        });
+
+        return res.json({
+            msg: 'Successfully send feedback.',
+        });
+    }
 }
