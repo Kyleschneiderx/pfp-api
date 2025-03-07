@@ -1,5 +1,6 @@
 import express from 'express';
 import validateInput from '../../middlewares/validate-input.js';
+import * as validations from '../../middlewares/validations/miscellaneous/index.js';
 import * as commonValidations from '../../middlewares/validations/common/index.js';
 
 export default ({ miscellaneousController, miscellaneousService, inAppPurchase, verifyAuth }) => {
@@ -24,6 +25,12 @@ export default ({ miscellaneousController, miscellaneousService, inAppPurchase, 
     router.post('/contact-support', miscellaneousController.handleSendContactSupportRoute.bind(miscellaneousController));
 
     router.get('/page-tracking/stats', miscellaneousController.handlePageTrackingStatsRoute.bind(miscellaneousController));
+
+    router.post(
+        '/feedback',
+        validateInput(validations.sendFeedback()),
+        miscellaneousController.handleSendFeedbackRoute.bind(miscellaneousController),
+    );
 
     return router;
 };
