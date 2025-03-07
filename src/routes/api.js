@@ -43,7 +43,6 @@ export default ({
     miscellaneousController,
     miscellaneousService,
     notificationController,
-    inAppPurchase,
     revenuecat,
     openAiChat,
 }) => {
