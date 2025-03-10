@@ -210,5 +210,5 @@ export const PAGES_TO_TRACK = {
     SIGNUP: 'signupScreen',
     QUESTIONNAIRE: 'questionnaireScreen',
     PAYWALL: 'paywallScreen',
-    HOME: 'homeScreen',
+    HOME: 'homepageScreen',
 };
