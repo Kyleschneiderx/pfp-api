@@ -705,7 +705,10 @@ export default class MiscellaneousService {
                 },
             });
 
-            let welcomeScreenPage;
+            const totalDevice = await this.database.models.PageVisits.count({
+                distinct: true,
+                col: 'device_id',
+            });
 
             const pagesToTrack = {};
 
@@ -721,18 +724,16 @@ export default class MiscellaneousService {
             stats.forEach((stat) => {
                 if (stat.page !== PAGES_TO_TRACK.WELCOME) {
                     pagesToTrack[stat.page].total = stat.total;
-                } else {
-                    welcomeScreenPage = stat;
                 }
             });
 
             return {
-                total: welcomeScreenPage?.total ?? 0,
+                total: totalDevice ?? 0,
                 pages: Object.keys(pagesToTrack).map((page) => ({
                     page: page,
                     label: pagesToTrack[page].label,
                     total: pagesToTrack[page].total,
-                    percentage: welcomeScreenPage?.total ? Math.round((pagesToTrack[page].total / welcomeScreenPage.total) * 100) : 0,
+                    percentage: totalDevice ? Math.round((pagesToTrack[page].total / totalDevice) * 100) : 0,
                 })),
             };
         } catch (error) {
