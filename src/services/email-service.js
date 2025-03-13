@@ -1,3 +1,4 @@
+import crypto from 'crypto-js';
 import * as exceptions from '../exceptions/index.js';
 import { CONVERSION_API_EVENTS, EMAIL_ASSETS_URL } from '../constants/index.js';
 
@@ -153,7 +154,11 @@ export default class EmailService {
             });
 
             try {
-                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.FEEDBACK, {});
+                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.FEEDBACK, {
+                    user_data: {
+                        em: crypto.SHA256(data.email).toString(),
+                    },
+                });
             } catch (error) {
                 this.logger.error('Failed to send event to conversion api.', error);
             }
@@ -174,7 +179,6 @@ export default class EmailService {
      * @param {string} data.receiver.address Email receiver address
      * @param {string} data.receiver.name Email receiver name
      * @param {string} data.email Customer email
-     * @param {string} data.name Customer name
      * @param {string} data.rating App rating
      * @param {string} data.ratingReason App rating reason
      * @param {string} data.usefulFeature Useful feature
@@ -214,7 +218,11 @@ export default class EmailService {
             });
 
             try {
-                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.FEEDBACK, {});
+                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.FEEDBACK, {
+                    user_data: {
+                        em: crypto.SHA256(data.email).toString(),
+                    },
+                });
             } catch (error) {
                 this.logger.error('Failed to send event to conversion api.', error);
             }

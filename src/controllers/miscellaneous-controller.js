@@ -67,11 +67,14 @@ export default class MiscellaneousController {
     }
 
     async handleSendFeedbackRoute(req, res) {
+        const user = await this.userService.getUser({ userId: req.auth.user_id, withProfile: true });
+
         await this.emailService.sendFeedbackEmail({
             receiver: {
                 name: CONTACT_SUPPORT_NAME,
                 address: CONTACT_SUPPORT_EMAIL,
             },
+            email: user.email,
             rating: req.body.rating ?? 0,
             ratingReason: req.body.rating_reason ?? '',
             usefulFeature: req.body.useful_feature ?? '',
