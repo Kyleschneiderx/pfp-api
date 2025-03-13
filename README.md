@@ -17,27 +17,100 @@ To run app in local environment that watches every change in files
 npm run start:dev
 ```
 
-To run database migration
+To run linter
+```
+npm run lint
+```
+
+## Configurations
+All kinds of configuration must be define in the <span style="color: #ff6961">src/configs</span> directory be it for app or providers.
+
+```
+src/
+├─ configs/
+│  ├─ provider1.js
+│  ├─ app1.js
+
+```
+
+Service container is also defined in the <span style="color: #ff6961">service-container.js</span> inside <span style="color: #ff6961">configs</span> directory.
+This contains the initialization of providers, services etc that you want to inject to services.
+
+```
+src/
+├─ configs/
+│  ├─ provider1.js
+│  ├─ service-container.js
+```
+
+
+## Databases
+### Setup
+This app is using MySQL for database. To setup database connection provide the credentials in the <span style="color: #ff6961">.env</span> by setting these following environment variables
+
+```
+DB_DIALECT=mysql
+DB_HOST
+DB_USER
+DB_PASS
+DB_PORT
+DB_DATABASE
+```
+
+### Migration
+All migration files resides in the <span style="color: #ff6961">src/database/seeders</span>
+
+To run seeder
 ```
 npm run db:migrate
 ```
 
-To run database seeds
+```
+src/
+├─ database/
+│  ├─ migrations/
+│  │  ├─ xxxxxxxxxxxxxx-table-migration.js
+│  │  ├─ xxxxxxxxxxxxxx-column-migration.js
+│  │  ├─ xxxxxxxxxxxxxx-table-migration.js
+```
+
+### Seeding
+All seeder files resides in the <span style="color: #ff6961">src/database/seeders</span>
+
+To run seeder
 
 ```
 npm run db:seed
 ```
 
-To run database reset
+```
+src/
+├─ database/
+│  ├─ seeders/
+│  │  ├─ xxxxxxxxxxxxxx-data1-seeder.js
+│  │  ├─ xxxxxxxxxxxxxx-data2-seeder.js
+│  │  ├─ xxxxxxxxxxxxxx-data3-seeder.js
+```
 
+### Models
+All database table models resides in the <span style="color: #ff6961">src/database/models</span>
+
+```
+src/
+├─ database/
+│  ├─ models/
+│  │  ├─ model1.js
+│  │  ├─ model2.js
+│  │  ├─ model3.js
+```
+
+### Reset
+
+To reset database tables and data
 ```
 npm run db:reset
 ```
 
-To run linter
-```
-npm run lint
-```
 
 ## Reference Links
 [Sequelize](https://sequelize.org/docs/v6/)
