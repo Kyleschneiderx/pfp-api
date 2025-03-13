@@ -154,7 +154,7 @@ export default class EmailService {
             });
 
             try {
-                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.FEEDBACK, {
+                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.CONTACT, {
                     user_data: {
                         em: crypto.SHA256(data.email).toString(),
                     },
