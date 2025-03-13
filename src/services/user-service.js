@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize';
 import * as dateFns from 'date-fns';
 import * as dateFnsUtc from '@date-fns/utc';
+import crypto from 'crypto-js';
 import {
     USER_ACCOUNT_TYPE_ID,
     ACTIVE_STATUS_ID,
