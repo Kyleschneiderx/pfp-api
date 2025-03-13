@@ -25,11 +25,12 @@ import {
     EXPIRED_PURCHASE_STATUS,
     CANCELLED_PURCHASE_STATUS,
     SUBSCRIPTION_PRODUCTS,
+    CONVERSION_API_EVENTS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class UserService {
-    constructor({ logger, database, password, storage, file, helper, notificationService }) {
+    constructor({ logger, database, password, storage, file, helper, notificationService, facebookPixel }) {
         this.database = database;
         this.logger = logger;
         this.password = password;
@@ -37,6 +38,7 @@ export default class UserService {
         this.file = file;
         this.helper = helper;
         this.notificationService = notificationService;
+        this.facebookPixel = facebookPixel;
     }
 
     /**
@@ -400,6 +402,17 @@ export default class UserService {
 
                 return user;
             });
+
+            try {
+                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.SIGNUP, {
+                    event_id: crypto.SHA256(`${userInfo.id}|${CONVERSION_API_EVENTS.SIGNUP}|`).toString(),
+                    user_data: {
+                        em: crypto.SHA256(userInfo.user_profile.email).toString(),
+                    },
+                });
+            } catch (error) {
+                this.logger.error('Failed to send event to conversion api.', error);
+            }
 
             await this.notificationService.removeUserNotifications(userInfo.id);
 

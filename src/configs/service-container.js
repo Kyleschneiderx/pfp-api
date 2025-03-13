@@ -5,6 +5,7 @@ import appleAppStore, { appleAppStoreServerLib } from '../common/apple-app-store
 import googleAuthClient, { googleApis } from '../common/googleapis/index.js';
 import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import revenuecat from '../common/revenuecat/index.js';
+import facebookPixel from '../common/facebook-business/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
 import * as utils from '../utils/index.js';
@@ -42,6 +43,7 @@ const serviceContainer = {
     helper: utils.Helper,
     scheduler: new utils.Scheduler({ logger: logger }),
     revenuecat: revenuecat,
+    facebookPixel: facebookPixel,
 };
 
 Object.assign(serviceContainer, {
@@ -52,6 +54,7 @@ Object.assign(serviceContainer, {
         smtp: serviceContainer.smtp,
         file: serviceContainer.file,
         helper: serviceContainer.helper,
+        facebookPixel: serviceContainer.facebookPixel,
     }),
     notificationService: new services.NotificationService({
         logger: serviceContainer.logger,
@@ -71,6 +74,7 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         notificationService: serviceContainer.notificationService,
         inAppPurchase: serviceContainer.inAppPurchase,
+        facebookPixel: serviceContainer.facebookPixel,
     }),
     authService: new services.AuthService({
         database: serviceContainer.database,
@@ -120,6 +124,7 @@ Object.assign(serviceContainer, {
         database: serviceContainer.database,
         inAppPurchase: serviceContainer.inAppPurchase,
         revenuecat: serviceContainer.revenuecat,
+        facebookPixel: serviceContainer.facebookPixel,
     }),
 });
 

@@ -1,5 +1,6 @@
 import * as dateFnsUtc from '@date-fns/utc';
 import { Sequelize } from 'sequelize';
+import crypto from 'crypto-js';
 import {
     PREMIUM_USER_TYPE_ID,
     FREE_USER_TYPE_ID,
@@ -12,16 +13,18 @@ import {
     BILLING_RETRY_PURCHASE_STATUS,
     INCOMPLETE_PURCHASE_STATUS,
     ACTIVE_PURCHASE_STATUS,
+    CONVERSION_API_EVENTS,
 } from '../constants/index.js';
 import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REVENUECAT_CANCELLATION_REASON } from '../common/revenuecat/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
-    constructor({ logger, database, inAppPurchase, revenuecat }) {
+    constructor({ logger, database, inAppPurchase, revenuecat, facebookPixel }) {
         this.database = database;
         this.logger = logger;
         this.inAppPurchase = inAppPurchase;
         this.revenuecat = revenuecat;
+        this.facebookPixel = facebookPixel;
     }
 
     /**
@@ -779,6 +782,8 @@ export default class MiscellaneousService {
                 throw new exceptions.InternalServerError('Reference does not exist.');
             }
 
+            const user = await this.database.models.Users.findOne({ where: { id: appUserId } });
+
             const updateUserSubscriptionPayload = {
                 reference: event.transaction_id,
                 package_id: event.product_id.includes(':') ? event.product_id.split(':')[0] : event.product_id,
@@ -813,6 +818,25 @@ export default class MiscellaneousService {
 
             if ([EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS].includes(updateUserSubscriptionPayload.status)) {
                 await this.database.models.Users.update({ type_id: FREE_USER_TYPE_ID }, { where: { id: userSubscription.user_id } });
+            }
+
+            const conversionApiEvent = CONVERSION_API_EVENTS[event.type?.toUpperCase()];
+            if (conversionApiEvent) {
+                try {
+                    this.facebookPixel.createEvent(conversionApiEvent, {
+                        event_id: crypto.SHA256(`${userSubscription.user_id}|${conversionApiEvent ?? 'Unknown'}|${event.transaction_id}`).toString(),
+                        user_data: {
+                            em: crypto.SHA256(user.email).toString(),
+                        },
+                        custom_data: {
+                            currency: event.currency,
+                            value: event.price_in_purchased_currency,
+                            transaction_id: event.transaction_id,
+                        },
+                    });
+                } catch (error) {
+                    this.logger.error('Failed to send event to conversion api.', error);
+                }
             }
         } catch (error) {
             this.logger.error('Failed to process RevenueCat webhook.', error);
