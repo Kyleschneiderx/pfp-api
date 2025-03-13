@@ -408,7 +408,7 @@ export default class UserService {
                 this.facebookPixel.createEvent(CONVERSION_API_EVENTS.SIGNUP, {
                     event_id: crypto.SHA256(`${userInfo.id}|${CONVERSION_API_EVENTS.SIGNUP}|`).toString(),
                     user_data: {
-                        em: crypto.SHA256(userInfo.user_profile.email).toString(),
+                        em: crypto.SHA256(userInfo.email).toString(),
                     },
                 });
             } catch (error) {
