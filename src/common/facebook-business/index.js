@@ -3,8 +3,6 @@ import config from '../../configs/facebook-business.js';
 
 export const facebookAdsApi = facebookBusinessSdk.FacebookAdsApi.init(config.accessToken);
 
-facebookAdsApi.setDebug(true);
-
 export const facebookBusiness = facebookBusinessSdk;
 
 const eventTime = () => Math.floor(Date.now() / 1000);
