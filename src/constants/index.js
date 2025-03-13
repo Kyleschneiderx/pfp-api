@@ -212,3 +212,13 @@ export const PAGES_TO_TRACK = {
     PAYWALL: 'paywallScreen',
     HOME: 'homepageScreen',
 };
+
+export const CONVERSION_API_EVENTS = {
+    CONTENT_VIEW: 'PageView',
+    INITIAL_PURCHASE: 'Purchase',
+    RENEWAL: 'RenewSubscription',
+    EXPIRATION: 'ExpireSubscription',
+    SIGNUP: 'CompleteRegistration',
+    CONTACT: 'Contact',
+    FEEDBACK: 'Feedback',
+};

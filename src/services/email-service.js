@@ -1,12 +1,13 @@
 import * as exceptions from '../exceptions/index.js';
-import { EMAIL_ASSETS_URL } from '../constants/index.js';
+import { CONVERSION_API_EVENTS, EMAIL_ASSETS_URL } from '../constants/index.js';
 
 export default class EmailService {
-    constructor({ logger, smtp, file, helper }) {
+    constructor({ logger, smtp, file, helper, facebookPixel }) {
         this.logger = logger;
         this.smtp = smtp;
         this.file = file;
         this.helper = helper;
+        this.facebookPixel = facebookPixel;
     }
 
     /**
@@ -144,12 +145,20 @@ export default class EmailService {
         }
 
         try {
-            return await this.smtp.send({
+            const emailResponse = await this.smtp.send({
                 from: `${process.env.SMTP_SENDER_NAME} <${process.env.SMTP_SENDER_EMAIL}>`,
                 to: data.receiver,
                 subject: `[${process.env.APP_NAME}] Contact Support`,
                 html: template,
             });
+
+            try {
+                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.FEEDBACK, {});
+            } catch (error) {
+                this.logger.error('Failed to send event to conversion api.', error);
+            }
+
+            return emailResponse;
         } catch (error) {
             this.logger.error('Failed to send contact support email.', error);
 
@@ -197,12 +206,20 @@ export default class EmailService {
         }
 
         try {
-            return await this.smtp.send({
+            const emailResponse = await this.smtp.send({
                 from: `${process.env.SMTP_SENDER_NAME} <${process.env.SMTP_SENDER_EMAIL}>`,
                 to: data.receiver,
                 subject: `[${process.env.APP_NAME}] App Feedback`,
                 html: template,
             });
+
+            try {
+                this.facebookPixel.createEvent(CONVERSION_API_EVENTS.FEEDBACK, {});
+            } catch (error) {
+                this.logger.error('Failed to send event to conversion api.', error);
+            }
+
+            return emailResponse;
         } catch (error) {
             this.logger.error('Failed to send feedback email.', error);
 
