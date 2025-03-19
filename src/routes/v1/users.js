@@ -95,6 +95,12 @@ export default ({
         userController.handleChangePasswordRoute.bind(userController),
     );
 
+    router.get(
+        '/:user_id/streak',
+        [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
+        userController.handleGetUserStreakRoute.bind(userController),
+    );
+
     router.use(verifyPremiumUser);
 
     router.get(

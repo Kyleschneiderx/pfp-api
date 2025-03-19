@@ -18,12 +18,13 @@ import {
 import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanService {
-    constructor({ logger, database, helper, storage, notificationService }) {
+    constructor({ logger, database, helper, storage, notificationService, streakService }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
         this.storage = storage;
         this.notificationService = notificationService;
+        this.streakService = streakService;
     }
 
     /**
@@ -1154,6 +1155,14 @@ export default class PfPlanService {
             });
 
             userPfPlanProgress.dataValues.is_skip = data.isSkip;
+
+            if (userPfPlanFulfilled.length) {
+                this.streakService.createStreak({
+                    userId: data.userId,
+                    isPfPlanDay: true,
+                    streakDate: new dateFnsUtc.UTCDate(),
+                });
+            }
 
             return userPfPlanProgress;
         } catch (error) {
