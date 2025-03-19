@@ -62,6 +62,11 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         pushNotification: serviceContainer.pushNotification,
     }),
+    streakService: new services.StreakService({
+        logger: serviceContainer.logger,
+        helper: serviceContainer.helper,
+        database: serviceContainer.database,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -111,6 +116,7 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
         notificationService: serviceContainer.notificationService,
+        streakService: serviceContainer.streakService,
     }),
     educationService: new services.EducationService({
         logger: serviceContainer.logger,
@@ -146,6 +152,7 @@ Object.assign(serviceContainer, {
         notificationService: serviceContainer.notificationService,
         emailService: serviceContainer.emailService,
         loggerService: serviceContainer.loggerService,
+        streakService: serviceContainer.streakService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,

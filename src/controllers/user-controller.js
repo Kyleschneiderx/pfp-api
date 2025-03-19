@@ -19,6 +19,7 @@ export default class UserController {
         notificationService,
         emailService,
         loggerService,
+        streakService,
     }) {
         this.userService = userService;
         this.verificationService = verificationService;
@@ -28,6 +29,7 @@ export default class UserController {
         this.notificationService = notificationService;
         this.emailService = emailService;
         this.loggerService = loggerService;
+        this.streakService = streakService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -293,5 +295,11 @@ export default class UserController {
         const user = await this.userService.getUserDetails(req.auth.user_id);
 
         return res.json(user);
+    }
+
+    async handleGetUserStreakRoute(req, res) {
+        const streak = await this.streakService.getUserStreak(req.auth.user_id);
+
+        return res.json(streak);
     }
 }
