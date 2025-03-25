@@ -179,6 +179,7 @@ export default class EmailService {
      * @param {string} data.receiver.address Email receiver address
      * @param {string} data.receiver.name Email receiver name
      * @param {string} data.email Customer email
+     * @param {string} data.name Customer name
      * @param {string} data.rating App rating
      * @param {string} data.ratingReason App rating reason
      * @param {string} data.usefulFeature Useful feature
@@ -192,6 +193,8 @@ export default class EmailService {
         });
         if (template) {
             template = this.helper.replacer(template, {
+                name: data.name ?? 'N/A',
+                email: data.email ?? 'N/A',
                 rating: data.rating ?? 0,
                 stars: Array.from(Array(10).keys())
                     .map((_, index) => {
