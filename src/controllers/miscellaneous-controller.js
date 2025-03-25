@@ -75,6 +75,7 @@ export default class MiscellaneousController {
                 address: CONTACT_SUPPORT_EMAIL,
             },
             email: user.email,
+            name: user.user_profile.name,
             rating: req.body.rating ?? 0,
             ratingReason: req.body.rating_reason ?? '',
             usefulFeature: req.body.useful_feature ?? '',
