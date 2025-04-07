@@ -1,3 +1,5 @@
+import { CONTENT_CATEGORIES_TYPE } from '../../constants/index.js';
+
 export default (sequelize, DataTypes) => {
     const model = sequelize.define(
         'Educations',
@@ -65,15 +67,85 @@ export default (sequelize, DataTypes) => {
                     using: 'BTREE',
                     fields: [{ name: 'status_id' }],
                 },
+                {
+                    name: 'educations_category_id',
+                    using: 'BTREE',
+                    fields: [{ name: 'category_id' }],
+                },
             ],
+            scopes: {
+                withStatus: () => ({
+                    include: [
+                        {
+                            model: sequelize.models.Statuses,
+                            as: 'status',
+                            attributes: ['id', 'value'],
+                            where: {},
+                        },
+                    ],
+                }),
+                withCategories: () => ({
+                    include: [
+                        {
+                            model: sequelize.models.SurveyQuestionGroups,
+                            as: 'categories',
+                            attributes: ['id', ['description', 'value']],
+                            through: {
+                                as: 'content_categories',
+                                attributes: [],
+                            },
+                            required: false,
+                            where: {},
+                        },
+                    ],
+                }),
+                defaultOrder: (custom) => {
+                    if (custom) {
+                        return {
+                            order: custom,
+                        };
+                    }
+
+                    return {
+                        order: [
+                            ['id', 'DESC'],
+                            [
+                                {
+                                    model: sequelize.models.SurveyQuestionGroups,
+                                    as: 'categories',
+                                },
+                                {
+                                    model: sequelize.models.ContentCategories,
+                                    as: 'content_categories',
+                                },
+                                'id',
+                                'ASC',
+                            ],
+                        ],
+                    };
+                },
+            },
         },
     );
     model.associate = () => {
-        const { Educations, Statuses, UserFavoriteEducations } = sequelize.models;
+        const { Educations, Statuses, UserFavoriteEducations, ContentCategories, SurveyQuestionGroups } = sequelize.models;
 
         Educations.belongsTo(Statuses, { as: 'status', foreignKey: 'status_id' });
 
         Educations.hasMany(UserFavoriteEducations, { as: 'user_favorite_educations', foreignKey: 'education_id' });
+
+        Educations.hasMany(ContentCategories, { as: 'content_categories', foreignKey: 'content_id' });
+
+        Educations.belongsToMany(SurveyQuestionGroups, {
+            as: 'categories',
+            through: {
+                model: ContentCategories,
+                as: 'content_categories',
+                scope: { content_type: CONTENT_CATEGORIES_TYPE.EDUCATION },
+            },
+            foreignKey: 'content_id',
+            otherKey: 'category_id',
+        });
     };
     return model;
 };

@@ -11,7 +11,7 @@ export default ({ selectionService, isUpdate = false, isDelete = false }) => {
                 .customSanitizer((value) => Number(value))
                 .custom(async (value) => {
                     if (!(await selectionService.isExerciseCategoryExistById(value))) {
-                        throw new Error('User does not exist.');
+                        throw new Error('Category does not exist.');
                     }
                     return true;
                 }),

@@ -21,6 +21,11 @@ export default (sequelize, DataTypes) => {
             indexes: [],
         },
     );
+    model.associate = () => {
+        const { SurveyQuestionGroups, ContentCategories } = sequelize.models;
+
+        SurveyQuestionGroups.hasMany(ContentCategories, { as: 'content_categories', foreignKey: 'category_id' });
+    };
 
     return model;
 };

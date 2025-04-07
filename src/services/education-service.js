@@ -11,6 +11,7 @@ import {
     NOTIFICATIONS,
     DRAFT_EDUCATION_STATUS_ID,
     DRAFT_PF_PLAN_STATUS_ID,
+    CONTENT_CATEGORIES_TYPE,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -86,6 +87,7 @@ export default class EducationService {
      * Create education
      * @param {object} data
      * @param {string} data.title Education title
+     * @param {number[]} data.categoryId Survey question group id
      * @param {string} data.description Education description
      * @param {string} data.content Education content
      * @param {number} data.statusId Education status id
@@ -117,6 +119,10 @@ export default class EducationService {
                 photo: photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : null,
                 status_id: data.statusId,
             });
+
+            await this.database.models.ContentCategories.bulkCreate(
+                data.categoryId.map((id) => ({ category_id: id, content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION })),
+            );
 
             education.media_upload = this.helper.generateProtectedUrl(
                 education.media_upload,
@@ -157,6 +163,7 @@ export default class EducationService {
      * @param {object} data
      * @param {number} data.id Education id
      * @param {string=} data.title Education title
+     * @param {number[]=} data.categoryId Survey question group id
      * @param {string=} data.description Education description
      * @param {string=} data.content Education content
      * @param {object=} data.photo Education photo
@@ -206,6 +213,17 @@ export default class EducationService {
             await education.save();
 
             await education.reload();
+
+            if (data.categoryId.length > 0) {
+                await this.database.models.ContentCategories.destroy({
+                    force: true,
+                    where: { content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION },
+                });
+
+                await this.database.models.ContentCategories.bulkCreate(
+                    data.categoryId.map((id) => ({ category_id: id, content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION })),
+                );
+            }
 
             education.photo = this.helper.generateProtectedUrl(education.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
                 expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
@@ -281,12 +299,6 @@ export default class EducationService {
                 exclude: ['deleted_at', 'status_id', 'content'],
             },
             include: [
-                {
-                    model: this.database.models.Statuses,
-                    as: 'status',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
                 ...(filter?.favorite?.userId
                     ? [
                           {
@@ -302,7 +314,7 @@ export default class EducationService {
                       ]
                     : []),
             ],
-            order: [['id', 'DESC']],
+            order: [],
             where: {
                 ...(filter.id && { id: filter.id }),
                 ...(filter.title && { title: { [Sequelize.Op.like]: `%${filter.title}%` } }),
@@ -310,21 +322,27 @@ export default class EducationService {
             },
         };
 
-        if (filter.sort !== undefined) {
-            options.order = this.helper.parseSortList(
-                filter.sort,
-                {
-                    id: undefined,
-                    title: undefined,
-                },
-                this.database,
-            );
-        }
-
         let count;
         let rows;
         try {
-            ({ count, rows } = await this.database.models.Educations.findAndCountAll(options));
+            ({ count, rows } = await this.database.models.Educations.scope([
+                'withStatus',
+                'withCategories',
+                {
+                    method: [
+                        'defaultOrder',
+                        filter.sort &&
+                            this.helper.parseSortList(
+                                filter.sort,
+                                {
+                                    id: undefined,
+                                    title: undefined,
+                                },
+                                this.database,
+                            ),
+                    ],
+                },
+            ]).findAndCountAll(options));
         } catch (error) {
             this.logger.error(error.message, error);
 
@@ -366,7 +384,7 @@ export default class EducationService {
      */
     async getEducationDetails(id, filter) {
         try {
-            const education = await this.database.models.Educations.findOne({
+            const education = await this.database.models.Educations.scope(['withStatus', 'withCategories', 'defaultOrder']).findOne({
                 nest: true,
                 subQuery: false,
                 attributes: {
@@ -378,12 +396,6 @@ export default class EducationService {
                     exclude: ['deleted_at', 'status_id'],
                 },
                 include: [
-                    {
-                        model: this.database.models.Statuses,
-                        as: 'status',
-                        attributes: ['id', 'value'],
-                        where: {},
-                    },
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [
                               {
@@ -398,7 +410,6 @@ export default class EducationService {
                           ]
                         : []),
                 ],
-                order: [['id', 'DESC']],
                 where: {
                     id: id,
                     ...(filter.statusId && { status_id: filter.statusId }),

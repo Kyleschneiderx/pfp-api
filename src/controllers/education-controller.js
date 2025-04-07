@@ -19,6 +19,7 @@ export default class EducationController {
     async handleCreateEducationRoute(req, res) {
         const education = await this.educationService.createEducation({
             title: req.body.title,
+            categoryId: req.body.category_id,
             description: req.body.description,
             content: req.body.content,
             mediaUrl: req.body.media_url,
@@ -68,6 +69,7 @@ export default class EducationController {
         const education = await this.educationService.updateEducation({
             id: req.params.id,
             title: req.body.title,
+            categoryId: req.body.category_id,
             description: req.body.description,
             content: req.body.content,
             mediaUrl: req.body.media_url,
