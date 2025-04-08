@@ -14,6 +14,7 @@ import {
     PF_PLAN_PROGRESS_RETENTION_PERION_IN_DAYS,
     DATE_FORMAT,
     TIME_FORMAT,
+    CONTENT_CATEGORIES_TYPE,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -170,6 +171,7 @@ export default class PfPlanService {
      * @param {object} data
      * @param {string} data.name PF plan name
      * @param {string} data.description PF plan description
+     * @param {number[]} data.categoryId Survey question group id
      * @param {string} data.content PF plan content
      * @param {number} data.statusId PF plan status id
      * @param {object} data.photo PF plan photo
@@ -209,6 +211,10 @@ export default class PfPlanService {
                 pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
                     expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
                 });
+
+                await this.database.models.ContentCategories.bulkCreate(
+                    data.categoryId.map((id) => ({ category_id: id, content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN })),
+                );
 
                 if (data.dailies) {
                     let arrangement = 0;
@@ -272,6 +278,7 @@ export default class PfPlanService {
      * @param {number} data.id PF plan id
      * @param {string=} data.name PF plan name
      * @param {string=} data.description PF plan description
+     * @param {number[]=} data.categoryId Survey question group id
      * @param {string} data.content PF plan content
      * @param {number=} data.statusId PF plan status id
      * @param {object=} data.photo PF plan photo
@@ -315,6 +322,17 @@ export default class PfPlanService {
             await pfPlan.save();
 
             await pfPlan.reload();
+
+            if (data.categoryId.length > 0) {
+                await this.database.models.ContentCategories.destroy({
+                    force: true,
+                    where: { content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN },
+                });
+
+                await this.database.models.ContentCategories.bulkCreate(
+                    data.categoryId.map((id) => ({ category_id: id, content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN })),
+                );
+            }
 
             if (storeResponse?.path !== undefined && oldPhoto) {
                 await this.storage.delete(oldPhoto.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
@@ -464,48 +482,6 @@ export default class PfPlanService {
                 ],
                 exclude: ['deleted_at', 'status_id', 'content'],
             },
-            include: [
-                ...this._defaultPfPlansRelation(),
-                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
-                    ? [
-                          {
-                              model: this.database.models.UserPfPlanProgress,
-                              as: 'user_pf_plan_progress',
-                              attributes: ['fulfilled', 'unfulfilled', 'skipped'],
-                              required: false,
-                              where: {
-                                  user_id: filter?.authenticatedUser?.user_id,
-                              },
-                              limit: 1,
-                              order: [['updated_at', 'DESC']],
-                          },
-                          {
-                              model: this.database.models.UserPfPlans,
-                              as: 'user_pf_plan',
-                              attributes: [],
-                              required: false,
-                              where: {
-                                  user_id: filter?.authenticatedUser?.user_id,
-                              },
-                          },
-                      ]
-                    : []),
-                ...(filter?.favorite
-                    ? [
-                          {
-                              model: this.database.models.UserFavoritePfPlans,
-                              as: 'user_favorite_pf_plans',
-                              attributes: [],
-                              required: true,
-                              where: {
-                                  user_id: filter.favorite.userId,
-                                  is_favorite: true,
-                              },
-                          },
-                      ]
-                    : []),
-            ],
-            order: [['id', 'DESC']],
             where: {
                 ...(filter.id && { id: filter.id }),
                 ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
@@ -513,23 +489,62 @@ export default class PfPlanService {
             },
         };
 
-        if (filter.sort !== undefined) {
-            options.order = this.helper.parseSortList(
-                filter.sort,
-                {
-                    id: undefined,
-                    name: undefined,
-                    is_premium: undefined,
-                },
-                this.database,
-            );
-        }
-
         let count;
         let rows;
 
         try {
-            ({ count, rows } = await this.database.models.PfPlans.findAndCountAll(options));
+            ({ count, rows } = await this.database.models.PfPlans.scope([
+                'withStatus',
+                'withCategories',
+                {
+                    method: [
+                        'defaultOrder',
+                        filter.sort &&
+                            this.helper.parseSortList(
+                                filter.sort,
+                                {
+                                    id: undefined,
+                                    name: undefined,
+                                    is_premium: undefined,
+                                },
+                                this.database,
+                            ),
+                    ],
+                },
+                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                    ? [
+                          {
+                              method: [
+                                  'withUserPfPlanProgress',
+                                  {
+                                      userId: filter?.authenticatedUser?.user_id,
+                                  },
+                              ],
+                          },
+                          {
+                              method: [
+                                  'withUserPfPlan',
+                                  {
+                                      userId: filter?.authenticatedUser?.user_id,
+                                  },
+                              ],
+                          },
+                      ]
+                    : []),
+                ...(filter?.favorite
+                    ? [
+                          {
+                              method: [
+                                  'withUserFavoritePfPlan',
+                                  {
+                                      userId: filter.favorite.userId,
+                                      isFavorite: true,
+                                  },
+                              ],
+                          },
+                      ]
+                    : []),
+            ]).findAndCountAll(options));
         } catch (error) {
             this.logger.error(error.message, error);
 
@@ -579,7 +594,7 @@ export default class PfPlanService {
      */
     async getPfPlanDetails(id, filter) {
         try {
-            const pfPlan = await this.database.models.PfPlans.findOne({
+            const pfPlan = await this.database.models.PfPlans.scope(['withStatus', 'withCategories']).findOne({
                 nest: true,
                 subQuery: false,
                 attributes: {
@@ -594,7 +609,6 @@ export default class PfPlanService {
                     exclude: ['deleted_at', 'status_id'],
                 },
                 include: [
-                    ...this._defaultPfPlansRelation(),
                     {
                         model: this.database.models.PfPlanDailies,
                         as: 'pf_plan_dailies',

@@ -19,6 +19,19 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
             return true;
         }),
     body('description').trim().exists({ value: 'falsy' }).isString().withMessage('Description should be string.'),
+    body('category_id')
+        .exists({ values: 'falsy' })
+        .withMessage('PF plan category is required.')
+        .customSanitizer((value) => JSON.parse(value))
+        .isArray()
+        .withMessage('PF plan category should be array.')
+        .isArray({ min: 1 })
+        .withMessage('PF plan category is required.')
+        .custom(async (value) => {
+            if (!(await selectionService.isContentCategoryExistById(value))) {
+                throw new Error('PF plan category does not exist.');
+            }
+        }),
     body('content').trim().exists({ value: 'falsy' }).isString().withMessage('Content should be string.'),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
