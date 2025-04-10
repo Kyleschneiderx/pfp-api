@@ -306,7 +306,7 @@ export default class MiscellaneousService {
 
             const [userPfPlan, userSurveyScoresSummary] = await Promise.all([
                 this.database.models.UserPfPlans.findOne({ where: { user_id: data.userId } }),
-                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: data.userId, order: [['scores', 'DESC']] } }),
+                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: data.userId }, order: [['score', 'DESC']] }),
             ]);
 
             return await this.database.transaction(async (transaction) => {
