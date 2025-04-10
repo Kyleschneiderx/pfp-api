@@ -220,7 +220,7 @@ export default class MiscellaneousService {
                 ]).findOne({
                     nest: true,
                     subQuery: false,
-                    where: { is_custom: false, status_id: PUBLISHED_PF_PLAN_STATUS_ID },
+                    where: { is_custom: true, status_id: PUBLISHED_PF_PLAN_STATUS_ID },
                 });
 
                 if (recommendPfPlan) {
