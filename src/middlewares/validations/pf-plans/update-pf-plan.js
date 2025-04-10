@@ -35,6 +35,19 @@ export default ({ exerciseService, educationService, pfPlanService, selectionSer
                 throw new Error('PF plan category does not exist.');
             }
         }),
+    body('is_custom')
+        .optional()
+        .notEmpty()
+        .customSanitizer((value) => {
+            try {
+                value = JSON.parse(value);
+            } catch (error) {
+                /** empty */
+            }
+            return value;
+        })
+        .isBoolean()
+        .withMessage('PF plan custom state should be boolean.'),
     body('content').trim().optional().notEmpty().isString().withMessage('Content should be string.'),
     commonValidation
         .statusIdValidation({

@@ -32,6 +32,19 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
                 throw new Error('PF plan category does not exist.');
             }
         }),
+    body('is_custom')
+        .exists({ values: 'falsy' })
+        .withMessage('PF plan custom state is required.')
+        .customSanitizer((value) => {
+            try {
+                value = JSON.parse(value);
+            } catch (error) {
+                /** empty */
+            }
+            return value;
+        })
+        .isBoolean()
+        .withMessage('PF plan custom state should be boolean.'),
     body('content').trim().exists({ value: 'falsy' }).isString().withMessage('Content should be string.'),
     commonValidation.statusIdValidation({ selectionService, allowedStatuses: [DRAFT_PF_PLAN_STATUS_ID, PUBLISHED_PF_PLAN_STATUS_ID] }),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),

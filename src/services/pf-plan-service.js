@@ -172,6 +172,7 @@ export default class PfPlanService {
      * @param {string} data.name PF plan name
      * @param {string} data.description PF plan description
      * @param {number[]} data.categoryId Survey question group id
+     * @param {boolean} data.isCustom PF plan custom state
      * @param {string} data.content PF plan content
      * @param {number} data.statusId PF plan status id
      * @param {object} data.photo PF plan photo
@@ -203,6 +204,7 @@ export default class PfPlanService {
                         content: data.content,
                         photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
                         is_premium: true,
+                        is_custom: data.isCustom,
                         status_id: data.statusId,
                     },
                     { transaction: transaction },
@@ -279,6 +281,7 @@ export default class PfPlanService {
      * @param {string=} data.name PF plan name
      * @param {string=} data.description PF plan description
      * @param {number[]=} data.categoryId Survey question group id
+     * @param {boolean} data.isCustom PF plan custom state
      * @param {string} data.content PF plan content
      * @param {number=} data.statusId PF plan status id
      * @param {object=} data.photo PF plan photo
@@ -318,6 +321,8 @@ export default class PfPlanService {
             pfPlan.photo = storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : undefined;
 
             pfPlan.status_id = data.statusId;
+
+            pfPlan.is_custom = data.isCustom;
 
             await pfPlan.save();
 

@@ -24,6 +24,9 @@ export default (sequelize, DataTypes) => {
             is_premium: {
                 type: DataTypes.BOOLEAN,
             },
+            is_custom: {
+                type: DataTypes.BOOLEAN,
+            },
             status_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see statuses table',
@@ -83,18 +86,18 @@ export default (sequelize, DataTypes) => {
                         },
                     ],
                 }),
-                withCategories: () => ({
+                withCategories: (options) => ({
                     include: [
                         {
                             model: sequelize.models.SurveyQuestionGroups,
                             as: 'categories',
-                            attributes: ['id', ['description', 'value']],
+                            attributes: options?.attributes ?? ['id', ['description', 'value']],
                             through: {
                                 as: 'content_categories',
                                 attributes: [],
                             },
                             required: false,
-                            where: {},
+                            where: options?.where ?? {},
                         },
                     ],
                 }),
