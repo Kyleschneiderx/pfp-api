@@ -200,9 +200,9 @@ export default class MiscellaneousService {
                 ),
             );
 
-            if (!userPfPlan) {
-                const highestScore = Math.max(...Object.values(userAnswerByGroupScores));
+            const highestScore = Math.max(...Object.values(userAnswerByGroupScores));
 
+            if (!userPfPlan && highestScore >= 0) {
                 const recommendPfPlan = await this.database.models.PfPlans.scope([
                     {
                         method: [
