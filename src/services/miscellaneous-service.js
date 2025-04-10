@@ -346,7 +346,7 @@ export default class MiscellaneousService {
                 });
 
                 const highestScore = Math.max(...Object.values(groupScoreMap));
-
+                console.log('highestScore', highestScore);
                 if (!userPfPlan && highestScore >= 0) {
                     const recommendPfPlan = await this.database.models.PfPlans.scope([
                         {
@@ -381,11 +381,14 @@ export default class MiscellaneousService {
 
                         startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
 
-                        await this.database.models.UserPfPlans.create({
-                            user_id: data.userId,
-                            pf_plan_id: recommendPfPlan.id,
-                            start_at: startAt,
-                        });
+                        await this.database.models.UserPfPlans.create(
+                            {
+                                user_id: data.userId,
+                                pf_plan_id: recommendPfPlan.id,
+                                start_at: startAt,
+                            },
+                            { transaction: transaction },
+                        );
                     }
                 }
 
