@@ -346,8 +346,8 @@ export default class MiscellaneousService {
                 });
 
                 const highestScore = Math.max(...Object.values(groupScoreMap));
-                console.log('highestScore', highestScore);
-                if (!userPfPlan && highestScore >= 0) {
+
+                if (!userPfPlan && highestScore > 0) {
                     const recommendPfPlan = await this.database.models.PfPlans.scope([
                         {
                             method: [
