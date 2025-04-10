@@ -20,6 +20,20 @@ export default ({ educationService, selectionService, file, pfPlanService }) => 
 
             return true;
         }),
+    body('category_id')
+        .optional()
+        .notEmpty()
+        .withMessage('Education category is required.')
+        .customSanitizer((value) => JSON.parse(value))
+        .isArray()
+        .withMessage('Education category should be array.')
+        .isArray({ min: 1 })
+        .withMessage('Education category is required.')
+        .custom(async (value) => {
+            if (!(await selectionService.isContentCategoryExistById(value))) {
+                throw new Error('Education category does not exist.');
+            }
+        }),
     body('description')
         .trim()
         .optional()

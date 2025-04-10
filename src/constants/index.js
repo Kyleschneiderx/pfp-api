@@ -222,3 +222,8 @@ export const CONVERSION_API_EVENTS = {
     CONTACT: 'Contact',
     FEEDBACK: 'Feedback',
 };
+
+export const CONTENT_CATEGORIES_TYPE = {
+    EDUCATION: 'educations',
+    PF_PLAN: 'pf_plans',
+};

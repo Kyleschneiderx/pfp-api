@@ -14,6 +14,7 @@ import {
     INCOMPLETE_PURCHASE_STATUS,
     ACTIVE_PURCHASE_STATUS,
     CONVERSION_API_EVENTS,
+    PUBLISHED_PF_PLAN_STATUS_ID,
 } from '../constants/index.js';
 import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REVENUECAT_CANCELLATION_REASON } from '../common/revenuecat/index.js';
 import * as exceptions from '../exceptions/index.js';
@@ -112,15 +113,23 @@ export default class MiscellaneousService {
      * @returns {Promise<void>}
      */
     async updateUserSurveyAnswer(userId, answers) {
+        const dbTransaction = await this.database.transaction();
         try {
-            const [surveyQuestionGroupDetailList, surveyQuestions, surveyQuestionAnswerScores, recordedAnswersResult, recordedAnswerByGroupResult] =
-                await Promise.all([
-                    this.database.models.SurveyQuestionGroups.findAll({}),
-                    this.database.models.SurveyQuestions.findAll({}),
-                    this.database.models.SurveyQuestionAnswerScores.findAll({}),
-                    this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
-                    this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId } }),
-                ]);
+            const [
+                surveyQuestionGroupDetailList,
+                surveyQuestions,
+                surveyQuestionAnswerScores,
+                recordedAnswersResult,
+                recordedAnswerByGroupResult,
+                userPfPlan,
+            ] = await Promise.all([
+                this.database.models.SurveyQuestionGroups.findAll({}),
+                this.database.models.SurveyQuestions.findAll({}),
+                this.database.models.SurveyQuestionAnswerScores.findAll({}),
+                this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
+                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId }, order: [['score', 'DESC']] }),
+                this.database.models.UserPfPlans.findOne({ where: { user_id: userId } }),
+            ]);
 
             const surveyQuestionGroupDetails = {};
 
@@ -152,63 +161,101 @@ export default class MiscellaneousService {
                 recordedAnswerByGroupScores[item.question_group_id] = item;
             });
 
-            return await this.database.transaction(async (transaction) => {
-                let userTotalScore = 0;
+            let userTotalScore = 0;
 
-                const userAnswerByGroupScores = {};
+            let userAnswerByGroupScores = {};
 
-                await Promise.all(
-                    answers.map(async (answer) => {
-                        answer.if_yes_how_much_bother = answer.if_yes_how_much_bother?.toLowerCase();
+            await Promise.all(
+                answers.map(async (answer) => {
+                    answer.if_yes_how_much_bother = answer.if_yes_how_much_bother?.toLowerCase();
 
-                        const answerScore = answer.yes_no === 'no' ? 0 : (answerScoresLegend[answer.if_yes_how_much_bother.replace(/\s/g, '_')] ?? 0);
+                    const answerScore = answer.yes_no === 'no' ? 0 : (answerScoresLegend[answer.if_yes_how_much_bother.replace(/\s/g, '_')] ?? 0);
 
-                        userTotalScore += answerScore;
+                    userTotalScore += answerScore;
 
-                        userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] =
-                            (userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] ?? 0) + answerScore;
+                    userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] =
+                        (userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] ?? 0) + answerScore;
 
-                        return this.database.models.UserSurveyQuestionAnswers.upsert(
-                            {
-                                id: recordedAnswers[answer.question_id]?.id,
-                                user_id: userId,
-                                question_id: answer.question_id,
-                                yes_no: answer.yes_no,
-                                if_yes_how_much_bother: answer.yes_no === 'no' ? '' : answer.if_yes_how_much_bother,
-                                score: answerScore,
-                            },
-                            {
-                                transaction: transaction,
-                            },
-                        );
-                    }),
-                );
+                    return this.database.models.UserSurveyQuestionAnswers.upsert({
+                        id: recordedAnswers[answer.question_id]?.id,
+                        user_id: userId,
+                        question_id: answer.question_id,
+                        yes_no: answer.yes_no,
+                        if_yes_how_much_bother: answer.yes_no === 'no' ? '' : answer.if_yes_how_much_bother,
+                        score: answerScore,
+                    });
+                }),
+            );
 
-                await Promise.all(
-                    Object.keys(userAnswerByGroupScores).map(async (group) =>
-                        this.database.models.UserSurveyQuestionAnswerScores.upsert(
-                            {
-                                id: recordedAnswerByGroupScores[group]?.id,
-                                user_id: userId,
-                                question_group_id: group,
-                                score: userAnswerByGroupScores[group],
-                            },
-                            {
-                                transaction: transaction,
-                            },
-                        ),
-                    ),
-                );
+            userAnswerByGroupScores = Object.fromEntries(Object.entries(userAnswerByGroupScores).sort(([, a], [, b]) => b - a));
 
-                return {
-                    total: userTotalScore,
-                    groups: Object.keys(userAnswerByGroupScores).map((group) => ({
-                        group: surveyQuestionGroupDetails[group],
+            await Promise.all(
+                Object.keys(userAnswerByGroupScores).map(async (group) =>
+                    this.database.models.UserSurveyQuestionAnswerScores.upsert({
+                        id: recordedAnswerByGroupScores[group]?.id,
+                        user_id: userId,
+                        question_group_id: group,
                         score: userAnswerByGroupScores[group],
-                    })),
-                };
-            });
+                    }),
+                ),
+            );
+
+            if (!userPfPlan) {
+                const highestScore = Math.max(...Object.values(userAnswerByGroupScores));
+
+                const recommendPfPlan = await this.database.models.PfPlans.scope([
+                    {
+                        method: [
+                            'withCategories',
+                            {
+                                where: {
+                                    id: Object.entries(userAnswerByGroupScores)
+                                        .filter(([, score]) => score === highestScore)
+                                        .map(([key]) => key),
+                                },
+                            },
+                        ],
+                    },
+                    { method: ['defaultOrder', this.database.literal(`RAND()`)] },
+                ]).findOne({
+                    nest: true,
+                    subQuery: false,
+                    where: { is_custom: false, status_id: PUBLISHED_PF_PLAN_STATUS_ID },
+                });
+
+                if (recommendPfPlan) {
+                    const dateToday = new dateFnsUtc.UTCDate();
+
+                    let startAt = dateToday;
+
+                    const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
+                        where: { user_id: userId, pf_plan_id: recommendPfPlan.id },
+                        order: [['id', 'DESC']],
+                        paranoid: false,
+                    });
+
+                    startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
+
+                    await this.database.models.UserPfPlans.create({
+                        user_id: userId,
+                        pf_plan_id: recommendPfPlan.id,
+                        start_at: startAt,
+                    });
+                }
+            }
+
+            await dbTransaction.commit();
+
+            return {
+                total: userTotalScore,
+                groups: Object.keys(userAnswerByGroupScores).map((group) => ({
+                    group: surveyQuestionGroupDetails[group],
+                    score: userAnswerByGroupScores[group],
+                })),
+            };
         } catch (error) {
+            await dbTransaction.rollback();
+
             this.logger.error('Failed to answer survey', error);
 
             throw new exceptions.InternalServerError('Failed to answer survey', error);
@@ -803,14 +850,15 @@ export default class MiscellaneousService {
             if (![REVENUECAT_WEBHOOK_EVENTS.RENEWAL, REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE].includes(event.type)) {
                 updateUserSubscriptionPayload.cancel_at = new dateFnsUtc.UTCDate();
                 updateUserSubscriptionPayload.status = EXPIRED_PURCHASE_STATUS;
-                if (event.type === REVENUECAT_WEBHOOK_EVENTS.CANCELLATION) {
-                    if (
-                        [REVENUECAT_CANCELLATION_REASON.DEVELOPER_INITIATED, REVENUECAT_CANCELLATION_REASON.CUSTOMER_SUPPORT].includes(
-                            event.cancel_reason,
-                        )
-                    ) {
-                        updateUserSubscriptionPayload.status = CANCELLED_PURCHASE_STATUS;
-                    }
+            }
+
+            if (event.type === REVENUECAT_WEBHOOK_EVENTS.CANCELLATION) {
+                if (
+                    [REVENUECAT_CANCELLATION_REASON.DEVELOPER_INITIATED, REVENUECAT_CANCELLATION_REASON.CUSTOMER_SUPPORT].includes(
+                        event.cancel_reason,
+                    )
+                ) {
+                    updateUserSubscriptionPayload.status = CANCELLED_PURCHASE_STATUS;
                 }
             }
 

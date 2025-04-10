@@ -140,6 +140,32 @@ export default class SelectionService {
     }
 
     /**
+     * Get survey question groups list
+     * @param {object=} filter
+     * @param {number=} filter.id Group id
+     * @returns {Promise<SurveyQuestionGroups[]>} SurveyQuestionGroups model
+     * @throws {InternalServerError} If failed to get survey question group list
+     */
+    async getSurveyGroups(filter) {
+        try {
+            return await this.database.models.SurveyQuestionGroups.findAll({
+                nest: true,
+                attributes: {
+                    exclude: ['value'],
+                },
+                order: [['id', 'ASC']],
+                where: {
+                    ...(filter?.id && { id: filter.id }),
+                },
+            });
+        } catch (error) {
+            this.logger.error('Failed to get survey question group list', error);
+
+            throw new exceptions.InternalServerError('Failed to get survey question group list', error);
+        }
+    }
+
+    /**
      * Get overall selections
      * @param {object=} filter
      * @param {Array<string>=} filter.select Selections to return
@@ -173,8 +199,8 @@ export default class SelectionService {
             ...((filter.select?.includes('exercise_category') || filter.select?.length === 0 || filter.select === undefined) && {
                 exercise_category: await this.getExerciseCategories(filter?.exercise_category),
             }),
-            ...((filter.select?.includes('subscription_package') || filter.select?.length === 0 || filter.select === undefined) && {
-                subscription_package: await this.getSubscriptionPackages(filter?.subscription_package),
+            ...((filter.select?.includes('survey_group') || filter.select?.length === 0 || filter.select === undefined) && {
+                survey_group: await this.getSurveyGroups(filter?.survey_group),
             }),
         };
     }
@@ -330,6 +356,22 @@ export default class SelectionService {
             this.logger.error('Failed to get subscription package', error);
 
             throw new exceptions.InternalServerError('Failed to get subscription package', error);
+        }
+    }
+
+    /**
+     * Check if content category exist using id
+     * @param {number} id Content category id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to verify content category
+     */
+    async isContentCategoryExistById(id) {
+        try {
+            return Boolean(await this.database.models.SurveyQuestionGroups.count({ where: { id: id } }));
+        } catch (error) {
+            this.logger.error('Failed to verify content category', error);
+
+            throw new exceptions.InternalServerError('Failed to verify content category', error);
         }
     }
 }

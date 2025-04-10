@@ -42,3 +42,4 @@ export { default as PageVisits } from './page-visits.js';
 export { default as RevenuecatWebhooks } from './revenuecat-webhooks.js';
 export { default as UserStreaks } from './user-streaks.js';
 export { default as UserStreakLogs } from './user-streak-logs.js';
+export { default as ContentCategories } from './content-categories.js';
