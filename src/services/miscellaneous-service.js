@@ -115,21 +115,14 @@ export default class MiscellaneousService {
     async updateUserSurveyAnswer(userId, answers) {
         const dbTransaction = await this.database.transaction();
         try {
-            const [
-                surveyQuestionGroupDetailList,
-                surveyQuestions,
-                surveyQuestionAnswerScores,
-                recordedAnswersResult,
-                recordedAnswerByGroupResult,
-                userPfPlan,
-            ] = await Promise.all([
-                this.database.models.SurveyQuestionGroups.findAll({}),
-                this.database.models.SurveyQuestions.findAll({}),
-                this.database.models.SurveyQuestionAnswerScores.findAll({}),
-                this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
-                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId }, order: [['score', 'DESC']] }),
-                this.database.models.UserPfPlans.findOne({ where: { user_id: userId } }),
-            ]);
+            const [surveyQuestionGroupDetailList, surveyQuestions, surveyQuestionAnswerScores, recordedAnswersResult, recordedAnswerByGroupResult] =
+                await Promise.all([
+                    this.database.models.SurveyQuestionGroups.findAll({}),
+                    this.database.models.SurveyQuestions.findAll({}),
+                    this.database.models.SurveyQuestionAnswerScores.findAll({}),
+                    this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
+                    this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId }, order: [['score', 'DESC']] }),
+                ]);
 
             const surveyQuestionGroupDetails = {};
 
@@ -163,7 +156,7 @@ export default class MiscellaneousService {
 
             let userTotalScore = 0;
 
-            let userAnswerByGroupScores = {};
+            const userAnswerByGroupScores = {};
 
             await Promise.all(
                 answers.map(async (answer) => {
@@ -187,8 +180,6 @@ export default class MiscellaneousService {
                 }),
             );
 
-            userAnswerByGroupScores = Object.fromEntries(Object.entries(userAnswerByGroupScores).sort(([, a], [, b]) => b - a));
-
             await Promise.all(
                 Object.keys(userAnswerByGroupScores).map(async (group) =>
                     this.database.models.UserSurveyQuestionAnswerScores.upsert({
@@ -199,50 +190,6 @@ export default class MiscellaneousService {
                     }),
                 ),
             );
-
-            const highestScore = Math.max(...Object.values(userAnswerByGroupScores));
-
-            if (!userPfPlan && highestScore >= 0) {
-                const recommendPfPlan = await this.database.models.PfPlans.scope([
-                    {
-                        method: [
-                            'withCategories',
-                            {
-                                where: {
-                                    id: Object.entries(userAnswerByGroupScores)
-                                        .filter(([, score]) => score === highestScore)
-                                        .map(([key]) => key),
-                                },
-                            },
-                        ],
-                    },
-                    { method: ['defaultOrder', this.database.literal(`RAND()`)] },
-                ]).findOne({
-                    nest: true,
-                    subQuery: false,
-                    where: { is_custom: true, status_id: PUBLISHED_PF_PLAN_STATUS_ID },
-                });
-
-                if (recommendPfPlan) {
-                    const dateToday = new dateFnsUtc.UTCDate();
-
-                    let startAt = dateToday;
-
-                    const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
-                        where: { user_id: userId, pf_plan_id: recommendPfPlan.id },
-                        order: [['id', 'DESC']],
-                        paranoid: false,
-                    });
-
-                    startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
-
-                    await this.database.models.UserPfPlans.create({
-                        user_id: userId,
-                        pf_plan_id: recommendPfPlan.id,
-                        start_at: startAt,
-                    });
-                }
-            }
 
             await dbTransaction.commit();
 
@@ -357,6 +304,11 @@ export default class MiscellaneousService {
                 order: [['id', 'DESC']],
             });
 
+            const [userPfPlan, userSurveyScoresSummary] = await Promise.all([
+                this.database.models.UserPfPlans.findOne({ where: { user_id: data.userId } }),
+                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: data.userId, order: [['scores', 'DESC']] } }),
+            ]);
+
             return await this.database.transaction(async (transaction) => {
                 await this.database.models.UserSubscriptions.update(
                     {
@@ -386,6 +338,56 @@ export default class MiscellaneousService {
                         transaction: transaction,
                     },
                 );
+
+                const groupScoreMap = {};
+
+                userSurveyScoresSummary.forEach((item) => {
+                    groupScoreMap[item.question_group_id] = item.score;
+                });
+
+                const highestScore = Math.max(...Object.values(groupScoreMap));
+
+                if (!userPfPlan && highestScore >= 0) {
+                    const recommendPfPlan = await this.database.models.PfPlans.scope([
+                        {
+                            method: [
+                                'withCategories',
+                                {
+                                    where: {
+                                        id: Object.entries(groupScoreMap)
+                                            .filter(([, score]) => score === highestScore)
+                                            .map(([key]) => key),
+                                    },
+                                },
+                            ],
+                        },
+                        { method: ['defaultOrder', this.database.literal(`RAND()`)] },
+                    ]).findOne({
+                        nest: true,
+                        subQuery: false,
+                        where: { is_custom: true, status_id: PUBLISHED_PF_PLAN_STATUS_ID },
+                    });
+
+                    if (recommendPfPlan) {
+                        const dateToday = new dateFnsUtc.UTCDate();
+
+                        let startAt = dateToday;
+
+                        const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
+                            where: { user_id: data.userId, pf_plan_id: recommendPfPlan.id },
+                            order: [['id', 'DESC']],
+                            paranoid: false,
+                        });
+
+                        startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
+
+                        await this.database.models.UserPfPlans.create({
+                            user_id: data.userId,
+                            pf_plan_id: recommendPfPlan.id,
+                            start_at: startAt,
+                        });
+                    }
+                }
 
                 return payment;
             });
