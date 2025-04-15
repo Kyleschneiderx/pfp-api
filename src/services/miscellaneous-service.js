@@ -358,6 +358,7 @@ export default class MiscellaneousService {
                                             .filter(([, score]) => score === highestScore)
                                             .map(([key]) => key),
                                     },
+                                    required: true,
                                 },
                             ],
                         },

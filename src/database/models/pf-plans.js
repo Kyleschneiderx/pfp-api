@@ -96,7 +96,7 @@ export default (sequelize, DataTypes) => {
                                 as: 'content_categories',
                                 attributes: [],
                             },
-                            required: false,
+                            required: options?.required ?? false,
                             where: options?.where ?? {},
                         },
                     ],

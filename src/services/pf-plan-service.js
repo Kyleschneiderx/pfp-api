@@ -488,6 +488,7 @@ export default class PfPlanService {
                 exclude: ['deleted_at', 'status_id', 'content'],
             },
             where: {
+                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && { is_custom: false }),
                 ...(filter.id && { id: filter.id }),
                 ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
                 ...(filter.statusId && { status_id: filter.statusId }),
