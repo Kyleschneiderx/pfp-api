@@ -62,6 +62,43 @@ export default class Storage {
     }
 
     /**
+     * Duplicate file from storage
+     *
+     * @param {string} name File name
+     * @param {string} path Base path where to store file
+     * @param {string} source Source file path
+     * @param {object=} options
+     */
+    async duplicate(name, path, source, options = {}) {
+        try {
+            const extension = this.file.extractExtension(name);
+
+            const fileName = `${uuid()}.${extension}`;
+
+            const s3Response = await this.driver.send(
+                new this.s3.CopyObjectCommand({
+                    Bucket: options?.s3?.bucket,
+                    Key: `${path}/${fileName}`,
+                    CopySource: `${options?.s3?.bucket}/${source}`,
+                    CacheControl: 'max-age=31536000',
+                }),
+            );
+
+            return {
+                originalFilename: name,
+                fileName: fileName,
+                path: `${path}/${fileName}`,
+                s3: s3Response,
+            };
+        } catch (error) {
+            console.log(error);
+            this.logger.error('Failed to duplicate file.');
+
+            throw new Error('Failed to duplicate file.', { cause: error });
+        }
+    }
+
+    /**
      * Store file to storage
      *
      * @param {string} name File name

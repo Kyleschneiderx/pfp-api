@@ -87,6 +87,14 @@ export default class PfPlanController {
         return res.json(workout);
     }
 
+    async handleDuplicatePfPlanRoute(req, res) {
+        const pfPlan = await this.pfPlanService.duplicatePfPlan(req.params.id);
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.DUPLICATE_PF_PLAN);
+
+        return res.status(201).json(pfPlan);
+    }
+
     async handleAddFavoritePfPlanRoute(req, res) {
         const userWorkoutFavorite = await this.pfPlanService.updateUserFavoritePfPlans(req.auth.user_id, req.params.id, FAVORITE_PF_PLAN_STATUS);
 
