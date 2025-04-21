@@ -120,9 +120,11 @@ export default class EducationService {
                 status_id: data.statusId,
             });
 
-            await this.database.models.ContentCategories.bulkCreate(
-                data.categoryId.map((id) => ({ category_id: id, content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION })),
-            );
+            if (data.categoryId.length > 0) {
+                await this.database.models.ContentCategories.bulkCreate(
+                    data.categoryId.map((id) => ({ category_id: id, content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION })),
+                );
+            }
 
             education.media_upload = this.helper.generateProtectedUrl(
                 education.media_upload,
@@ -214,12 +216,12 @@ export default class EducationService {
 
             await education.reload();
 
-            if (data.categoryId.length > 0) {
-                await this.database.models.ContentCategories.destroy({
-                    force: true,
-                    where: { content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION },
-                });
+            await this.database.models.ContentCategories.destroy({
+                force: true,
+                where: { content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION },
+            });
 
+            if (data.categoryId.length > 0) {
                 await this.database.models.ContentCategories.bulkCreate(
                     data.categoryId.map((id) => ({ category_id: id, content_id: education.id, content_type: CONTENT_CATEGORIES_TYPE.EDUCATION })),
                 );

@@ -22,16 +22,16 @@ export default ({ educationService, selectionService, file, pfPlanService }) => 
         }),
     body('category_id')
         .optional()
-        .notEmpty()
-        .withMessage('Education category is required.')
         .customSanitizer((value) => JSON.parse(value))
         .isArray()
         .withMessage('Education category should be array.')
-        .isArray({ min: 1 })
-        .withMessage('Education category is required.')
         .custom(async (value) => {
-            if (!(await selectionService.isContentCategoryExistById(value))) {
-                throw new Error('Education category does not exist.');
+            if (value.length > 0) {
+                const isCategoryExistMap = await Promise.all(value.map((category) => selectionService.isContentCategoryExistById(category)));
+
+                if (isCategoryExistMap.includes(false)) {
+                    throw new Error(`Education category  does not exist.`);
+                }
             }
         }),
     body('description')
