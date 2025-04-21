@@ -22,7 +22,7 @@ export const MONTHLY_RANGE_PERIOD = 11;
 
 export const WEEKLY_RANGE_PERIOD = 6;
 
-export const AUTH_TOKEN_EXPIRATION_IN_MINUTES = 60;
+export const AUTH_TOKEN_EXPIRATION_IN_MINUTES = 60 * 8;
 
 export const USER_ACCOUNT_TYPE_ID = 2;
 
