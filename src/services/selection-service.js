@@ -494,8 +494,16 @@ export default class SelectionService {
      */
     async removeContentCategory(id) {
         try {
-            return await this.database.models.SurveyQuestionGroups.destroy({
-                where: { id },
+            return this.database.transaction(async (transaction) => {
+                await this.database.models.SurveyQuestionGroupIds.destroy({
+                    where: { group_id: id },
+                    transaction: transaction,
+                });
+
+                return this.database.models.SurveyQuestionGroups.destroy({
+                    where: { id },
+                    transaction: transaction,
+                });
             });
         } catch (error) {
             this.logger.error('Failed to remove content category', error);
