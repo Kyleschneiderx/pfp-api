@@ -67,14 +67,6 @@ export default class MiscellaneousService {
         try {
             return this.database.models.SurveyQuestions.findAll({
                 attributes: { exclude: ['deleted_at', 'group_id'] },
-                include: [
-                    {
-                        model: this.database.models.SurveyQuestionGroups,
-                        as: 'survey_question_group',
-                        attributes: ['id', 'value', 'description'],
-                        where: {},
-                    },
-                ],
                 where: {},
                 order: [['id', 'ASC']],
             });

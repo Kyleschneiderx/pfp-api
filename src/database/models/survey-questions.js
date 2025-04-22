@@ -41,13 +41,25 @@ export default (sequelize, DataTypes) => {
         },
     );
     model.associate = () => {
-        const { SurveyQuestions, UserSurveyQuestionAnswers, SurveyQuestionGroups } = sequelize.models;
+        const { SurveyQuestions, UserSurveyQuestionAnswers, SurveyQuestionGroups, SurveyQuestionGroupIds } = sequelize.models;
 
         SurveyQuestions.hasMany(UserSurveyQuestionAnswers, { as: 'user_survey_question_answers', foreignKey: 'question_id' });
 
         SurveyQuestions.hasOne(UserSurveyQuestionAnswers, { as: 'user_survey_question_answer', foreignKey: 'question_id' });
 
         SurveyQuestions.belongsTo(SurveyQuestionGroups, { as: 'survey_question_group', foreignKey: 'group_id' });
+
+        SurveyQuestions.hasMany(SurveyQuestionGroupIds, { as: 'groups_ids', foreignKey: 'question_id' });
+
+        SurveyQuestions.belongsToMany(SurveyQuestionGroups, {
+            as: 'groups',
+            through: {
+                model: SurveyQuestionGroupIds,
+                as: 'group_ids',
+            },
+            foreignKey: 'question_id',
+            otherKey: 'group_id',
+        });
     };
     return model;
 };
