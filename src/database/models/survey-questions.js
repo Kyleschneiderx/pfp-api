@@ -49,7 +49,7 @@ export default (sequelize, DataTypes) => {
 
         SurveyQuestions.belongsTo(SurveyQuestionGroups, { as: 'survey_question_group', foreignKey: 'group_id' });
 
-        SurveyQuestions.hasMany(SurveyQuestionGroupIds, { as: 'groups_ids', foreignKey: 'question_id' });
+        SurveyQuestions.hasMany(SurveyQuestionGroupIds, { as: 'group_ids', foreignKey: 'question_id' });
 
         SurveyQuestions.belongsToMany(SurveyQuestionGroups, {
             as: 'groups',

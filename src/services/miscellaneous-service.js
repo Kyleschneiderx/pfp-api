@@ -107,43 +107,45 @@ export default class MiscellaneousService {
     async updateUserSurveyAnswer(userId, answers) {
         const dbTransaction = await this.database.transaction();
         try {
-            const [surveyQuestionGroupDetailList, surveyQuestions, surveyQuestionAnswerScores, recordedAnswersResult, recordedAnswerByGroupResult] =
+            const [surveyQuestionGroups, surveyQuestions, surveyQuestionAnswerScores, userSurveyQuestionAnswers, userSurveyQuestionAnswerScores] =
                 await Promise.all([
                     this.database.models.SurveyQuestionGroups.findAll({}),
-                    this.database.models.SurveyQuestions.findAll({}),
+                    this.database.models.SurveyQuestions.findAll({
+                        include: [{ model: this.database.models.SurveyQuestionGroupIds, as: 'group_ids' }],
+                    }),
                     this.database.models.SurveyQuestionAnswerScores.findAll({}),
                     this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
                     this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId }, order: [['score', 'DESC']] }),
                 ]);
 
-            const surveyQuestionGroupDetails = {};
+            const surveyQuestionGroupMap = {};
 
-            surveyQuestionGroupDetailList.forEach((item) => {
-                surveyQuestionGroupDetails[item.id] = item;
+            surveyQuestionGroups.forEach((item) => {
+                surveyQuestionGroupMap[item.id] = item;
             });
 
-            const surveyQuestionGroups = {};
+            const surveyQuestionGroupIdsMap = {};
 
             surveyQuestions.forEach((item) => {
-                surveyQuestionGroups[item.id] = item.group_id;
+                surveyQuestionGroupIdsMap[item.id] = item.group_ids.map((groupId) => groupId.group_id);
             });
 
-            const answerScoresLegend = {};
+            const answerScoreMap = {};
 
             surveyQuestionAnswerScores.forEach((item) => {
-                answerScoresLegend[item.key] = item.score;
+                answerScoreMap[item.key] = item.score;
             });
 
-            const recordedAnswers = {};
+            const userSurveyQuestionAnswerMap = {};
 
-            recordedAnswersResult.forEach((item) => {
-                recordedAnswers[item.question_id] = item;
+            userSurveyQuestionAnswers.forEach((item) => {
+                userSurveyQuestionAnswerMap[item.question_id] = item;
             });
 
-            const recordedAnswerByGroupScores = {};
+            const userSurveyQuestionAnswerScoresMap = {};
 
-            recordedAnswerByGroupResult.forEach((item) => {
-                recordedAnswerByGroupScores[item.question_group_id] = item;
+            userSurveyQuestionAnswerScores.forEach((item) => {
+                userSurveyQuestionAnswerScoresMap[item.question_group_id] = item;
             });
 
             let userTotalScore = 0;
@@ -154,15 +156,18 @@ export default class MiscellaneousService {
                 answers.map(async (answer) => {
                     answer.if_yes_how_much_bother = answer.if_yes_how_much_bother?.toLowerCase();
 
-                    const answerScore = answer.yes_no === 'no' ? 0 : (answerScoresLegend[answer.if_yes_how_much_bother.replace(/\s/g, '_')] ?? 0);
+                    const answerScore = answer.yes_no === 'no' ? 0 : (answerScoreMap[answer.if_yes_how_much_bother.replace(/\s/g, '_')] ?? 0);
 
                     userTotalScore += answerScore;
 
-                    userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] =
-                        (userAnswerByGroupScores[surveyQuestionGroups[answer.question_id]] ?? 0) + answerScore;
+                    const questionGroupIds = surveyQuestionGroupIdsMap[answer.question_id];
+
+                    questionGroupIds.forEach((groupId) => {
+                        userAnswerByGroupScores[groupId] = (userAnswerByGroupScores[groupId] ?? 0) + answerScore;
+                    });
 
                     return this.database.models.UserSurveyQuestionAnswers.upsert({
-                        id: recordedAnswers[answer.question_id]?.id,
+                        id: userSurveyQuestionAnswerMap[answer.question_id]?.id,
                         user_id: userId,
                         question_id: answer.question_id,
                         yes_no: answer.yes_no,
@@ -175,7 +180,7 @@ export default class MiscellaneousService {
             await Promise.all(
                 Object.keys(userAnswerByGroupScores).map(async (group) =>
                     this.database.models.UserSurveyQuestionAnswerScores.upsert({
-                        id: recordedAnswerByGroupScores[group]?.id,
+                        id: userSurveyQuestionAnswerScoresMap[group]?.id,
                         user_id: userId,
                         question_group_id: group,
                         score: userAnswerByGroupScores[group],
@@ -188,7 +193,7 @@ export default class MiscellaneousService {
             return {
                 total: userTotalScore,
                 groups: Object.keys(userAnswerByGroupScores).map((group) => ({
-                    group: surveyQuestionGroupDetails[group],
+                    group: surveyQuestionGroupMap[group],
                     score: userAnswerByGroupScores[group],
                 })),
             };
