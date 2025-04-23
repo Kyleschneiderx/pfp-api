@@ -795,6 +795,106 @@ export default class PfPlanService {
     }
 
     /**
+     * Duplicate PF plan
+     *
+     * @param {number} id PF plan id
+     * @returns {Promise<PfPlans>}
+     * @throws {InternalServerError} If failed to duplicate PF plan
+     */
+    async duplicatePfPlan(id) {
+        let storeResponse;
+
+        const dbTransaction = await this.database.transaction();
+        try {
+            const [pfPlan, pfPlanDailies, pfPlanContentCategories] = await Promise.all([
+                this.database.models.PfPlans.findOne({ where: { id: id } }),
+                this.database.models.PfPlanDailies.findAll({
+                    where: { pf_plan_id: id },
+                    include: [{ model: this.database.models.PfPlanDailyContents, as: 'pf_plan_daily_contents' }],
+                }),
+                this.database.models.ContentCategories.findAll({
+                    where: { content_id: id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN },
+                }),
+            ]);
+
+            if (pfPlan.photo) {
+                const photoName = pfPlan.photo.split(`${PFPLAN_PHOTO_PATH}/`)[1];
+
+                storeResponse = await this.storage.duplicate(photoName, PFPLAN_PHOTO_PATH, `${PFPLAN_PHOTO_PATH}/${photoName}`, {
+                    s3: { bucket: process.env.S3_BUCKET_NAME },
+                });
+            }
+
+            const newPfPlan = await this.database.models.PfPlans.create(
+                {
+                    name: `${pfPlan.name} Duplicate`,
+                    description: pfPlan.description,
+                    content: pfPlan.content,
+                    photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
+                    is_premium: pfPlan.is_premium,
+                    is_custom: pfPlan.is_custom,
+                    status_id: DRAFT_PF_PLAN_STATUS_ID,
+                    content_categories: pfPlanContentCategories.map((category) => ({
+                        content_type: category.content_type,
+                        category_id: category.category_id,
+                    })),
+                },
+                {
+                    include: [
+                        {
+                            model: this.database.models.ContentCategories,
+                            as: 'content_categories',
+                        },
+                    ],
+                },
+            );
+
+            newPfPlan.photo = this.helper.generateProtectedUrl(newPfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+            });
+
+            await this.database.models.PfPlanDailies.bulkCreate(
+                pfPlanDailies.map((daily) => ({
+                    pf_plan_id: newPfPlan.id,
+                    name: daily.name,
+                    day: daily.day,
+                    pf_plan_daily_contents: daily.pf_plan_daily_contents.map((content) => ({
+                        pf_plan_id: newPfPlan.id,
+                        arrangement: content.arrangement,
+                        exercise_id: content.exercise_id,
+                        sets: content.sets,
+                        reps: content.reps,
+                        hold: content.hold,
+                        education_id: content.education_id,
+                    })),
+                })),
+                {
+                    include: [
+                        {
+                            model: this.database.models.PfPlanDailyContents,
+                            as: 'pf_plan_daily_contents',
+                        },
+                    ],
+                },
+            );
+
+            await dbTransaction.commit();
+
+            delete newPfPlan.dataValues.content_categories;
+
+            return newPfPlan;
+        } catch (error) {
+            await dbTransaction.rollback();
+
+            await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
+
+            this.logger.error('Failed to remove PF plan', error);
+
+            throw new exceptions.InternalServerError('Failed to duplicate PF plan', error);
+        }
+    }
+
+    /**
      * Check if pf plan exist using id
      *
      * @param {number} id PF plan id

@@ -169,6 +169,7 @@ export const SYSTEM_AUDITS = {
     REGISTER: 33,
     SELECT_PF_PLAN: 34,
     DESELECT_PF_PLAN: 35,
+    DUPLICATE_PF_PLAN: 36,
 };
 
 export const CONTACT_SUPPORT_NAME = process.env.SUPPORT_NAME;

@@ -78,6 +78,12 @@ export default ({
         pfPlanController.handleCreatePfPlanRoute.bind(pfPlanController),
     );
 
+    router.post(
+        '/:id/duplicate',
+        validateInput([commonValidations.pfPlanIdValidation({ pfPlanService })]),
+        pfPlanController.handleDuplicatePfPlanRoute.bind(pfPlanController),
+    );
+
     router.put(
         '/:id',
         validateInput(validations.updatePfPlanValidation({ pfPlanService, exerciseService, educationService, selectionService, file })),
