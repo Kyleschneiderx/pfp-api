@@ -300,6 +300,7 @@ export default ({
             verifyAdmin: middlewares.verifyAdmin,
             selectionController: selectionController,
             selectionService: selectionService,
+            miscellaneousService: miscellaneousService,
         }),
     );
 
