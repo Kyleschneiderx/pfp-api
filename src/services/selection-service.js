@@ -150,9 +150,18 @@ export default class SelectionService {
         try {
             return await this.database.models.SurveyQuestionGroups.findAll({
                 nest: true,
-                attributes: {
-                    exclude: ['value'],
-                },
+                attributes: ['id', 'description'],
+                include: [
+                    {
+                        model: this.database.models.SurveyQuestions,
+                        as: 'questions',
+                        attributes: ['id', 'question'],
+                        through: {
+                            as: 'question_ids',
+                            attributes: [],
+                        },
+                    },
+                ],
                 order: [['id', 'ASC']],
                 where: {
                     ...(filter?.id && { id: filter.id }),
@@ -372,6 +381,134 @@ export default class SelectionService {
             this.logger.error('Failed to verify content category', error);
 
             throw new exceptions.InternalServerError('Failed to verify content category', error);
+        }
+    }
+
+    /**
+     * Check if content category exist using description
+     * @param {number} id Content category description
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to verify content category
+     */
+    async isContentCategoryExistByDescription(description, id) {
+        try {
+            return Boolean(
+                await this.database.models.SurveyQuestionGroups.count({
+                    where: { description: description, ...(id && { id: { [Sequelize.Op.ne]: id } }) },
+                }),
+            );
+        } catch (error) {
+            this.logger.error('Failed to verify content category', error);
+
+            throw new exceptions.InternalServerError('Failed to verify content category', error);
+        }
+    }
+
+    /**
+     * Create content category
+     *
+     * @param {object} data
+     * @param {string} data.description Content category value
+     * @param {object} data.questionId Survey question ids
+     * @returns {Promise<SurveyQuestionGroups>}
+     * @throws {InternalServerError} If failed to create content category
+     */
+    async createContentCategory(data) {
+        try {
+            const surveyGroup = await this.database.models.SurveyQuestionGroups.create(
+                {
+                    description: data.description,
+                    question_ids: data.questionId.map((id) => ({
+                        question_id: id,
+                    })),
+                },
+                {
+                    include: [
+                        {
+                            model: this.database.models.SurveyQuestionGroupIds,
+                            as: 'question_ids',
+                        },
+                    ],
+                },
+            );
+
+            delete surveyGroup.dataValues.question_ids;
+
+            return surveyGroup;
+        } catch (error) {
+            this.logger.error('Failed to create content category', error);
+
+            throw new exceptions.InternalServerError('Failed to create content category', error);
+        }
+    }
+
+    /**
+     * Update content category
+     * @param {number} id Content category id
+     * @param {object} data
+     * @param {string} data.description Content category value
+     * @param {object} data.questionId Survey question ids
+     * @returns {Promise<SurveyQuestionGroups>}
+     * @throws {InternalServerError} If failed to update content category
+     */
+    async updateContentCategory(id, data) {
+        try {
+            await this.database.models.SurveyQuestionGroups.update(
+                { description: data.description },
+                {
+                    where: { id: id },
+                },
+            );
+
+            await this.database.models.SurveyQuestionGroupIds.destroy({
+                where: { group_id: id },
+                force: true,
+            });
+
+            await this.database.models.SurveyQuestionGroupIds.bulkCreate(
+                data.questionId.map((questionId) => ({
+                    group_id: id,
+                    question_id: questionId,
+                })),
+            );
+
+            return await this.database.models.SurveyQuestionGroups.findOne({
+                attributes: {
+                    exclude: ['deleted_at', 'value'],
+                },
+                where: { id: id },
+            });
+        } catch (error) {
+            this.logger.error('Failed to update content category', error);
+
+            throw new exceptions.InternalServerError('Failed to update content category', error);
+        }
+    }
+
+    /**
+     * Remove content category
+     *
+     * @param {number} id Content category id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to remove content category
+     */
+    async removeContentCategory(id) {
+        try {
+            return this.database.transaction(async (transaction) => {
+                await this.database.models.SurveyQuestionGroupIds.destroy({
+                    where: { group_id: id },
+                    transaction: transaction,
+                });
+
+                return this.database.models.SurveyQuestionGroups.destroy({
+                    where: { id },
+                    transaction: transaction,
+                });
+            });
+        } catch (error) {
+            this.logger.error('Failed to remove content category', error);
+
+            throw new exceptions.InternalServerError('Failed to remove content category', error);
         }
     }
 }
