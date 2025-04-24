@@ -344,16 +344,23 @@ export default class MiscellaneousService {
 
                 const highestScore = Math.max(...Object.values(groupScoreMap));
 
-                if (!userPfPlan && highestScore > 0) {
+                if (!userPfPlan) {
+                    const surveyQuestionGroups = await this.database.models.SurveyQuestionGroups.findAll({
+                        include: { model: this.database.models.SurveyQuestionGroupIds, as: 'question_ids', separate: true },
+                    });
+
                     const recommendPfPlan = await this.database.models.PfPlans.scope([
                         {
                             method: [
                                 'withCategories',
                                 {
                                     where: {
-                                        id: Object.entries(groupScoreMap)
-                                            .filter(([, score]) => score === highestScore)
-                                            .map(([key]) => key),
+                                        id:
+                                            highestScore === 0
+                                                ? surveyQuestionGroups.filter((group) => group.question_ids.length === 0).map((group) => group.id)
+                                                : Object.entries(groupScoreMap)
+                                                      .filter(([, score]) => score === highestScore)
+                                                      .map(([key]) => key),
                                     },
                                     required: true,
                                 },
