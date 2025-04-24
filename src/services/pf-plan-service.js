@@ -214,9 +214,11 @@ export default class PfPlanService {
                     expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
                 });
 
-                await this.database.models.ContentCategories.bulkCreate(
-                    data.categoryId.map((id) => ({ category_id: id, content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN })),
-                );
+                if (data.categoryId.length > 0) {
+                    await this.database.models.ContentCategories.bulkCreate(
+                        data.categoryId.map((id) => ({ category_id: id, content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN })),
+                    );
+                }
 
                 if (data.dailies) {
                     let arrangement = 0;
@@ -328,12 +330,12 @@ export default class PfPlanService {
 
             await pfPlan.reload();
 
-            if (data.categoryId.length > 0) {
-                await this.database.models.ContentCategories.destroy({
-                    force: true,
-                    where: { content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN },
-                });
+            await this.database.models.ContentCategories.destroy({
+                force: true,
+                where: { content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN },
+            });
 
+            if (data.categoryId.length > 0) {
                 await this.database.models.ContentCategories.bulkCreate(
                     data.categoryId.map((id) => ({ category_id: id, content_id: pfPlan.id, content_type: CONTENT_CATEGORIES_TYPE.PF_PLAN })),
                 );

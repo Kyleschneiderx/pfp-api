@@ -20,16 +20,17 @@ export default ({ exerciseService, selectionService, file, educationService, pfP
         }),
     body('description').trim().exists({ value: 'falsy' }).isString().withMessage('Description should be string.'),
     body('category_id')
-        .exists({ values: 'falsy' })
-        .withMessage('PF plan category is required.')
+        .optional()
         .customSanitizer((value) => JSON.parse(value))
         .isArray()
         .withMessage('PF plan category should be array.')
-        .isArray({ min: 1 })
-        .withMessage('PF plan category is required.')
         .custom(async (value) => {
-            if (!(await selectionService.isContentCategoryExistById(value))) {
-                throw new Error('PF plan category does not exist.');
+            if (value.length > 0) {
+                const isCategoryExistMap = await Promise.all(value.map((category) => selectionService.isContentCategoryExistById(category)));
+
+                if (isCategoryExistMap.includes(false)) {
+                    throw new Error(`PF plan category  does not exist.`);
+                }
             }
         }),
     body('is_custom')
