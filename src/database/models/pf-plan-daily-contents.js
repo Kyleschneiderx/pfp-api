@@ -41,6 +41,10 @@ export default (sequelize, DataTypes) => {
                 comment: 'in seconds',
                 type: DataTypes.INTEGER,
             },
+            rest: {
+                comment: 'in seconds',
+                type: DataTypes.INTEGER,
+            },
             education_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see educations table',

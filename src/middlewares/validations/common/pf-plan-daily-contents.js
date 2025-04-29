@@ -59,14 +59,20 @@ export default ({ exerciseService, educationService, pfPlanService }) => [
         .withMessage('Reps should be greater than 0.'),
     body('dailies.*.contents.*.hold')
         .if((value, { req, pathValues }) => req.body.dailies[pathValues[0]].contents[pathValues[1]].exercise_id !== undefined)
-        .trim()
-        .exists({ values: 'falsy' })
-        .withMessage('Number of hold is required.')
+        .optional()
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Hold should be numeric')
+        .withMessage('Hold should be numeric'),
+    body('dailies.*.contents.*.rest')
+        .if((value, { req, pathValues }) => req.body.dailies[pathValues[0]].contents[pathValues[1]].exercise_id !== undefined)
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Number of rest is required.')
+        .customSanitizer((value) => Number(value))
+        .isNumeric()
+        .withMessage('Rest should be numeric')
         .isInt({ gt: 0 })
-        .withMessage('Hold should be greater than 0.'),
+        .withMessage('Rest should be greater than 0.'),
     educationIdValidation({
         educationService,
         isBody: true,

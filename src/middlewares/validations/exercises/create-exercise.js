@@ -45,14 +45,19 @@ export default ({ selectionService, file, exerciseService }) => [
         .isInt({ gt: 0 })
         .withMessage('Reps should be greater than 0.'),
     body('hold')
-        .trim()
-        .exists({ values: 'falsy' })
-        .withMessage('Number of hold is required.')
+        .optional()
         .customSanitizer((value) => Number(value))
         .isNumeric()
-        .withMessage('Hold should be numeric.')
+        .withMessage('Hold should be numeric.'),
+    body('rest')
+        .trim()
+        .exists({ values: 'falsy' })
+        .withMessage('Number of rest is required.')
+        .customSanitizer((value) => Number(value))
+        .isNumeric()
+        .withMessage('Rest should be numeric.')
         .isInt({ gt: 0 })
-        .withMessage('Hold should be greater than 0.'),
+        .withMessage('Rest should be greater than 0.'),
     body('description').trim().optional().isString().withMessage('Description should be string.'),
     body('how_to').trim().optional().isString().withMessage('How to should be string.'),
     ...commonValidation.photoValidation({ field: 'photo', file: file, isRequired: true }),
