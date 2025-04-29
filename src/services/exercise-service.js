@@ -76,7 +76,8 @@ export default class ExerciseService {
      * @param {number} data.categoryId Exercise category
      * @param {number} data.sets Exercise number of sets
      * @param {number} data.reps Exercise number of reps
-     * @param {number} data.hold Exercise hold time
+     * @param {numbe=} data.hold Exercise hold time
+     * @param {number} data.rest Exercise rest time
      * @param {string} data.description Exercise description
      * @param {string} data.howTo Exercise how to
      * @param {object} data.photo Exercise photo
@@ -100,7 +101,8 @@ export default class ExerciseService {
                 category_id: data.categoryId,
                 sets: data.sets,
                 reps: data.reps,
-                hold: data.hold,
+                hold: data.hold ?? 0,
+                rest: data.rest,
                 description: data.description,
                 how_to: data.howTo,
                 photo: photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : null,
@@ -267,6 +269,7 @@ export default class ExerciseService {
      * @param {number=} data.sets Exercise number of sets
      * @param {number=} data.reps Exercise number of reps
      * @param {number=} data.hold Exercise hold time
+     * @param {number=} data.rest Exercise rest time
      * @param {string=} data.description Exercise description
      * @param {string=} data.howTo Exercise how to
      * @param {object=} data.photo Exercise photo
@@ -297,6 +300,7 @@ export default class ExerciseService {
             exercise.sets = data.sets;
             exercise.reps = data.reps;
             exercise.hold = data.hold;
+            exercise.rest = data.rest;
             exercise.description = data.description;
             exercise.how_to = data.howTo;
             exercise.photo = photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : undefined;

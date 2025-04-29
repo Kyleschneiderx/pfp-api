@@ -55,7 +55,7 @@ export default class PfPlanService {
                 model: this.database.models.PfPlanDailyContents,
                 as: 'pf_plan_daily_contents',
                 attributes: {
-                    include: ['id', 'sets', 'reps', 'hold'],
+                    include: ['id', 'sets', 'reps', 'hold', 'rest'],
                     exclude: [
                         'deleted_at',
                         'pf_plan_daily_id',
@@ -85,7 +85,7 @@ export default class PfPlanService {
                         as: 'exercise',
                         required: false,
                         attributes: {
-                            exclude: ['deleted_at', 'reps', 'sets', 'hold'],
+                            exclude: ['deleted_at', 'reps', 'sets', 'hold', 'rest'],
                         },
                         where: {},
                     },
@@ -184,6 +184,7 @@ export default class PfPlanService {
      * @param {number=} data.dailies[].content[].sets PF plan daily content exercise sets
      * @param {number=} data.dailies[].content[].reps PF plan daily content exercise reps
      * @param {number=} data.dailies[].content[].hold PF plan daily content exercise hold
+     * @param {number=} data.dailies[].content[].rest PF plan daily content exercise rest
      * @param {number=} data.dailies[].content[].education_id PF plan daily content education id
      * @returns {Promise<PfPlans>} PfPlans instance
      * @throws {InternalServerError} If failed to create PF plan
@@ -238,6 +239,7 @@ export default class PfPlanService {
                                     sets: content.sets,
                                     reps: content.reps,
                                     hold: content.hold,
+                                    rest: content.rest,
                                     education_id: content.education_id,
                                 };
                             }),
@@ -296,6 +298,7 @@ export default class PfPlanService {
      * @param {number=} data.dailies[].content[].sets PF plan daily content exercise sets
      * @param {number=} data.dailies[].content[].reps PF plan daily content exercise reps
      * @param {number=} data.dailies[].content[].hold PF plan daily content exercise hold
+     * @param {number=} data.dailies[].content[].rest PF plan daily content exercise rest
      * @param {number=} data.dailies[].content[].education_id PF plan daily content education id
      * @returns {Promise<PfPlans>} PF plans model instance
      * @throws {InternalServerError} If failed to update pf plan
@@ -407,6 +410,7 @@ export default class PfPlanService {
                                 sets: content.sets,
                                 reps: content.reps,
                                 hold: content.hold,
+                                rest: content.rest,
                                 education_id: content.education_id,
                             };
                         }),
@@ -706,6 +710,8 @@ export default class PfPlanService {
 
                             pfPlanDailyContent.dataValues.exercise.hold = pfPlanDailyContent.hold;
 
+                            pfPlanDailyContent.dataValues.exercise.rest = pfPlanDailyContent.rest;
+
                             pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
                                 pfPlanDailyContent.exercise?.photo,
                                 `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
@@ -730,6 +736,8 @@ export default class PfPlanService {
                         delete pfPlanDailyContent.dataValues.reps;
 
                         delete pfPlanDailyContent.dataValues.hold;
+
+                        delete pfPlanDailyContent.dataValues.rest;
 
                         if (pfPlanDailyContent.dataValues.education) {
                             pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
