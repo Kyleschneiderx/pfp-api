@@ -42,7 +42,7 @@ module.exports = ({ table = '', schema = {}, columns = {}, indexes = [] }) => {
 
         await Promise.all(
             Object.keys(columnObject).map(async (column) => {
-                await queryInterface.removeColumn(columnTable, column, columnObject[column]);
+                await queryInterface.removeColumn(columnTable, column);
             }),
         );
     };

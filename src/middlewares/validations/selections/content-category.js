@@ -30,7 +30,7 @@ export default ({ selectionService, miscellaneousService, isUpdate = false, isDe
                 .isLength({ max: 100 })
                 .withMessage('Description should not exceed 100 characters.')
                 .custom(async (value, { req }) => {
-                    if (await selectionService.isContentCategoryExistByDescription(value, isUpdate ? req.params.id : undefined)) {
+                    if (await selectionService.isContentCategoryExistByDescription(value, req.params.id)) {
                         throw new Error('Category already exist.');
                     }
                     return true;
@@ -40,15 +40,19 @@ export default ({ selectionService, miscellaneousService, isUpdate = false, isDe
                 .isArray()
                 .withMessage('Question id should be array.')
                 .custom(async (value) => {
-                    if (value.length > 0) {
-                        value = [...new Set(value)];
-
-                        const isQuestionExistMap = await Promise.all(value.map((id) => miscellaneousService.isSurveyQuestionExistById(id)));
-
-                        if (isQuestionExistMap.includes(false)) {
-                            throw new Error('Question does not exist.');
-                        }
+                    if (value.length === 0) {
+                        return true;
                     }
+
+                    value = [...new Set(value)];
+
+                    const isQuestionExistMap = await Promise.all(value.map((id) => miscellaneousService.isSurveyQuestionExistById(id)));
+
+                    if (isQuestionExistMap.includes(false)) {
+                        throw new Error('Question does not exist.');
+                    }
+
+                    return true;
                 }),
         ];
     }

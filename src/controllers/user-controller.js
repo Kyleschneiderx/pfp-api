@@ -302,4 +302,47 @@ export default class UserController {
 
         return res.json(streak);
     }
+
+    async handleCreatePersonalizedPfPlan(req, res) {
+        const pfPlan = await this.pfPlanService.createPfPlan({
+            userId: req.params.user_id,
+            name: req.body.name,
+            description: req.body.description,
+            categoryId: req.body.category_id,
+            isCustom: req.body.is_custom,
+            content: req.body.content,
+            statusId: req.body.status_id,
+            photo: req?.files?.photo,
+            dailies: req.body.dailies,
+        });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_PF_PLAN);
+
+        return res.status(201).json(pfPlan);
+    }
+
+    async handleUpdatePersonalizedPfPlan(req, res) {
+        const pfPlan = await this.pfPlanService.updatePfPlan({
+            id: req.params.id,
+            userId: req.params.user_id,
+            name: req.body.name,
+            description: req.body.description,
+            categoryId: req.body.category_id,
+            isCustom: req.body.is_custom,
+            content: req.body.content,
+            statusId: req.body.status_id,
+            photo: req?.files?.photo,
+            dailies: req.body.dailies,
+        });
+
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_PF_PLAN);
+
+        return res.json(pfPlan);
+    }
+
+    async handleGetPersonalizedPfPlan(req, res) {
+        const pfPlan = await this.pfPlanService.getPfPlanByUserId(req.params.user_id);
+
+        return res.json(pfPlan);
+    }
 }
