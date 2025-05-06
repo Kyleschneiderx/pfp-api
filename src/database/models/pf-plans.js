@@ -21,6 +21,14 @@ export default (sequelize, DataTypes) => {
             photo: {
                 type: DataTypes.STRING(300),
             },
+            user_id: {
+                type: DataTypes.INTEGER,
+                comment: 'see users table',
+                references: {
+                    model: 'users',
+                    key: 'id',
+                },
+            },
             is_premium: {
                 type: DataTypes.BOOLEAN,
             },
@@ -50,29 +58,14 @@ export default (sequelize, DataTypes) => {
             tableName: 'pf_plans',
             indexes: [
                 {
-                    name: 'pf_plans_status_id',
+                    name: 'pf_plans_1',
                     using: 'BTREE',
-                    fields: [{ name: 'status_id' }],
+                    fields: [{ name: 'status_id' }, { name: 'is_custom' }],
                 },
                 {
-                    name: 'pf_plans_name',
+                    name: 'pf_plans_2',
                     using: 'BTREE',
                     fields: [{ name: 'name' }],
-                },
-                {
-                    name: 'pf_plans_status_id_name',
-                    using: 'BTREE',
-                    fields: [{ name: 'status_id' }, { name: 'name' }],
-                },
-                {
-                    name: 'pf_plans_is_premium',
-                    using: 'BTREE',
-                    fields: [{ name: 'is_premium' }],
-                },
-                {
-                    name: 'pf_plans_status_id_is_premium',
-                    using: 'BTREE',
-                    fields: [{ name: 'status_id' }, { name: 'is_premium' }],
                 },
             ],
             scopes: {

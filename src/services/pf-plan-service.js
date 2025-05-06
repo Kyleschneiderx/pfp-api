@@ -169,6 +169,7 @@ export default class PfPlanService {
      * Create PF plan
      *
      * @param {object} data
+     * @param {number=} data.userId User id where PF plan to be attached
      * @param {string} data.name PF plan name
      * @param {string} data.description PF plan description
      * @param {number[]} data.categoryId Survey question group id
@@ -204,6 +205,7 @@ export default class PfPlanService {
                         description: data.description,
                         content: data.content,
                         photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
+                        user_id: data.userId,
                         is_premium: true,
                         is_custom: data.isCustom,
                         status_id: data.statusId,
@@ -256,10 +258,33 @@ export default class PfPlanService {
                     );
                 }
 
+                if (pfPlan.user_id) {
+                    const dateToday = new dateFnsUtc.UTCDate();
+
+                    const userPfPlans = await this.database.models.UserPfPlans.findOne({ where: { user_id: pfPlan.user_id } });
+
+                    if (userPfPlans) {
+                        await this.database.models.UserPfPlans.destroy({ where: { user_id: data.userId } }, { transaction: transaction });
+
+                        userPfPlans.reset_at = dateToday;
+
+                        await userPfPlans.save({ transaction: transaction });
+                    }
+
+                    await this.database.models.UserPfPlans.create(
+                        {
+                            user_id: data.userId,
+                            pf_plan_id: pfPlan.id,
+                            start_at: dateToday,
+                        },
+                        { transaction: transaction },
+                    );
+                }
+
                 return pfPlan;
             });
 
-            if (pfPlanInfo.status_id === PUBLISHED_PF_PLAN_STATUS_ID) {
+            if (pfPlanInfo.status_id === PUBLISHED_PF_PLAN_STATUS_ID && !pfPlanInfo.user_id) {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
@@ -282,6 +307,7 @@ export default class PfPlanService {
      *
      * @param {object} data
      * @param {number} data.id PF plan id
+     * @param {number=} data.userId User id where PF plan to be attached
      * @param {string=} data.name PF plan name
      * @param {string=} data.description PF plan description
      * @param {number[]=} data.categoryId Survey question group id
@@ -318,6 +344,8 @@ export default class PfPlanService {
             const oldPhoto = pfPlan.photo;
 
             pfPlan.name = data.name;
+
+            pfPlan.user_id = data.userId;
 
             pfPlan.description = data.description;
 
@@ -438,7 +466,7 @@ export default class PfPlanService {
                 });
             }
 
-            if (oldStatus === DRAFT_PF_PLAN_STATUS_ID && data.statusId === PUBLISHED_PF_PLAN_STATUS_ID) {
+            if (oldStatus === DRAFT_PF_PLAN_STATUS_ID && data.statusId === PUBLISHED_PF_PLAN_STATUS_ID && !pfPlan.user_id) {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
@@ -494,10 +522,18 @@ export default class PfPlanService {
                 exclude: ['deleted_at', 'status_id', 'content'],
             },
             where: {
-                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID && { is_custom: false }),
                 ...(filter.id && { id: filter.id }),
-                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
                 ...(filter.statusId && { status_id: filter.statusId }),
+                ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
+                    ? {
+                          is_custom: false,
+                          user_id: filter?.authenticatedUser?.user_id,
+                      }
+                    : {
+                          is_custom: false,
+                          user_id: null,
+                      }),
+                ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
             },
         };
 
@@ -628,7 +664,7 @@ export default class PfPlanService {
                         attributes: {
                             exclude: ['deleted_at', 'pf_plan_id', 'created_at', 'updated_at'],
                         },
-                        include: [...this._defaultPfPlanDailiesRelation(filter.authenticatedUser.user_id)],
+                        include: [...this._defaultPfPlanDailiesRelation(filter?.authenticatedUser?.user_id)],
                     },
                     ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                         ? [
@@ -638,7 +674,7 @@ export default class PfPlanService {
                                   attributes: ['fulfilled', 'unfulfilled', 'skipped'],
                                   required: false,
                                   where: {
-                                      user_id: filter.authenticatedUser.user_id,
+                                      user_id: filter?.authenticatedUser?.user_id,
                                   },
                                   limit: 1,
                                   order: [['updated_at', 'DESC']],
@@ -649,7 +685,7 @@ export default class PfPlanService {
                                   attributes: [],
                                   required: false,
                                   where: {
-                                      user_id: filter.authenticatedUser.user_id,
+                                      user_id: filter?.authenticatedUser?.user_id,
                                   },
                               },
                               {
@@ -675,7 +711,7 @@ export default class PfPlanService {
                 ],
                 where: {
                     id: id,
-                    ...(filter.statusId && { status_id: filter.statusId }),
+                    ...(filter?.statusId && { status_id: filter?.statusId }),
                 },
             });
 
@@ -1665,5 +1701,31 @@ export default class PfPlanService {
 
             throw new exceptions.InternalServerError('Failed to get daily PF plan reminder', error);
         }
+    }
+
+    /**
+     * Get personalized PF plan by user id
+     *
+     * @param {number} userId User account id
+     * @returns {Promise<PfPlans>} PfPlans instance
+     * @throws {InternalServerError} If failed to get personalize PF plan
+     */
+    async getPfPlanByUserId(userId) {
+        let pfPlan;
+        try {
+            pfPlan = await this.database.models.PfPlans.findOne({ where: { user_id: userId }, order: [['id', 'DESC']] });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get personalized PF plan', error);
+        }
+
+        if (!pfPlan) throw new exceptions.NotFound('No records found.');
+
+        pfPlan.photo = this.helper.generateProtectedUrl(pfPlan?.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
+            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
+        });
+
+        return pfPlan;
     }
 }

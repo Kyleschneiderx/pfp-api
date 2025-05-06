@@ -16,6 +16,8 @@ export default ({
     password,
     pfPlanService,
     miscellaneousService,
+    exerciseService,
+    educationService,
 }) => {
     const router = express.Router();
 
@@ -104,6 +106,28 @@ export default ({
     );
 
     router.use(verifyAdmin);
+
+    router.put(
+        '/:user_id/pf-plan/:id',
+        validateInput(
+            validations.updatePersonalizedPfPlanValidation({ pfPlanService, exerciseService, selectionService, file, educationService, userService }),
+        ),
+        userController.handleUpdatePersonalizedPfPlan.bind(userController),
+    );
+
+    router.get(
+        '/:user_id/pf-plan',
+        validateInput([commonValidations.userIdValidation({ userService })]),
+        userController.handleGetPersonalizedPfPlan.bind(userController),
+    );
+
+    router.post(
+        '/:user_id/pf-plan',
+        validateInput(
+            validations.createPersonalizedPfPlanValidation({ pfPlanService, exerciseService, selectionService, file, educationService, userService }),
+        ),
+        userController.handleCreatePersonalizedPfPlan.bind(userController),
+    );
 
     router.get(
         '/:user_id/survey',

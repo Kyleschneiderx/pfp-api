@@ -8,3 +8,5 @@ export { default as getUserPfPlanProgressValidation } from './get-user-pf-plan-p
 export { default as updateUserSurveyAnswerValidation } from './update-user-survey-answer.js';
 export { default as sendInviteValidation } from './send-invite.js';
 export { default as setupPasswordValidation } from './setup-password.js';
+export { default as createPersonalizedPfPlanValidation } from './create-personalized-pf-plan.js';
+export { default as updatePersonalizedPfPlanValidation } from './update-personalized-pf-plan.js';

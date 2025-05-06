@@ -962,4 +962,20 @@ export default class UserService {
             throw new exceptions.InternalServerError('Failed to get user answer survey state', error);
         }
     }
+
+    /**
+     * Check if user has personalize pf plan
+     * @param {number} userId User account user id
+     * @returns {Promise<boolean>}
+     * @throws {InternalServerError} If failed to get user personalize pf plan
+     */
+    async hasPersonalizePfPlan(userId) {
+        try {
+            return Boolean(await this.database.models.PfPlans.count({ where: { user_id: userId } }));
+        } catch (error) {
+            this.logger.error('Failed to get user personalize pf plan', error);
+
+            throw new exceptions.InternalServerError('Failed to get user personalize pf plan', error);
+        }
+    }
 }

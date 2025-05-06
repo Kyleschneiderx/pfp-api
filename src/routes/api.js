@@ -179,6 +179,8 @@ export default ({
             pfPlanService: pfPlanService,
             miscellaneousService: miscellaneousService,
             verifyPremiumUser: verifyPremiumUser,
+            educationService: educationService,
+            exerciseService: exerciseService,
         }),
     );
 
