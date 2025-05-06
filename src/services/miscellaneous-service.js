@@ -370,7 +370,7 @@ export default class MiscellaneousService {
                     ]).findOne({
                         nest: true,
                         subQuery: false,
-                        where: { is_custom: true, status_id: PUBLISHED_PF_PLAN_STATUS_ID },
+                        where: { status_id: PUBLISHED_PF_PLAN_STATUS_ID, is_custom: true, user_id: null },
                     });
 
                     if (recommendPfPlan) {
