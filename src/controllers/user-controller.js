@@ -308,7 +308,7 @@ export default class UserController {
             dailies: req.body.dailies,
         });
 
-        // this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_PF_PLAN);
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_PF_PLAN);
 
         return res.status(201).json(pfPlan);
     }
@@ -327,15 +327,13 @@ export default class UserController {
             dailies: req.body.dailies,
         });
 
-        // this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_PF_PLAN);
+        this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_PF_PLAN);
 
         return res.json(pfPlan);
     }
 
     async handleGetPersonalizedPfPlan(req, res) {
         const pfPlan = await this.pfPlanService.getPfPlanByUserId(req.params.user_id);
-
-        // this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_PF_PLAN);
 
         return res.json(pfPlan);
     }
