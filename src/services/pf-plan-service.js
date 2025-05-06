@@ -527,7 +527,9 @@ export default class PfPlanService {
                 ...(filter?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID
                     ? {
                           is_custom: false,
-                          user_id: filter?.authenticatedUser?.user_id,
+                          user_id: {
+                              [Sequelize.Op.or]: [null, filter?.authenticatedUser?.user_id],
+                          },
                       }
                     : {
                           is_custom: false,
