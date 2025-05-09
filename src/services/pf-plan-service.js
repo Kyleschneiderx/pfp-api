@@ -284,7 +284,7 @@ export default class PfPlanService {
                 return pfPlan;
             });
 
-            if (pfPlanInfo.status_id === PUBLISHED_PF_PLAN_STATUS_ID && !pfPlanInfo.user_id) {
+            if (pfPlanInfo.status_id === PUBLISHED_PF_PLAN_STATUS_ID && !pfPlanInfo.is_custom && !pfPlanInfo.user_id) {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
@@ -466,7 +466,7 @@ export default class PfPlanService {
                 });
             }
 
-            if (oldStatus === DRAFT_PF_PLAN_STATUS_ID && data.statusId === PUBLISHED_PF_PLAN_STATUS_ID && !pfPlan.user_id) {
+            if (oldStatus === DRAFT_PF_PLAN_STATUS_ID && data.statusId === PUBLISHED_PF_PLAN_STATUS_ID && !pfPlan.is_custom && !pfPlan.user_id) {
                 this.notificationService.createNotification({
                     userId: undefined,
                     descriptionId: NOTIFICATIONS.NEW_PF_PLAN,
