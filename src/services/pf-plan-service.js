@@ -532,7 +532,6 @@ export default class PfPlanService {
                           },
                       }
                     : {
-                          is_custom: false,
                           user_id: null,
                       }),
                 ...(filter.name && { name: { [Sequelize.Op.like]: `%${filter.name}%` } }),
