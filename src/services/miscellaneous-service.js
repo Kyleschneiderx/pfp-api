@@ -192,10 +192,36 @@ export default class MiscellaneousService {
 
             return {
                 total: userTotalScore,
-                groups: Object.keys(userAnswerByGroupScores).map((group) => ({
-                    group: surveyQuestionGroupMap[group],
-                    score: userAnswerByGroupScores[group],
-                })),
+                groups:
+                    userTotalScore > 0
+                        ? Object.keys(userAnswerByGroupScores).flatMap((group) => {
+                              if (userAnswerByGroupScores[group] > 0) {
+                                  delete surveyQuestionGroupMap[group].dataValues.value;
+
+                                  return {
+                                      group: surveyQuestionGroupMap[group],
+                                      score: userAnswerByGroupScores[group],
+                                  };
+                              }
+
+                              return [];
+                          })
+                        : (
+                              await this.database.models.SurveyQuestionGroups.findAll({
+                                  include: { model: this.database.models.SurveyQuestionGroupIds, as: 'question_ids', separate: true },
+                              })
+                          )
+                              .filter((group) => group.question_ids.length === 0)
+                              .map((group) => {
+                                  delete group.dataValues.value;
+
+                                  delete group.dataValues.question_ids;
+
+                                  return {
+                                      group: group,
+                                      score: 0,
+                                  };
+                              }),
             };
         } catch (error) {
             await dbTransaction.rollback();
