@@ -33,6 +33,10 @@ export default (sequelize, DataTypes) => {
                 comment: 'in seconds',
                 type: DataTypes.INTEGER,
             },
+            rest: {
+                comment: 'in seconds',
+                type: DataTypes.INTEGER,
+            },
             arrangement: {
                 type: DataTypes.INTEGER,
             },
