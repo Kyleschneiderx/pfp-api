@@ -75,6 +75,7 @@ export default class WorkoutService {
                                 sets: exercise.sets,
                                 reps: exercise.reps,
                                 hold: exercise.hold,
+                                rest: exercise.rest,
                                 arrangement: arrangement,
                             };
                         }),
@@ -186,6 +187,7 @@ export default class WorkoutService {
                             sets: exercise.sets,
                             reps: exercise.reps,
                             hold: exercise.hold,
+                            rest: exercise.rest,
                             arrangement: arrangement,
                         };
                     });
@@ -361,7 +363,7 @@ export default class WorkoutService {
                                 model: this.database.models.Exercises,
                                 as: 'exercise',
                                 attributes: {
-                                    exclude: ['deleted_at', 'updated_at', 'created_at', 'category_id', 'sets', 'reps', 'hold'],
+                                    exclude: ['deleted_at', 'updated_at', 'created_at', 'category_id', 'sets', 'reps', 'hold', 'rest'],
                                 },
                                 where: {},
                                 include: [

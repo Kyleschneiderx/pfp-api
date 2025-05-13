@@ -1441,6 +1441,8 @@ export default class PfPlanService {
 
                             pfPlanDailyContent.dataValues.exercise.hold = pfPlanDailyContent.hold;
 
+                            pfPlanDailyContent.dataValues.exercise.rest = pfPlanDailyContent.rest;
+
                             pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
                                 pfPlanDailyContent.exercise?.photo,
                                 `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
@@ -1463,6 +1465,8 @@ export default class PfPlanService {
                         delete pfPlanDailyContent.dataValues.reps;
 
                         delete pfPlanDailyContent.dataValues.hold;
+
+                        delete pfPlanDailyContent.dataValues.rest;
 
                         if (pfPlanDailyContent.dataValues.education) {
                             pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
