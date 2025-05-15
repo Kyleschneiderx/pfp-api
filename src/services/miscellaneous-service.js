@@ -20,12 +20,13 @@ import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REV
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
-    constructor({ logger, database, inAppPurchase, revenuecat, facebookPixel }) {
+    constructor({ logger, database, inAppPurchase, revenuecat, facebookPixel, helper }) {
         this.database = database;
         this.logger = logger;
         this.inAppPurchase = inAppPurchase;
         this.revenuecat = revenuecat;
         this.facebookPixel = facebookPixel;
+        this.helper = helper;
     }
 
     /**
@@ -109,7 +110,9 @@ export default class MiscellaneousService {
         try {
             const [surveyQuestionGroups, surveyQuestions, surveyQuestionAnswerScores, userSurveyQuestionAnswers, userSurveyQuestionAnswerScores] =
                 await Promise.all([
-                    this.database.models.SurveyQuestionGroups.findAll({}),
+                    this.database.models.SurveyQuestionGroups.findAll({
+                        include: { model: this.database.models.SurveyQuestionGroupIds, as: 'question_ids', separate: true },
+                    }),
                     this.database.models.SurveyQuestions.findAll({
                         include: [{ model: this.database.models.SurveyQuestionGroupIds, as: 'group_ids' }],
                     }),
@@ -120,8 +123,16 @@ export default class MiscellaneousService {
 
             const surveyQuestionGroupMap = {};
 
+            let maxQuestionBinded = 0;
+
+            const maxScore = 4;
+
             surveyQuestionGroups.forEach((item) => {
                 surveyQuestionGroupMap[item.id] = item;
+
+                if (item.question_ids.length > maxQuestionBinded) {
+                    maxQuestionBinded = item.question_ids.length;
+                }
             });
 
             const surveyQuestionGroupIdsMap = {};
@@ -163,7 +174,21 @@ export default class MiscellaneousService {
                     const questionGroupIds = surveyQuestionGroupIdsMap[answer.question_id];
 
                     questionGroupIds.forEach((groupId) => {
-                        userAnswerByGroupScores[groupId] = (userAnswerByGroupScores[groupId] ?? 0) + answerScore;
+                        if (userAnswerByGroupScores[groupId]) {
+                            userAnswerByGroupScores[groupId].score += answerScore;
+                        } else {
+                            userAnswerByGroupScores[groupId] = {
+                                score: answerScore,
+                                group_weight: surveyQuestionGroupMap[groupId].question_ids.length / maxQuestionBinded,
+                                max_score: surveyQuestionGroupMap[groupId].question_ids.length * maxScore,
+                                final_score: 0,
+                                avg_score: 0,
+                            };
+                        }
+                        userAnswerByGroupScores[groupId].avg_score =
+                            userAnswerByGroupScores[groupId].score / userAnswerByGroupScores[groupId].max_score;
+                        userAnswerByGroupScores[groupId].final_score =
+                            userAnswerByGroupScores[groupId].avg_score * userAnswerByGroupScores[groupId].group_weight;
                     });
 
                     return this.database.models.UserSurveyQuestionAnswers.upsert({
@@ -183,7 +208,10 @@ export default class MiscellaneousService {
                         id: userSurveyQuestionAnswerScoresMap[group]?.id,
                         user_id: userId,
                         question_group_id: group,
-                        score: userAnswerByGroupScores[group],
+                        score: userAnswerByGroupScores[group].score,
+                        final_score: this.helper.toPercent(userAnswerByGroupScores[group].final_score),
+                        avg_score: this.helper.toPercent(userAnswerByGroupScores[group].avg_score),
+                        group_weight: this.helper.toPercent(userAnswerByGroupScores[group].group_weight),
                     }),
                 ),
             );
@@ -191,11 +219,40 @@ export default class MiscellaneousService {
             await dbTransaction.commit();
 
             return {
-                total: userTotalScore,
-                groups: Object.keys(userAnswerByGroupScores).map((group) => ({
-                    group: surveyQuestionGroupMap[group],
-                    score: userAnswerByGroupScores[group],
-                })),
+                score: userTotalScore,
+                total: surveyQuestions.length * maxScore,
+                groups:
+                    userTotalScore > 0
+                        ? Object.keys(userAnswerByGroupScores).flatMap((group) => {
+                              if (userAnswerByGroupScores[group].score > 0) {
+                                  delete surveyQuestionGroupMap[group].dataValues.value;
+
+                                  delete surveyQuestionGroupMap[group].dataValues.question_ids;
+
+                                  return {
+                                      group: surveyQuestionGroupMap[group],
+                                      score: userAnswerByGroupScores[group].score,
+                                      total: userAnswerByGroupScores[group].max_score,
+                                  };
+                              }
+
+                              return [];
+                          })
+                        : surveyQuestionGroups
+                              .filter((group) => group.question_ids.length === 0)
+                              .map((group) => {
+                                  delete group.dataValues.value;
+
+                                  const groupQuestionCount = surveyQuestionGroupMap[group].question_ids.length;
+
+                                  delete group.dataValues.question_ids;
+
+                                  return {
+                                      group: group,
+                                      score: 0,
+                                      total: groupQuestionCount * maxScore,
+                                  };
+                              }),
             };
         } catch (error) {
             await dbTransaction.rollback();
@@ -303,7 +360,7 @@ export default class MiscellaneousService {
 
             const [userPfPlan, userSurveyScoresSummary] = await Promise.all([
                 this.database.models.UserPfPlans.findOne({ where: { user_id: data.userId } }),
-                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: data.userId }, order: [['score', 'DESC']] }),
+                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: data.userId }, order: [['final_score', 'DESC']] }),
             ]);
 
             return await this.database.transaction(async (transaction) => {
@@ -339,7 +396,7 @@ export default class MiscellaneousService {
                 const groupScoreMap = {};
 
                 userSurveyScoresSummary.forEach((item) => {
-                    groupScoreMap[item.question_group_id] = item.score;
+                    groupScoreMap[item.question_group_id] = item.final_score;
                 });
 
                 const highestScore = Math.max(...Object.values(groupScoreMap));

@@ -22,6 +22,15 @@ export default (sequelize, DataTypes) => {
             score: {
                 type: DataTypes.INTEGER,
             },
+            final_score: {
+                type: DataTypes.DOUBLE(20, 2),
+            },
+            avg_score: {
+                type: DataTypes.DOUBLE(20, 2),
+            },
+            group_weight: {
+                type: DataTypes.DOUBLE(20, 2),
+            },
             created_at: {
                 type: DataTypes.DATE,
             },
