@@ -125,6 +125,7 @@ Object.assign(serviceContainer, {
         inAppPurchase: serviceContainer.inAppPurchase,
         revenuecat: serviceContainer.revenuecat,
         facebookPixel: serviceContainer.facebookPixel,
+        helper: serviceContainer.helper,
     }),
 });
 

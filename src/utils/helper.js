@@ -52,4 +52,14 @@ export default class Helper {
         }
         return string;
     };
+
+    static toFixed(number, decimalPlace = 0) {
+        const factor = 10 ** decimalPlace;
+
+        return Math.trunc(number * factor) / factor;
+    }
+
+    static toPercent(number) {
+        return number * 100;
+    }
 }
