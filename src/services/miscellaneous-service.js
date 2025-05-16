@@ -223,20 +223,16 @@ export default class MiscellaneousService {
                 total: surveyQuestions.length * maxScore,
                 groups:
                     userTotalScore > 0
-                        ? Object.keys(userAnswerByGroupScores).flatMap((group) => {
-                              if (userAnswerByGroupScores[group].score > 0) {
-                                  delete surveyQuestionGroupMap[group].dataValues.value;
+                        ? Object.keys(userAnswerByGroupScores).map((group) => {
+                              delete surveyQuestionGroupMap[group].dataValues.value;
 
-                                  delete surveyQuestionGroupMap[group].dataValues.question_ids;
+                              delete surveyQuestionGroupMap[group].dataValues.question_ids;
 
-                                  return {
-                                      group: surveyQuestionGroupMap[group],
-                                      score: userAnswerByGroupScores[group].score,
-                                      total: userAnswerByGroupScores[group].max_score,
-                                  };
-                              }
-
-                              return [];
+                              return {
+                                  group: surveyQuestionGroupMap[group],
+                                  score: userAnswerByGroupScores[group].score,
+                                  total: userAnswerByGroupScores[group].max_score,
+                              };
                           })
                         : surveyQuestionGroups
                               .filter((group) => group.question_ids.length === 0)
