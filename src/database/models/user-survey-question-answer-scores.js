@@ -22,6 +22,9 @@ export default (sequelize, DataTypes) => {
             score: {
                 type: DataTypes.INTEGER,
             },
+            max_score: {
+                type: DataTypes.INTEGER,
+            },
             final_score: {
                 type: DataTypes.DOUBLE(20, 2),
             },
@@ -56,8 +59,26 @@ export default (sequelize, DataTypes) => {
                     fields: [{ name: 'user_id' }, { name: 'question_group_id' }],
                 },
             ],
+            scopes: {
+                withGroup: () => ({
+                    include: [
+                        {
+                            model: sequelize.models.SurveyQuestionGroups,
+                            as: 'group',
+                            attributes: {
+                                exclude: [],
+                            },
+                            where: {},
+                        },
+                    ],
+                }),
+            },
         },
     );
+    model.associate = () => {
+        const { UserSurveyQuestionAnswerScores, SurveyQuestionGroups } = sequelize.models;
 
+        UserSurveyQuestionAnswerScores.belongsTo(SurveyQuestionGroups, { as: 'group', foreignKey: 'question_group_id' });
+    };
     return model;
 };

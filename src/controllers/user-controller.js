@@ -6,6 +6,7 @@ import {
     INACTIVE_STATUS_ID,
     APP_SETUP_ACCOUNT_URL,
     SYSTEM_AUDITS,
+    ADMIN_ACCOUNT_TYPE_ID,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -178,17 +179,23 @@ export default class UserController {
     }
 
     async handleUpdateUserSurveyRoute(req, res) {
-        const scores = await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
+        await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SUBMIT_SURVEY);
 
-        return res.json(scores);
+        return res.json({ msg: 'Survey successfully submitted' });
     }
 
     async handleGetUserSurveyRoute(req, res) {
-        const surveyAnswers = await this.miscellaneousService.getUserSurveyAnswers(req.params.user_id);
+        if (req.auth.account_type_id === ADMIN_ACCOUNT_TYPE_ID) {
+            const surveyAnswers = await this.miscellaneousService.getUserSurveyAnswers(req.params.user_id);
 
-        return res.json(surveyAnswers);
+            return res.json(surveyAnswers);
+        }
+
+        const surveyScore = await this.miscellaneousService.getUserSurveyScore(req.auth.user_id);
+
+        return res.json(surveyScore);
     }
 
     async handleVerifySsoExist(req, res) {

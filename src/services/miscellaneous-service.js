@@ -159,8 +159,6 @@ export default class MiscellaneousService {
                 userSurveyQuestionAnswerScoresMap[item.question_group_id] = item;
             });
 
-            let userTotalScore = 0;
-
             const userAnswerByGroupScores = {};
 
             await Promise.all(
@@ -168,8 +166,6 @@ export default class MiscellaneousService {
                     answer.if_yes_how_much_bother = answer.if_yes_how_much_bother?.toLowerCase();
 
                     const answerScore = answer.yes_no === 'no' ? 0 : (answerScoreMap[answer.if_yes_how_much_bother.replace(/\s/g, '_')] ?? 0);
-
-                    userTotalScore += answerScore;
 
                     const questionGroupIds = surveyQuestionGroupIdsMap[answer.question_id];
 
@@ -209,6 +205,7 @@ export default class MiscellaneousService {
                         user_id: userId,
                         question_group_id: group,
                         score: userAnswerByGroupScores[group].score,
+                        max_score: userAnswerByGroupScores[group].max_score,
                         final_score: this.helper.toPercent(userAnswerByGroupScores[group].final_score),
                         avg_score: this.helper.toPercent(userAnswerByGroupScores[group].avg_score),
                         group_weight: this.helper.toPercent(userAnswerByGroupScores[group].group_weight),
@@ -218,38 +215,7 @@ export default class MiscellaneousService {
 
             await dbTransaction.commit();
 
-            return {
-                score: userTotalScore,
-                total: surveyQuestions.length * maxScore,
-                groups:
-                    userTotalScore > 0
-                        ? Object.keys(userAnswerByGroupScores).map((group) => {
-                              delete surveyQuestionGroupMap[group].dataValues.value;
-
-                              delete surveyQuestionGroupMap[group].dataValues.question_ids;
-
-                              return {
-                                  group: surveyQuestionGroupMap[group],
-                                  score: userAnswerByGroupScores[group].score,
-                                  total: userAnswerByGroupScores[group].max_score,
-                              };
-                          })
-                        : surveyQuestionGroups
-                              .filter((group) => group.question_ids.length === 0)
-                              .map((group) => {
-                                  delete group.dataValues.value;
-
-                                  const groupQuestionCount = surveyQuestionGroupMap[group].question_ids.length;
-
-                                  delete group.dataValues.question_ids;
-
-                                  return {
-                                      group: group,
-                                      score: 0,
-                                      total: groupQuestionCount * maxScore,
-                                  };
-                              }),
-            };
+            return userAnswerByGroupScores;
         } catch (error) {
             await dbTransaction.rollback();
 
@@ -286,6 +252,47 @@ export default class MiscellaneousService {
             this.logger.error('Failed to get user survey answers', error);
 
             throw new exceptions.InternalServerError('Failed to get user survey answers', error);
+        }
+    }
+
+    /**
+     * Get user survey score summary
+     *
+     * @returns {Promise<{
+     *  score: number,
+     *  total: number,
+     *  groups: UserSurveyQuestionAnswerScores
+     * }>} User survey score summary
+     * @throws {InternalServerError} If failed to get user survey score summary
+     */
+    async getUserSurveyScore(userId) {
+        try {
+            const surveyScores = await this.database.models.UserSurveyQuestionAnswerScores.scope(['withGroup']).findAll({
+                attributes: ['score', ['max_score', 'total']],
+                where: { user_id: userId },
+                order: [['score', 'DESC']],
+            });
+
+            let totalScore = 0;
+
+            let totalMaxScore = 0;
+
+            surveyScores.forEach((surveyScore) => {
+                console.log(surveyScore.score, surveyScore.total);
+                totalScore += surveyScore.dataValues.score;
+
+                totalMaxScore += surveyScore.dataValues.total;
+            });
+
+            return {
+                score: totalScore,
+                total: totalMaxScore,
+                groups: surveyScores,
+            };
+        } catch (error) {
+            this.logger.error('Failed to get user survey score summary', error);
+
+            throw new exceptions.InternalServerError('Failed to get user survey score summary', error);
         }
     }
 

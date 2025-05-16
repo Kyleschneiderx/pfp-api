@@ -97,6 +97,12 @@ export default ({
         userController.handleChangePasswordRoute.bind(userController),
     );
 
+    router.get(
+        '/:user_id/survey',
+        [validateInput([commonValidations.userIdValidation({ userService })])],
+        userController.handleGetUserSurveyRoute.bind(userController),
+    );
+
     router.use(verifyPremiumUser);
 
     router.get(
@@ -127,12 +133,6 @@ export default ({
             validations.createPersonalizedPfPlanValidation({ pfPlanService, exerciseService, selectionService, file, educationService, userService }),
         ),
         userController.handleCreatePersonalizedPfPlan.bind(userController),
-    );
-
-    router.get(
-        '/:user_id/survey',
-        [validateInput([commonValidations.userIdValidation({ userService })])],
-        userController.handleGetUserSurveyRoute.bind(userController),
     );
 
     router.post(
