@@ -98,6 +98,12 @@ export default ({
     );
 
     router.get(
+        '/:user_id/survey',
+        [validateInput([commonValidations.userIdValidation({ userService })])],
+        userController.handleGetUserSurveyRoute.bind(userController),
+    );
+
+    router.get(
         '/:user_id/streak',
         [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
         userController.handleGetUserStreakRoute.bind(userController),
@@ -133,12 +139,6 @@ export default ({
             validations.createPersonalizedPfPlanValidation({ pfPlanService, exerciseService, selectionService, file, educationService, userService }),
         ),
         userController.handleCreatePersonalizedPfPlan.bind(userController),
-    );
-
-    router.get(
-        '/:user_id/survey',
-        [validateInput([commonValidations.userIdValidation({ userService })])],
-        userController.handleGetUserSurveyRoute.bind(userController),
     );
 
     router.post(
