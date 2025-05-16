@@ -910,6 +910,7 @@ export default class PfPlanService {
                         sets: content.sets,
                         reps: content.reps,
                         hold: content.hold,
+                        rest: content.rest,
                         education_id: content.education_id,
                     })),
                 })),
