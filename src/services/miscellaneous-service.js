@@ -392,7 +392,7 @@ export default class MiscellaneousService {
                 const groupScoreMap = {};
 
                 userSurveyScoresSummary.forEach((item) => {
-                    groupScoreMap[item.question_group_id] = item.final_score;
+                    groupScoreMap[item.question_group_id] = item.avg_score;
                 });
 
                 const highestScore = Math.max(...Object.values(groupScoreMap));
