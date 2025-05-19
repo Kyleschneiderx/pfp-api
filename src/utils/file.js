@@ -104,7 +104,7 @@ export default class File {
 
     static async convertImage(format, buffer) {
         if (!buffer) return buffer;
-
+        console.log('Converting image buffer');
         try {
             return await sharp(buffer).toFormat(format, { quality: 20, lossless: false, smartSubsample: true }).toBuffer();
         } catch (error) {
