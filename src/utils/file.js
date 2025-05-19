@@ -101,4 +101,14 @@ export default class File {
             throw new Error('Error on resizing image.', { cause: error });
         }
     }
+
+    static async convertImage(format, buffer) {
+        if (!buffer) return buffer;
+
+        try {
+            return await sharp(buffer).toFormat(format, { quality: 20, lossless: false, smartSubsample: true }).toBuffer();
+        } catch (error) {
+            throw new Error(`Error on converting image to ${format}.`, { cause: error });
+        }
+    }
 }

@@ -1,7 +1,6 @@
 import { Sequelize } from 'sequelize';
 import {
     ADMIN_ACCOUNT_TYPE_ID,
-    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
     ASSET_URL,
     S3_OBJECT_URL,
     EDUCATION_PHOTO_PATH,
@@ -16,12 +15,13 @@ import {
 import * as exceptions from '../exceptions/index.js';
 
 export default class EducationService {
-    constructor({ logger, database, helper, storage, notificationService }) {
+    constructor({ logger, database, helper, storage, notificationService, file }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
         this.storage = storage;
         this.notificationService = notificationService;
+        this.file = file;
     }
 
     /**
@@ -40,13 +40,13 @@ export default class EducationService {
         try {
             const storeResponse = await Promise.allSettled([
                 ...((files.photo && [
-                    this.storage.store(files.photo.name, files.photo.data, EDUCATION_PHOTO_PATH, {
-                        contentType: files.photo.mimetype,
+                    this.storage.store(files.photo, EDUCATION_PHOTO_PATH, {
+                        convertTo: 'webp',
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
                 ]) ?? [undefined]),
                 ...((files.media && [
-                    this.storage.storeMultipart(files.media.name, files.media.data, EDUCATION_MEDIA_PATH, {
+                    this.storage.store(files.media, EDUCATION_MEDIA_PATH, {
                         contentType: files.media.mimetype,
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
@@ -115,8 +115,8 @@ export default class EducationService {
                 content: data.content,
                 reference_pf_plan_id: data.referencePfPlanId,
                 media_url: data.mediaUrl,
-                media_upload: mediaStoreResponse?.path ? `${ASSET_URL}/${mediaStoreResponse?.path}` : null,
-                photo: photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : null,
+                media_upload: mediaStoreResponse?.path ? mediaStoreResponse?.path : null,
+                photo: photoStoreResponse?.path ? photoStoreResponse?.path : null,
                 status_id: data.statusId,
             });
 
@@ -126,17 +126,9 @@ export default class EducationService {
                 );
             }
 
-            education.media_upload = this.helper.generateProtectedUrl(
-                education.media_upload,
-                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                },
-            );
+            education.media_upload = this.helper.generateAssetUrl(education.media_upload);
 
-            education.photo = this.helper.generateProtectedUrl(education.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            education.photo = this.helper.generateAssetUrl(education.photo);
 
             if (education.status_id === PUBLISHED_EDUCATION_STATUS_ID) {
                 this.notificationService.createNotification({
@@ -204,11 +196,11 @@ export default class EducationService {
 
             education.reference_pf_plan_id = data.referencePfPlanId;
 
-            education.photo = photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : undefined;
+            education.photo = photoStoreResponse?.path ? photoStoreResponse?.path : undefined;
 
             education.media_url = data.mediaUrl;
 
-            education.media_upload = mediaStoreResponse?.path ? `${ASSET_URL}/${mediaStoreResponse?.path}` : undefined;
+            education.media_upload = mediaStoreResponse?.path ? mediaStoreResponse?.path : undefined;
 
             education.status_id = data.statusId;
 
@@ -227,17 +219,9 @@ export default class EducationService {
                 );
             }
 
-            education.photo = this.helper.generateProtectedUrl(education.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            education.photo = this.helper.generateAssetUrl(education.photo);
 
-            education.media_upload = this.helper.generateProtectedUrl(
-                education.media_upload,
-                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                },
-            );
+            education.media_upload = this.helper.generateAssetUrl(education.media_upload);
 
             if (toRemoveFiles.length !== 0) {
                 await this.storage.delete(toRemoveFiles, {
@@ -354,13 +338,9 @@ export default class EducationService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            row.photo = this.helper.generateAssetUrl(row.photo);
 
-            row.media_upload = this.helper.generateProtectedUrl(row.media_upload, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            row.media_upload = this.helper.generateAssetUrl(row.media_upload);
 
             return row;
         });
@@ -418,17 +398,9 @@ export default class EducationService {
                 },
             });
 
-            education.photo = this.helper.generateProtectedUrl(education.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            education.photo = this.helper.generateAssetUrl(education.photo);
 
-            education.media_upload = this.helper.generateProtectedUrl(
-                education.media_upload,
-                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                },
-            );
+            education.media_upload = this.helper.generateAssetUrl(education.media_upload);
 
             if (education.dataValues.is_favorite !== undefined) {
                 education.dataValues.is_favorite = Boolean(education.dataValues.is_favorite);

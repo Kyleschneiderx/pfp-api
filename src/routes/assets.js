@@ -6,9 +6,7 @@ export default ({ helper }) => {
     const router = express.Router();
 
     router.get('/:s3_path/:secret/:s3_file', async (req, res) => {
-        if (
-            !helper.verifyProtectedUrl(req.params.secret, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, req.params.s3_file.split('.')[0])
-        ) {
+        if (!helper.verifyProtectedUrl(req.params.secret, req.params.s3_file.split('.')[0])) {
             throw new exceptions.Unauthorized('Unauthorized');
         }
 
@@ -16,9 +14,7 @@ export default ({ helper }) => {
     });
 
     router.get('/:env/:s3_path/:secret/:s3_file', async (req, res) => {
-        if (
-            !helper.verifyProtectedUrl(req.params.secret, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, req.params.s3_file.split('.')[0])
-        ) {
+        if (!helper.verifyProtectedUrl(req.params.secret, req.params.s3_file.split('.')[0])) {
             throw new exceptions.Unauthorized('Unauthorized');
         }
 

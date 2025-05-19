@@ -114,13 +114,7 @@ export default class UserService {
             });
 
             if (user?.user_profile) {
-                user.user_profile.photo = this.helper.generateProtectedUrl(
-                    user.user_profile.photo,
-                    `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                    {
-                        expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                    },
-                );
+                user.user_profile.photo = this.helper.generateAssetUrl(user.user_profile.photo);
             }
 
             return user;
@@ -207,13 +201,7 @@ export default class UserService {
                 row.dataValues.can_invite = !row.dataValues.password;
             }
 
-            row.user_profile.photo = this.helper.generateProtectedUrl(
-                row.user_profile.photo,
-                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                },
-            );
+            row.user_profile.photo = this.helper.generateAssetUrl(row.user_profile.photo);
 
             delete row.dataValues.password;
 
@@ -254,13 +242,7 @@ export default class UserService {
 
             user.dataValues.has_answered_survey = await this.hasUserAnsweredSurvey(user.id);
 
-            user.user_profile.photo = this.helper.generateProtectedUrl(
-                user.user_profile.photo,
-                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                },
-            );
+            user.user_profile.photo = this.helper.generateAssetUrl(user.user_profile.photo);
 
             user.dataValues.user_subscription = await this.database.models.UserSubscriptions.findOne({
                 attributes: ['package_id', 'expires_at'],
@@ -353,10 +335,10 @@ export default class UserService {
     async createUserAccount(data) {
         let storeResponse;
         try {
-            const resizeData = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+            data.photo.data = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
 
-            storeResponse = await this.storage.store(data.photo?.name, resizeData, USER_PHOTO_PATH, {
-                contentType: data.photo?.mimetype,
+            storeResponse = await this.storage.store(data.photo, USER_PHOTO_PATH, {
+                convertTo: 'webp',
                 s3: { bucket: process.env.S3_BUCKET_NAME },
             });
 
@@ -384,14 +366,12 @@ export default class UserService {
                         contact_number: data.contactNumber,
                         birthdate: data.birthdate,
                         description: data.description,
-                        photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
+                        photo: storeResponse?.path ? storeResponse?.path : null,
                     },
                     { transaction: transaction },
                 );
 
-                profile.photo = this.helper.generateProtectedUrl(profile.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                });
+                profile.photo = this.helper.generateAssetUrl(profile.photo);
 
                 delete user.dataValues.password;
                 delete profile.dataValues.id;
@@ -534,10 +514,10 @@ export default class UserService {
     async updateUserAccount(data) {
         let storeResponse;
         try {
-            const resizeData = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+            data.photo.data = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
 
-            storeResponse = await this.storage.store(data.photo?.name, resizeData, USER_PHOTO_PATH, {
-                contentType: data.photo?.mimetype,
+            storeResponse = await this.storage.store(data.photo, USER_PHOTO_PATH, {
+                convertTo: 'webp',
                 s3: { bucket: process.env.S3_BUCKET_NAME },
             });
 
@@ -551,7 +531,7 @@ export default class UserService {
                 ...(data.contactNumber !== undefined && { contact_number: data.contactNumber }),
                 ...(data.birthdate !== undefined && { birthdate: data.birthdate }),
                 ...(data.description && { description: data.description }),
-                ...(storeResponse?.path && { photo: `${ASSET_URL}/${storeResponse?.path}` }),
+                ...(storeResponse?.path && { photo: storeResponse?.path }),
             };
 
             const user = await this.getUser({ userId: data.userId, withProfile: true });
@@ -581,13 +561,7 @@ export default class UserService {
             await user.reload();
             await user.user_profile.reload();
 
-            user.user_profile.photo = this.helper.generateProtectedUrl(
-                user.user_profile.photo,
-                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                },
-            );
+            user.user_profile.photo = this.helper.generateAssetUrl(user.user_profile.photo);
 
             delete user.dataValues.password;
             delete user.dataValues.google_id;

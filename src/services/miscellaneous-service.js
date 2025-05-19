@@ -278,7 +278,6 @@ export default class MiscellaneousService {
             let totalMaxScore = 0;
 
             surveyScores.forEach((surveyScore) => {
-                console.log(surveyScore.score, surveyScore.total);
                 totalScore += surveyScore.dataValues.score;
 
                 totalMaxScore += surveyScore.dataValues.total;

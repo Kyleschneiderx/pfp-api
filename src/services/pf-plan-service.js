@@ -19,13 +19,14 @@ import {
 import * as exceptions from '../exceptions/index.js';
 
 export default class PfPlanService {
-    constructor({ logger, database, helper, storage, notificationService, streakService }) {
+    constructor({ logger, database, helper, storage, notificationService, streakService, file }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
         this.storage = storage;
         this.notificationService = notificationService;
         this.streakService = streakService;
+        this.file = file;
     }
 
     /**
@@ -194,8 +195,8 @@ export default class PfPlanService {
     async createPfPlan(data) {
         let storeResponse;
         try {
-            storeResponse = await this.storage.store(data.photo?.name, data.photo?.data, PFPLAN_PHOTO_PATH, {
-                contentType: data.photo?.mimetype,
+            storeResponse = await this.storage.store(data.photo, PFPLAN_PHOTO_PATH, {
+                convertTo: 'webp',
                 s3: { bucket: process.env.S3_BUCKET_NAME },
             });
 
@@ -205,7 +206,7 @@ export default class PfPlanService {
                         name: data.name,
                         description: data.description,
                         content: data.content,
-                        photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
+                        photo: storeResponse?.path ? storeResponse?.path : null,
                         user_id: data.userId,
                         is_premium: true,
                         is_custom: data.isCustom,
@@ -214,9 +215,7 @@ export default class PfPlanService {
                     { transaction: transaction },
                 );
 
-                pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                });
+                pfPlan.photo = this.helper.generateAssetUrl(pfPlan.photo);
 
                 if (data.categoryId.length > 0) {
                     await this.database.models.ContentCategories.bulkCreate(
@@ -333,8 +332,8 @@ export default class PfPlanService {
     async updatePfPlan(data) {
         let storeResponse;
         try {
-            storeResponse = await this.storage.store(data.photo?.name, data.photo?.data, PFPLAN_PHOTO_PATH, {
-                contentType: data.photo?.mimetype,
+            storeResponse = await this.storage.store(data.photo, PFPLAN_PHOTO_PATH, {
+                convertTo: 'webp',
                 s3: { bucket: process.env.S3_BUCKET_NAME },
             });
 
@@ -352,7 +351,7 @@ export default class PfPlanService {
 
             pfPlan.content = data.content;
 
-            pfPlan.photo = storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : undefined;
+            pfPlan.photo = storeResponse?.path ? storeResponse?.path : undefined;
 
             pfPlan.status_id = data.statusId;
 
@@ -377,9 +376,7 @@ export default class PfPlanService {
                 await this.storage.delete(oldPhoto.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
             }
 
-            pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            pfPlan.photo = this.helper.generateAssetUrl(pfPlan.photo);
 
             delete pfPlan.dataValues.deleted_at;
 
@@ -604,9 +601,7 @@ export default class PfPlanService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            row.photo = this.helper.generateAssetUrl(row.photo);
 
             const userPfPlanProgress = row.user_pf_plan_progress?.[0];
 
@@ -717,9 +712,7 @@ export default class PfPlanService {
                 },
             });
 
-            pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            pfPlan.photo = this.helper.generateAssetUrl(pfPlan.photo);
 
             if (pfPlan.dataValues.is_favorite !== undefined) {
                 pfPlan.dataValues.is_favorite = Boolean(pfPlan.dataValues.is_favorite);
@@ -750,21 +743,9 @@ export default class PfPlanService {
 
                             pfPlanDailyContent.dataValues.exercise.rest = pfPlanDailyContent.rest;
 
-                            pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
-                                pfPlanDailyContent.exercise?.photo,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
-                            );
+                            pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateAssetUrl(pfPlanDailyContent.exercise?.photo);
 
-                            pfPlanDailyContent.dataValues.exercise.video = this.helper.generateProtectedUrl(
-                                pfPlanDailyContent.exercise?.video,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
-                            );
+                            pfPlanDailyContent.dataValues.exercise.video = this.helper.generateAssetUrl(pfPlanDailyContent.exercise?.video);
                         }
 
                         delete pfPlanDailyContent.dataValues.user_pf_plan_daily_progress;
@@ -778,20 +759,10 @@ export default class PfPlanService {
                         delete pfPlanDailyContent.dataValues.rest;
 
                         if (pfPlanDailyContent.dataValues.education) {
-                            pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
-                                pfPlanDailyContent.education?.photo,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
-                            );
+                            pfPlanDailyContent.dataValues.education.photo = this.helper.generateAssetUrl(pfPlanDailyContent.education?.photo);
 
-                            pfPlanDailyContent.dataValues.education.media_upload = this.helper.generateProtectedUrl(
+                            pfPlanDailyContent.dataValues.education.media_upload = this.helper.generateAssetUrl(
                                 pfPlanDailyContent.education?.media_upload,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
                             );
                         }
 
@@ -875,7 +846,7 @@ export default class PfPlanService {
                     name: `${pfPlan.name} Duplicate`,
                     description: pfPlan.description,
                     content: pfPlan.content,
-                    photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
+                    photo: storeResponse?.path ? storeResponse?.path : null,
                     is_premium: pfPlan.is_premium,
                     is_custom: pfPlan.is_custom,
                     status_id: DRAFT_PF_PLAN_STATUS_ID,
@@ -894,9 +865,7 @@ export default class PfPlanService {
                 },
             );
 
-            newPfPlan.photo = this.helper.generateProtectedUrl(newPfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            newPfPlan.photo = this.helper.generateAssetUrl(newPfPlan.photo);
 
             await this.database.models.PfPlanDailies.bulkCreate(
                 pfPlanDailies.map((daily) => ({
@@ -1412,9 +1381,7 @@ export default class PfPlanService {
                 },
             });
 
-            pfPlan.photo = this.helper.generateProtectedUrl(pfPlan.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            pfPlan.photo = this.helper.generateAssetUrl(pfPlan.photo);
 
             if (pfPlan.dataValues.is_favorite !== undefined) {
                 pfPlan.dataValues.is_favorite = Boolean(pfPlan.dataValues.is_favorite);
@@ -1444,21 +1411,9 @@ export default class PfPlanService {
 
                             pfPlanDailyContent.dataValues.exercise.rest = pfPlanDailyContent.rest;
 
-                            pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateProtectedUrl(
-                                pfPlanDailyContent.exercise?.photo,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
-                            );
+                            pfPlanDailyContent.dataValues.exercise.photo = this.helper.generateAssetUrl(pfPlanDailyContent.exercise?.photo);
 
-                            pfPlanDailyContent.dataValues.exercise.video = this.helper.generateProtectedUrl(
-                                pfPlanDailyContent.exercise?.video,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
-                            );
+                            pfPlanDailyContent.dataValues.exercise.video = this.helper.generateAssetUrl(pfPlanDailyContent.exercise?.video);
                         }
 
                         delete pfPlanDailyContent.dataValues.sets;
@@ -1470,20 +1425,10 @@ export default class PfPlanService {
                         delete pfPlanDailyContent.dataValues.rest;
 
                         if (pfPlanDailyContent.dataValues.education) {
-                            pfPlanDailyContent.dataValues.education.photo = this.helper.generateProtectedUrl(
-                                pfPlanDailyContent.education?.photo,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
-                            );
+                            pfPlanDailyContent.dataValues.education.photo = this.helper.generateAssetUrl(pfPlanDailyContent.education?.photo);
 
-                            pfPlanDailyContent.dataValues.education.media_upload = this.helper.generateProtectedUrl(
+                            pfPlanDailyContent.dataValues.education.media_upload = this.helper.generateAssetUrl(
                                 pfPlanDailyContent.education?.media_upload,
-                                `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                                {
-                                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                                },
                             );
                         }
 
@@ -1737,9 +1682,7 @@ export default class PfPlanService {
 
         if (!pfPlan) throw new exceptions.NotFound('No records found.');
 
-        pfPlan.photo = this.helper.generateProtectedUrl(pfPlan?.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-        });
+        pfPlan.photo = this.helper.generateAssetUrl(pfPlan?.photo);
 
         return pfPlan;
     }

@@ -14,6 +14,7 @@ import routeV1Educations from './v1/educations.js';
 import routeV1Miscellaneous from './v1/miscellaneous.js';
 import routeV1Notifications from './v1/notifications.js';
 import routeAsset from './assets.js';
+import routeScripts from './scripts.js';
 import * as middlewares from '../middlewares/index.js';
 
 export default ({
@@ -45,6 +46,8 @@ export default ({
     notificationController,
     revenuecat,
     openAiChat,
+    database,
+    storage,
 }) => {
     const router = express.Router();
 
@@ -293,6 +296,8 @@ export default ({
     );
 
     router.use(verifyAuth);
+
+    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, file, storage, helper }));
 
     router.use(
         '/v1/selections',
