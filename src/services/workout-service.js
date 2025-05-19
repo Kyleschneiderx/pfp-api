@@ -9,6 +9,8 @@ import {
     FAVORITE_WORKOUT_STATUS,
     NOTIFICATIONS,
     DRAFT_WORKOUT_STATUS_ID,
+    CONTENT_PHOTO_WIDTH,
+    CONTENT_PHOTO_HEIGHT,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -42,6 +44,8 @@ export default class WorkoutService {
         try {
             let storeResponse;
             if (data.photo !== undefined) {
+                data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+
                 storeResponse = await this.storage.store(data.photo, WORKOUT_PHOTO_PATH, {
                     convertTo: 'webp',
                     s3: { bucket: process.env.S3_BUCKET_NAME },
@@ -122,6 +126,8 @@ export default class WorkoutService {
         let storeResponse;
         try {
             if (data.photo !== undefined) {
+                data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+
                 storeResponse = await this.storage.store(data.photo, WORKOUT_PHOTO_PATH, {
                     convertTo: 'webp',
                     s3: { bucket: process.env.S3_BUCKET_NAME },

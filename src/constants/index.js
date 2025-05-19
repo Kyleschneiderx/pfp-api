@@ -228,3 +228,7 @@ export const CONTENT_CATEGORIES_TYPE = {
     EDUCATION: 'educations',
     PF_PLAN: 'pf_plans',
 };
+
+export const CONTENT_PHOTO_HEIGHT = 405;
+
+export const CONTENT_PHOTO_WIDTH = 225;

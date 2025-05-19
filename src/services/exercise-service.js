@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
+import { EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class ExerciseService {
@@ -25,6 +25,9 @@ export default class ExerciseService {
      */
     async _uploadFilesToS3(files) {
         try {
+            if (files.photo) {
+                files.photo.data = await this.file.resizeImage(files.photo.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+            }
             const storeResponse = await Promise.allSettled([
                 ...((files.photo && [
                     this.storage.store(files.photo, EXERCISE_PHOTO_PATH, {

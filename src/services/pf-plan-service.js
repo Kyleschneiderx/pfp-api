@@ -15,6 +15,8 @@ import {
     DATE_FORMAT,
     TIME_FORMAT,
     CONTENT_CATEGORIES_TYPE,
+    CONTENT_PHOTO_WIDTH,
+    CONTENT_PHOTO_HEIGHT,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -194,6 +196,8 @@ export default class PfPlanService {
     async createPfPlan(data) {
         let storeResponse;
         try {
+            data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+
             storeResponse = await this.storage.store(data.photo, PFPLAN_PHOTO_PATH, {
                 convertTo: 'webp',
                 s3: { bucket: process.env.S3_BUCKET_NAME },
@@ -331,6 +335,8 @@ export default class PfPlanService {
     async updatePfPlan(data) {
         let storeResponse;
         try {
+            data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+
             storeResponse = await this.storage.store(data.photo, PFPLAN_PHOTO_PATH, {
                 convertTo: 'webp',
                 s3: { bucket: process.env.S3_BUCKET_NAME },
