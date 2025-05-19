@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { ASSET_URL, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
 
 export default class Helper {
     /**
@@ -20,24 +21,40 @@ export default class Helper {
             });
     }
 
-    static generateProtectedUrl(url, secret, options = { expiration: 15 }) {
+    static generateAssetUrl(path) {
+        return this.generateProtectedUrl(`${ASSET_URL}/${path}`, { expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES });
+    }
+
+    static generateProtectedUrl(url, options = { expiration: 15 }) {
         if (url === undefined || url === null) return url;
+
         const urlObject = new URL(url);
+
         let urlBreakdown = urlObject.pathname.split('/');
+
         const file = urlBreakdown.pop();
+
         const [filename, filetype] = file.split('.');
+
         const expires = Date.now() + options.expiration * 60 * 1000;
+
+        const secret = `${process.env.S3_ACCESS_KEY_ID}|${process.env.S3_SECRET_ACCESS_KEY}`;
+
         const hash = crypto.createHmac('sha256', secret).update(`${filename}:${expires}`).digest('hex');
+
         urlBreakdown = [...urlBreakdown, `${expires}:${hash}`, `${filename}.${filetype}`];
+
         return `${urlObject.origin}${urlBreakdown.join('/')}`;
     }
 
-    static verifyProtectedUrl(token, secret, filename) {
+    static verifyProtectedUrl(token, filename) {
         const [expires, hash] = token.split(':');
 
-        if (Date.now() > expires) {
+        if (Date.now() > Number(expires) || Number.isNaN(Number(expires))) {
             return false;
         }
+
+        const secret = `${process.env.S3_ACCESS_KEY_ID}|${process.env.S3_SECRET_ACCESS_KEY}`;
 
         const validHash = crypto.createHmac('sha256', secret).update(`${filename}:${expires}`).digest('hex');
 
