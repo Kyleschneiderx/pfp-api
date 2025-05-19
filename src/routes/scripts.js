@@ -112,6 +112,7 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
     });
 
     router.get('/convert/:resource', async (req, res) => {
+        return res.json({ msg: 'Blocked' });
         const { resource } = req.params;
 
         if (!resource) return res.json({ msg: 'Specify resource to convert.' });
@@ -134,6 +135,8 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                 parsedPath,
             };
         };
+
+        const itemsToProcess = 20;
 
         const [exercises, workouts, educations, pfPlans, users] = await Promise.all([
             database.models.Exercises.findAll({}),

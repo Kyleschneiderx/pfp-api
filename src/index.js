@@ -120,6 +120,9 @@ const server = app.listen(process.env.APP_PORT, () => {
             pfPlanService: serviceContainer.pfPlanService,
             notificationService: serviceContainer.notificationService,
             miscellaneousService: serviceContainer.miscellaneousService,
+            database: serviceContainer.database,
+            storage: serviceContainer.storage,
+            file: serviceContainer.file,
         }),
     );
 
