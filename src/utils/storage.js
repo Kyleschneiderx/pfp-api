@@ -301,6 +301,7 @@ export default class Storage {
                     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
                 }
 
+                console.log('Fetching content');
                 return Buffer.concat(chunks);
             };
 
