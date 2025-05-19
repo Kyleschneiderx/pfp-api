@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 import mime from 'mime-types';
 
+sharp.concurrency(1);
+sharp.cache({ memory: 10, files: 0, items: 10 });
 export default class File {
     static dir = path.dirname(fileURLToPath(import.meta.url));
 
