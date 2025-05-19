@@ -229,6 +229,6 @@ export const CONTENT_CATEGORIES_TYPE = {
     PF_PLAN: 'pf_plans',
 };
 
-export const CONTENT_PHOTO_HEIGHT = 405;
+export const CONTENT_PHOTO_HEIGHT = 450;
 
-export const CONTENT_PHOTO_WIDTH = 225;
+export const CONTENT_PHOTO_WIDTH = 810;
