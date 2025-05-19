@@ -13,12 +13,13 @@ import {
 import * as exceptions from '../exceptions/index.js';
 
 export default class WorkoutService {
-    constructor({ logger, database, helper, storage, notificationService }) {
+    constructor({ logger, database, helper, storage, notificationService, file }) {
         this.database = database;
         this.logger = logger;
         this.helper = helper;
         this.storage = storage;
         this.notificationService = notificationService;
+        this.file = file;
     }
 
     /**
@@ -41,8 +42,8 @@ export default class WorkoutService {
         try {
             let storeResponse;
             if (data.photo !== undefined) {
-                storeResponse = await this.storage.store(data.photo.name, data.photo.data, WORKOUT_PHOTO_PATH, {
-                    contentType: data.photo.mimetype,
+                storeResponse = await this.storage.store(data.photo, WORKOUT_PHOTO_PATH, {
+                    convertTo: 'webp',
                     s3: { bucket: process.env.S3_BUCKET_NAME },
                 });
             }
@@ -52,16 +53,14 @@ export default class WorkoutService {
                     {
                         name: data.name,
                         description: data.description,
-                        photo: storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : null,
+                        photo: storeResponse?.path ? storeResponse?.path : null,
                         is_premium: data.isPremium,
                         status_id: data.statusId,
                     },
                     { transaction: transaction },
                 );
 
-                workout.photo = this.helper.generateProtectedUrl(workout.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                    expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                });
+                workout.photo = this.helper.generateAssetUrl(workout.photo);
 
                 if (data.exercises) {
                     let arrangement = 0;
@@ -123,8 +122,8 @@ export default class WorkoutService {
         let storeResponse;
         try {
             if (data.photo !== undefined) {
-                storeResponse = await this.storage.store(data.photo.name, data.photo.data, WORKOUT_PHOTO_PATH, {
-                    contentType: data.photo.mimetype,
+                storeResponse = await this.storage.store(data.photo, WORKOUT_PHOTO_PATH, {
+                    convertTo: 'webp',
                     s3: { bucket: process.env.S3_BUCKET_NAME },
                 });
             }
@@ -139,7 +138,7 @@ export default class WorkoutService {
 
             workout.description = data.description;
 
-            workout.photo = storeResponse?.path ? `${ASSET_URL}/${storeResponse?.path}` : undefined;
+            workout.photo = storeResponse?.path ? storeResponse?.path : undefined;
 
             workout.is_premium = data.isPremium;
 
@@ -153,9 +152,7 @@ export default class WorkoutService {
                 await this.storage.delete(oldPhoto.replace(ASSET_URL, S3_OBJECT_URL), { s3: { bucket: process.env.S3_BUCKET_NAME } });
             }
 
-            workout.photo = this.helper.generateProtectedUrl(workout.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            workout.photo = this.helper.generateAssetUrl(workout.photo);
 
             delete workout.dataValues.deleted_at;
 
@@ -306,9 +303,7 @@ export default class WorkoutService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            row.photo = this.helper.generateAssetUrl(row.photo);
 
             return row;
         });
@@ -407,9 +402,7 @@ export default class WorkoutService {
                 },
             });
 
-            workout.photo = this.helper.generateProtectedUrl(workout.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            workout.photo = this.helper.generateAssetUrl(workout.photo);
 
             if (workout.dataValues.is_favorite !== undefined) {
                 workout.dataValues.is_favorite = Boolean(workout.dataValues.is_favorite);
@@ -417,21 +410,9 @@ export default class WorkoutService {
 
             if (workout.workout_exercises) {
                 workout.dataValues.workout_exercises = workout.dataValues.workout_exercises.map((workoutExercise) => {
-                    workoutExercise.exercise.photo = this.helper.generateProtectedUrl(
-                        workoutExercise.exercise.photo,
-                        `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                        {
-                            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                        },
-                    );
+                    workoutExercise.exercise.photo = this.helper.generateAssetUrl(workoutExercise.exercise.photo);
 
-                    workoutExercise.exercise.video = this.helper.generateProtectedUrl(
-                        workoutExercise.exercise.video,
-                        `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`,
-                        {
-                            expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-                        },
-                    );
+                    workoutExercise.exercise.video = this.helper.generateAssetUrl(workoutExercise.exercise.video);
 
                     return workoutExercise;
                 });

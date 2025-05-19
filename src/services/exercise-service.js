@@ -1,13 +1,14 @@
 import { Sequelize } from 'sequelize';
-import { EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
+import { EXERCISE_VIDEO_PATH, EXERCISE_PHOTO_PATH, ASSET_URL, S3_OBJECT_URL } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
 export default class ExerciseService {
-    constructor({ logger, database, storage, helper }) {
+    constructor({ logger, database, storage, helper, file }) {
         this.database = database;
         this.logger = logger;
         this.storage = storage;
         this.helper = helper;
+        this.file = file;
     }
 
     /**
@@ -26,13 +27,13 @@ export default class ExerciseService {
         try {
             const storeResponse = await Promise.allSettled([
                 ...((files.photo && [
-                    this.storage.store(files.photo.name, files.photo.data, EXERCISE_PHOTO_PATH, {
-                        contentType: files.photo.mimetype,
+                    this.storage.store(files.photo, EXERCISE_PHOTO_PATH, {
+                        convertTo: 'webp',
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
                 ]) ?? [undefined]),
                 ...((files.video && [
-                    this.storage.storeMultipart(files.video.name, files.video.data, EXERCISE_VIDEO_PATH, {
+                    this.storage.store(files.video, EXERCISE_VIDEO_PATH, {
                         contentType: files.video.mimetype,
                         s3: { bucket: process.env.S3_BUCKET_NAME },
                     }),
@@ -105,17 +106,13 @@ export default class ExerciseService {
                 rest: data.rest,
                 description: data.description,
                 how_to: data.howTo,
-                photo: photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : null,
-                video: videoStoreResponse?.path ? `${ASSET_URL}/${videoStoreResponse?.path}` : null,
+                photo: photoStoreResponse?.path ? photoStoreResponse?.path : null,
+                video: videoStoreResponse?.path ? videoStoreResponse?.path : null,
             });
 
-            exercise.photo = this.helper.generateProtectedUrl(exercise.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            exercise.photo = this.helper.generateAssetUrl(exercise.photo);
 
-            exercise.video = this.helper.generateProtectedUrl(exercise.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            exercise.video = this.helper.generateAssetUrl(exercise.video);
 
             return exercise;
         } catch (error) {
@@ -209,13 +206,9 @@ export default class ExerciseService {
         if (!rows.length) throw new exceptions.NotFound('No records found.');
 
         rows = rows.map((row) => {
-            row.photo = this.helper.generateProtectedUrl(row.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            row.photo = this.helper.generateAssetUrl(row.photo);
 
-            row.video = this.helper.generateProtectedUrl(row.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            row.video = this.helper.generateAssetUrl(row.video);
 
             return row;
         });
@@ -303,20 +296,16 @@ export default class ExerciseService {
             exercise.rest = data.rest;
             exercise.description = data.description;
             exercise.how_to = data.howTo;
-            exercise.photo = photoStoreResponse?.path ? `${ASSET_URL}/${photoStoreResponse?.path}` : undefined;
-            exercise.video = videoStoreResponse?.path ? `${ASSET_URL}/${videoStoreResponse?.path}` : undefined;
+            exercise.photo = photoStoreResponse?.path ? photoStoreResponse?.path : undefined;
+            exercise.video = videoStoreResponse?.path ? videoStoreResponse?.path : undefined;
 
             await exercise.save();
 
             await exercise.reload();
 
-            exercise.photo = this.helper.generateProtectedUrl(exercise.photo, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            exercise.photo = this.helper.generateAssetUrl(exercise.photo);
 
-            exercise.video = this.helper.generateProtectedUrl(exercise.video, `${process.env.S3_REGION}|${process.env.S3_BUCKET_NAME}`, {
-                expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
-            });
+            exercise.video = this.helper.generateAssetUrl(exercise.video);
 
             if (toRemoveFiles.length !== 0) {
                 await this.storage.delete(toRemoveFiles, {
