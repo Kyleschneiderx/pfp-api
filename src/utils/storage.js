@@ -415,6 +415,8 @@ export default class Storage {
                     CacheControl: 'max-age=31536000',
                 }),
             );
+
+            await this.delete(sourcePath, options);
         } catch (error) {
             this.logger.error('Failed to convert image.');
 
