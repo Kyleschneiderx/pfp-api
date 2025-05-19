@@ -297,7 +297,7 @@ export default ({
 
     router.use(verifyAuth);
 
-    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, file, storage, helper }));
+    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper }));
 
     router.use(
         '/v1/selections',

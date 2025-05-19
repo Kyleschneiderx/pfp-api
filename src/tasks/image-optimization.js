@@ -85,7 +85,7 @@ export default ({ logger, database, file, storage }) => {
                     }),
                     database.models.UserProfiles.findOne({
                         where: {
-                            user_id: {
+                            id: {
                                 [Sequelize.Op.notIn]: Sequelize.literal(
                                     `(${database.dialect.queryGenerator
                                         .selectQuery('image_optimization_logs', {
@@ -266,7 +266,7 @@ export default ({ logger, database, file, storage }) => {
                 } else {
                     await logOptimize({
                         resource: 'user_profiles',
-                        resource_id: user.user_id,
+                        resource_id: user.id,
                         log: JSON.stringify({}),
                         error: 'not optimizable',
                     });
