@@ -11,6 +11,8 @@ import {
     DRAFT_EDUCATION_STATUS_ID,
     DRAFT_PF_PLAN_STATUS_ID,
     CONTENT_CATEGORIES_TYPE,
+    CONTENT_PHOTO_WIDTH,
+    CONTENT_PHOTO_HEIGHT,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -38,6 +40,10 @@ export default class EducationService {
      */
     async _uploadFilesToS3(files) {
         try {
+            if (files.photo) {
+                files.photo.data = await this.file.resizeImage(files.photo.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+            }
+
             const storeResponse = await Promise.allSettled([
                 ...((files.photo && [
                     this.storage.store(files.photo, EDUCATION_PHOTO_PATH, {
