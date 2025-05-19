@@ -394,8 +394,11 @@ export default class Storage {
         try {
             const sourceObject = await this.get(sourcePath, options);
 
+            console.log('Starting resizing');
+            const resizeImage = await this.file.resizeImage(await sourceObject.GetContent(), 405, 225);
+
             console.log('Starting conversion');
-            const convertedImageBuffer = await this.file.convertImage('webp', await sourceObject.GetContent());
+            const convertedImageBuffer = await this.file.convertImage('webp', resizeImage);
 
             if (options.backupPath) {
                 console.log('Starting backup');
