@@ -22,7 +22,13 @@ export default class Helper {
     }
 
     static generateAssetUrl(path) {
-        return this.generateProtectedUrl(`${ASSET_URL}/${path}`, { expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES });
+        try {
+            const urlObject = new URL(path);
+        } catch (error) {
+            /** empty */
+            path = `${ASSET_URL}/${path}`;
+        }
+        return this.generateProtectedUrl(path, { expiration: ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES });
     }
 
     static generateProtectedUrl(url, options = { expiration: 15 }) {
