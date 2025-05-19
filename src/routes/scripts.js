@@ -111,7 +111,11 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
         return res.json({ msg: 'Done' });
     });
 
-    router.get('/convert', async (req, res) => {
+    router.get('/convert/:resource', async (req, res) => {
+        const { resource } = req.params;
+
+        if (!resource) return res.json({ msg: 'Specify resource to convert.' });
+
         const parseFileUrl = ({ url, prefix }) => {
             if (!url) return {};
 
@@ -148,7 +152,7 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
         };
 
         await Promise.all([
-            ...(exercises
+            ...(resource === 'exercises' && exercises
                 ? exercises.map(async (each) => {
                       if (each.photo && each.photo.includes(EXERCISE_PHOTO_PATH)) {
                           const log = {
@@ -169,7 +173,6 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                               const newVideoUrl = each.video ? `${EXERCISE_VIDEO_PATH}/${videoUrl?.fileName}` : undefined;
 
                               await storage.convertImage(photoUrl.parsedPath, newPhotoUrl, {
-                                  backupPath: `${EXERCISE_PHOTO_PATH}-backup/${photoUrl.fileName}`,
                                   s3: { bucket: process.env.S3_BUCKET_NAME },
                               });
 
@@ -197,7 +200,7 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                       return true;
                   })
                 : []),
-            ...(workouts
+            ...(resource === 'workouts' && workouts
                 ? workouts.map(async (each) => {
                       if (each.photo && each.photo.includes(WORKOUT_PHOTO_PATH)) {
                           const log = {
@@ -212,7 +215,6 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                               const newPhotoUrl = `${WORKOUT_PHOTO_PATH}/${photoUrl.rawFileName}.webp`;
 
                               await storage.convertImage(photoUrl.parsedPath, newPhotoUrl, {
-                                  backupPath: `${WORKOUT_PHOTO_PATH}-backup/${photoUrl.fileName}`,
                                   s3: { bucket: process.env.S3_BUCKET_NAME },
                               });
 
@@ -237,7 +239,7 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                       return true;
                   })
                 : []),
-            ...(educations
+            ...(resource === 'educations' && educations
                 ? educations.map(async (each) => {
                       if (each.photo && each.photo.includes(EDUCATION_PHOTO_PATH)) {
                           const log = {
@@ -258,7 +260,6 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                               const newMediaUrl = each.media_upload ? `${EDUCATION_MEDIA_PATH}/${mediaUrl?.fileName}` : undefined;
 
                               await storage.convertImage(photoUrl.parsedPath, newPhotoUrl, {
-                                  backupPath: `${EDUCATION_PHOTO_PATH}-backup/${photoUrl.fileName}`,
                                   s3: { bucket: process.env.S3_BUCKET_NAME },
                               });
 
@@ -285,7 +286,7 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                       return true;
                   })
                 : []),
-            ...(pfPlans
+            ...(resource === 'pfplans' && pfPlans
                 ? pfPlans.map(async (each) => {
                       if (each.photo && each.photo.includes(PFPLAN_PHOTO_PATH)) {
                           const log = {
@@ -300,7 +301,6 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                               const newPhotoUrl = `${PFPLAN_PHOTO_PATH}/${photoUrl.rawFileName}.webp`;
 
                               await storage.convertImage(photoUrl.parsedPath, newPhotoUrl, {
-                                  backupPath: `${PFPLAN_PHOTO_PATH}-backup/${photoUrl.fileName}`,
                                   s3: { bucket: process.env.S3_BUCKET_NAME },
                               });
 
@@ -324,7 +324,7 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                       return false;
                   })
                 : []),
-            ...(users
+            ...(resource === 'users' && users
                 ? users.map(async (each) => {
                       if (each.photo && each.photo.includes(USER_PHOTO_PATH)) {
                           const log = {
@@ -340,7 +340,6 @@ export default ({ verifyAdmin, storage, database, file, helper }) => {
                               const newPhotoUrl = `${USER_PHOTO_PATH}/${photoUrl.rawFileName}.webp`;
 
                               await storage.convertImage(photoUrl.parsedPath, newPhotoUrl, {
-                                  backupPath: `${USER_PHOTO_PATH}-backup/${photoUrl.fileName}`,
                                   s3: { bucket: process.env.S3_BUCKET_NAME },
                               });
 
