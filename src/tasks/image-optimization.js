@@ -266,7 +266,7 @@ export default ({ logger, database, file, storage }) => {
                 } else {
                     await logOptimize({
                         resource: 'user_profiles',
-                        resource_id: user.id,
+                        resource_id: user.user_id,
                         log: JSON.stringify({}),
                         error: 'not optimizable',
                     });
