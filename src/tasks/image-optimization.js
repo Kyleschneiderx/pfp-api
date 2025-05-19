@@ -120,13 +120,7 @@ export default ({ logger, database, file, storage }) => {
                     };
                 };
 
-                const isOptimizable = async (resource, resourceType) => {
-                    const isExist = await database.models.ImageOptimizationLogs.findOne({
-                        where: { resource: resourceType, resource_id: resource.id },
-                    });
-
-                    if (isExist) return false;
-
+                const isOptimizable = async (resource) => {
                     try {
                         const isUrl = new URL(resource.photo);
 
@@ -218,7 +212,8 @@ export default ({ logger, database, file, storage }) => {
                 };
 
                 if (exercise) {
-                    if (await isOptimizable(exercise, 'exercises')) {
+                    console.log('Starting execise image optimization');
+                    if (await isOptimizable(exercise)) {
                         await optimize(exercise, 'exercises');
                     } else {
                         await logOptimize({
@@ -231,7 +226,8 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (workout) {
-                    if (await isOptimizable(workout, 'workouts')) {
+                    console.log('Starting workout image optimization');
+                    if (await isOptimizable(workout)) {
                         await optimize(workout, 'workouts');
                     } else {
                         await logOptimize({
@@ -244,7 +240,8 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (pfPlan) {
-                    if (await isOptimizable(pfPlan, 'pf_plans')) {
+                    console.log('Starting pf plan image optimization');
+                    if (await isOptimizable(pfPlan)) {
                         await optimize(pfPlan, 'pf_plans');
                     } else {
                         await logOptimize({
@@ -257,7 +254,8 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (education) {
-                    if (await isOptimizable(education, 'educations')) {
+                    console.log('Starting education image optimization');
+                    if (await isOptimizable(education)) {
                         await optimize(education, 'educations');
                     } else {
                         await logOptimize({
@@ -270,7 +268,8 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (user) {
-                    if (await isOptimizable(user, 'user_profiles')) {
+                    console.log('Starting user image optimization');
+                    if (await isOptimizable(user)) {
                         await optimize(user, 'user_profiles');
                     } else {
                         await logOptimize({
