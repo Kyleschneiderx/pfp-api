@@ -102,6 +102,7 @@ app.use(
         inAppPurchase: serviceContainer.inAppPurchase,
         storage: serviceContainer.storage,
         revenuecat: serviceContainer.revenuecat,
+        database: serviceContainer.database,
     }),
 );
 
