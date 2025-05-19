@@ -217,59 +217,69 @@ export default ({ logger, database, file, storage }) => {
                     }
                 };
 
-                if (exercise && (await isOptimizable(exercise, 'exercises'))) {
-                    await optimize(exercise, 'exercises');
-                } else {
-                    await logOptimize({
-                        resource: 'exercises',
-                        resource_id: exercise.id,
-                        log: JSON.stringify({}),
-                        error: 'not optimizable',
-                    });
+                if (exercise) {
+                    if (await isOptimizable(exercise, 'exercises')) {
+                        await optimize(exercise, 'exercises');
+                    } else {
+                        await logOptimize({
+                            resource: 'exercises',
+                            resource_id: exercise.id,
+                            log: JSON.stringify({}),
+                            error: 'not optimizable',
+                        });
+                    }
                 }
 
-                if (workout && (await isOptimizable(workout, 'workouts'))) {
-                    await optimize(workout, 'workouts');
-                } else {
-                    await logOptimize({
-                        resource: 'workouts',
-                        resource_id: workout.id,
-                        log: JSON.stringify({}),
-                        error: 'not optimizable',
-                    });
+                if (workout) {
+                    if (await isOptimizable(workout, 'workouts')) {
+                        await optimize(workout, 'workouts');
+                    } else {
+                        await logOptimize({
+                            resource: 'workouts',
+                            resource_id: workout.id,
+                            log: JSON.stringify({}),
+                            error: 'not optimizable',
+                        });
+                    }
                 }
 
-                if (pfPlan && (await isOptimizable(pfPlan, 'pf_plans'))) {
-                    await optimize(pfPlan, 'pf_plans');
-                } else {
-                    await logOptimize({
-                        resource: 'pf_plans',
-                        resource_id: pfPlan.id,
-                        log: JSON.stringify({}),
-                        error: 'not optimizable',
-                    });
+                if (pfPlan) {
+                    if (await isOptimizable(pfPlan, 'pf_plans')) {
+                        await optimize(pfPlan, 'pf_plans');
+                    } else {
+                        await logOptimize({
+                            resource: 'pf_plans',
+                            resource_id: pfPlan.id,
+                            log: JSON.stringify({}),
+                            error: 'not optimizable',
+                        });
+                    }
                 }
 
-                if (education && (await isOptimizable(education, 'educations'))) {
-                    await optimize(education, 'educations');
-                } else {
-                    await logOptimize({
-                        resource: 'educations',
-                        resource_id: education.id,
-                        log: JSON.stringify({}),
-                        error: 'not optimizable',
-                    });
+                if (education) {
+                    if (await isOptimizable(education, 'educations')) {
+                        await optimize(education, 'educations');
+                    } else {
+                        await logOptimize({
+                            resource: 'educations',
+                            resource_id: education.id,
+                            log: JSON.stringify({}),
+                            error: 'not optimizable',
+                        });
+                    }
                 }
 
-                if (user && (await isOptimizable(user, 'user_profiles'))) {
-                    await optimize(user, 'user_profiles');
-                } else {
-                    await logOptimize({
-                        resource: 'user_profiles',
-                        resource_id: user.id,
-                        log: JSON.stringify({}),
-                        error: 'not optimizable',
-                    });
+                if (user) {
+                    if (await isOptimizable(user, 'user_profiles')) {
+                        await optimize(user, 'user_profiles');
+                    } else {
+                        await logOptimize({
+                            resource: 'user_profiles',
+                            resource_id: user.id,
+                            log: JSON.stringify({}),
+                            error: 'not optimizable',
+                        });
+                    }
                 }
             } catch (error) {
                 logger.error(`[${name}] task failed`, error);
