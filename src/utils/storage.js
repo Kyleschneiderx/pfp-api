@@ -393,9 +393,11 @@ export default class Storage {
         try {
             const sourceObject = await this.get(sourcePath, options);
 
+            console.log('Starting conversion');
             const convertedImageBuffer = await this.file.convertImage('webp', await sourceObject.GetContent());
 
             if (options.backupPath) {
+                console.log('Starting backup');
                 await this.driver.send(
                     new this.s3.CopyObjectCommand({
                         Bucket: options?.s3?.bucket,
@@ -406,6 +408,7 @@ export default class Storage {
                 );
             }
 
+            console.log('Starting storing converted');
             await this.driver.send(
                 new this.s3.PutObjectCommand({
                     Bucket: options?.s3?.bucket,
@@ -416,6 +419,7 @@ export default class Storage {
                 }),
             );
 
+            console.log('Starting deletion');
             await this.delete(sourcePath, options);
         } catch (error) {
             this.logger.error('Failed to convert image.');
