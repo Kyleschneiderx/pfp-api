@@ -212,7 +212,6 @@ export default ({ logger, database, file, storage }) => {
                 };
 
                 if (exercise) {
-                    console.log('Starting execise image optimization');
                     if (await isOptimizable(exercise)) {
                         await optimize(exercise, 'exercises');
                     } else {
@@ -226,7 +225,6 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (workout) {
-                    console.log('Starting workout image optimization');
                     if (await isOptimizable(workout)) {
                         await optimize(workout, 'workouts');
                     } else {
@@ -240,7 +238,6 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (pfPlan) {
-                    console.log('Starting pf plan image optimization');
                     if (await isOptimizable(pfPlan)) {
                         await optimize(pfPlan, 'pf_plans');
                     } else {
@@ -254,7 +251,6 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (education) {
-                    console.log('Starting education image optimization');
                     if (await isOptimizable(education)) {
                         await optimize(education, 'educations');
                     } else {
@@ -268,7 +264,6 @@ export default ({ logger, database, file, storage }) => {
                 }
 
                 if (user) {
-                    console.log('Starting user image optimization');
                     if (await isOptimizable(user)) {
                         await optimize(user, 'user_profiles');
                     } else {
