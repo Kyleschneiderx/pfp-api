@@ -253,28 +253,6 @@ export default class WorkoutService {
             attributes: {
                 exclude: ['deleted_at', 'status_id'],
             },
-            include: [
-                {
-                    model: this.database.models.Statuses,
-                    as: 'status',
-                    attributes: ['id', 'value'],
-                    where: {},
-                },
-                ...(filter?.favorite?.userId
-                    ? [
-                          {
-                              model: this.database.models.UserFavoriteWorkouts,
-                              as: 'user_favorite_workouts',
-                              attributes: [],
-                              required: true,
-                              where: {
-                                  user_id: filter.favorite.userId,
-                                  is_favorite: true,
-                              },
-                          },
-                      ]
-                    : []),
-            ],
             order: [['id', 'DESC']],
             where: {
                 ...(filter.id && { id: filter.id }),
@@ -283,22 +261,40 @@ export default class WorkoutService {
             },
         };
 
-        if (filter.sort !== undefined) {
-            options.order = this.helper.parseSortList(
-                filter.sort,
-                {
-                    id: undefined,
-                    name: undefined,
-                    is_premium: undefined,
-                },
-                this.database,
-            );
-        }
-
         let count;
         let rows;
         try {
-            ({ count, rows } = await this.database.models.Workouts.findAndCountAll(options));
+            ({ count, rows } = await this.database.models.Workouts.scope([
+                'withStatus',
+                ...(filter?.favorite
+                    ? [
+                          {
+                              method: [
+                                  'withUserFavoriteWorkout',
+                                  {
+                                      userId: filter.favorite.userId,
+                                      isFavorite: true,
+                                  },
+                              ],
+                          },
+                      ]
+                    : []),
+                {
+                    method: [
+                        'defaultOrder',
+                        filter.sort &&
+                            this.helper.parseSortList(
+                                filter.sort,
+                                {
+                                    id: undefined,
+                                    name: undefined,
+                                    is_premium: undefined,
+                                },
+                                this.database,
+                            ),
+                    ],
+                },
+            ]).findAndCountAll(options));
         } catch (error) {
             this.logger.error(error.message, error);
 
