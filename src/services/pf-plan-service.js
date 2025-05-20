@@ -197,7 +197,9 @@ export default class PfPlanService {
     async createPfPlan(data) {
         let storeResponse;
         try {
-            data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+            if (data.photo) {
+                data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+            }
 
             storeResponse = await this.storage.store(data.photo, PFPLAN_PHOTO_PATH, {
                 convertTo: 'webp',
@@ -336,7 +338,9 @@ export default class PfPlanService {
     async updatePfPlan(data) {
         let storeResponse;
         try {
-            data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+            if (data.photo) {
+                data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
+            }
 
             storeResponse = await this.storage.store(data.photo, PFPLAN_PHOTO_PATH, {
                 convertTo: 'webp',

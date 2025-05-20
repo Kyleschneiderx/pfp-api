@@ -42,7 +42,7 @@ export default class WorkoutService {
     async createWorkout(data) {
         try {
             let storeResponse;
-            if (data.photo !== undefined) {
+            if (data.photo) {
                 data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
 
                 storeResponse = await this.storage.store(data.photo, WORKOUT_PHOTO_PATH, {
@@ -124,7 +124,7 @@ export default class WorkoutService {
     async updateWorkout(data) {
         let storeResponse;
         try {
-            if (data.photo !== undefined) {
+            if (data.photo) {
                 data.photo.data = await this.file.resizeImage(data.photo?.data, CONTENT_PHOTO_WIDTH, CONTENT_PHOTO_HEIGHT);
 
                 storeResponse = await this.storage.store(data.photo, WORKOUT_PHOTO_PATH, {
