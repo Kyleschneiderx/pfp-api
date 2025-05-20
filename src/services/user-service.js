@@ -335,7 +335,9 @@ export default class UserService {
     async createUserAccount(data) {
         let storeResponse;
         try {
-            data.photo.data = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+            if (data.photo) {
+                data.photo.data = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+            }
 
             storeResponse = await this.storage.store(data.photo, USER_PHOTO_PATH, {
                 convertTo: 'webp',
@@ -514,7 +516,9 @@ export default class UserService {
     async updateUserAccount(data) {
         let storeResponse;
         try {
-            data.photo.data = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+            if (data.photo) {
+                data.photo.data = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+            }
 
             storeResponse = await this.storage.store(data.photo, USER_PHOTO_PATH, {
                 convertTo: 'webp',
