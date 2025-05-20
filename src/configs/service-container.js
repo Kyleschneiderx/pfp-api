@@ -97,6 +97,7 @@ Object.assign(serviceContainer, {
         database: serviceContainer.database,
         storage: serviceContainer.storage,
         helper: serviceContainer.helper,
+        file: serviceContainer.file,
     }),
     workoutService: new services.WorkoutService({
         logger: serviceContainer.logger,
@@ -104,6 +105,7 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
         notificationService: serviceContainer.notificationService,
+        file: serviceContainer.file,
     }),
     pfPlanService: new services.PfPlanService({
         logger: serviceContainer.logger,
@@ -111,6 +113,7 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
         notificationService: serviceContainer.notificationService,
+        file: serviceContainer.file,
     }),
     educationService: new services.EducationService({
         logger: serviceContainer.logger,
@@ -118,6 +121,7 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         storage: serviceContainer.storage,
         notificationService: serviceContainer.notificationService,
+        file: serviceContainer.file,
     }),
     miscellaneousService: new services.MiscellaneousService({
         logger: serviceContainer.logger,
