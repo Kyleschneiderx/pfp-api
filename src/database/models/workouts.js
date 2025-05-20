@@ -67,6 +67,57 @@ export default (sequelize, DataTypes) => {
                     fields: [{ name: 'status_id' }, { name: 'is_premium' }],
                 },
             ],
+            scopes: {
+                withStatus: () => ({
+                    include: [
+                        {
+                            model: sequelize.models.Statuses,
+                            as: 'status',
+                            attributes: ['id', 'value'],
+                            where: {},
+                        },
+                    ],
+                }),
+                withUserFavoriteWorkout: (options) => ({
+                    include: [
+                        {
+                            model: sequelize.models.UserFavoriteWorkouts,
+                            as: 'user_favorite_workouts',
+                            attributes: [],
+                            required: true,
+                            where: {
+                                user_id: options?.userId,
+                                is_favorite: options?.isFavorite ?? true,
+                            },
+                        },
+                    ],
+                }),
+                defaultOrder: (custom) => {
+                    if (custom) {
+                        return {
+                            order: custom,
+                        };
+                    }
+
+                    return {
+                        order: [
+                            ['id', 'DESC'],
+                            [
+                                {
+                                    model: sequelize.models.SurveyQuestionGroups,
+                                    as: 'categories',
+                                },
+                                {
+                                    model: sequelize.models.ContentCategories,
+                                    as: 'content_categories',
+                                },
+                                'id',
+                                'ASC',
+                            ],
+                        ],
+                    };
+                },
+            },
         },
     );
     model.associate = () => {
