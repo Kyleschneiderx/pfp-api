@@ -1,7 +1,6 @@
 import { Sequelize } from 'sequelize';
 import {
     ADMIN_ACCOUNT_TYPE_ID,
-    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
     WORKOUT_PHOTO_PATH,
     ASSET_URL,
     S3_OBJECT_URL,
