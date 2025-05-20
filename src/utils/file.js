@@ -98,7 +98,14 @@ export default class File {
                 resizeHeight = metadata.height > height ? height : metadata.height;
             }
 
-            return sharp(buffer).resize(resizeWidth, resizeHeight).toBuffer();
+            return sharp(buffer)
+                .resize({
+                    width: resizeWidth,
+                    height: resizeHeight,
+                    fit: 'inside',
+                    withoutEnlargement: true,
+                })
+                .toBuffer();
         } catch (error) {
             throw new Error('Error on resizing image.', { cause: error });
         }
@@ -107,7 +114,7 @@ export default class File {
     static async convertImage(format, buffer) {
         if (!buffer) return buffer;
         try {
-            return await sharp(buffer).toFormat(format, { quality: 70 }).toBuffer();
+            return await sharp(buffer).toFormat(format, { quality: 80 }).toBuffer();
         } catch (error) {
             throw new Error(`Error on converting image to ${format}.`, { cause: error });
         }

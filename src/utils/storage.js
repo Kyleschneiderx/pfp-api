@@ -393,7 +393,7 @@ export default class Storage {
         try {
             const sourceObject = await this.get(sourcePath, options);
 
-            const resizeImage = await this.file.resizeImage(await sourceObject.GetContent(), 810, 450);
+            const resizeImage = await this.file.resizeImage(await sourceObject.GetContent(), 1024, 1024);
 
             const convertedImageBuffer = await this.file.convertImage('webp', resizeImage);
 
