@@ -1,7 +1,7 @@
 import * as commonValidation from '../common/index.js';
 
 export default ({ userService, pfPlanService }) => [
-    commonValidation.userIdValidation({ userService }).custom(async (value, { req }) => {
+    commonValidation.userAccessUserIdValidation({ userService }).custom(async (value, { req }) => {
         req.selectedPlan = await pfPlanService.getSelectedPfPlanByUserId(req.params.user_id);
 
         if (!req.selectedPlan) {
