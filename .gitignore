@@ -1,8 +1,5 @@
 node_modules
-.env
-.env.development
-.env.staging
-.env.production
+.env*
 .scannerwork
 coverage
 logs/

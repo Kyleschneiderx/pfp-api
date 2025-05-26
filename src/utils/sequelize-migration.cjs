@@ -76,7 +76,7 @@ module.exports = ({ table = '', schema = {}, columns = {}, indexes = [] }) => {
             }
 
             // snippet for removing index
-            if (Object.keys(schema).length === 0 && indexes.length !== 0) {
+            if (Object.keys(schema).length === 0 && Object.keys(columns).length === 0 && indexes.length !== 0) {
                 await removeIndex(queryInterface, table, indexes);
             }
         },

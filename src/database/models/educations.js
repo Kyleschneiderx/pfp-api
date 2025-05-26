@@ -67,11 +67,6 @@ export default (sequelize, DataTypes) => {
                     using: 'BTREE',
                     fields: [{ name: 'status_id' }],
                 },
-                {
-                    name: 'educations_category_id',
-                    using: 'BTREE',
-                    fields: [{ name: 'category_id' }],
-                },
             ],
             scopes: {
                 withStatus: () => ({
