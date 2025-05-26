@@ -908,7 +908,7 @@ export default class MiscellaneousService {
                 currency: event.currency,
             };
 
-            if (event.type !== REVENUECAT_WEBHOOK_EVENTS.EXPIRATION) {
+            if (![REVENUECAT_WEBHOOK_EVENTS.EXPIRATION, REVENUECAT_WEBHOOK_EVENTS.CANCELLATION].includes(event.type)) {
                 updateUserSubscriptionPayload.price = event.price_in_purchased_currency;
             }
 
@@ -916,7 +916,11 @@ export default class MiscellaneousService {
                 updateUserSubscriptionPayload.response = JSON.stringify(event);
             }
 
-            if (![REVENUECAT_WEBHOOK_EVENTS.RENEWAL, REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE].includes(event.type)) {
+            if (
+                ![REVENUECAT_WEBHOOK_EVENTS.RENEWAL, REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE, REVENUECAT_WEBHOOK_EVENTS.CANCELLATION].includes(
+                    event.type,
+                )
+            ) {
                 updateUserSubscriptionPayload.cancel_at = new dateFnsUtc.UTCDate();
                 updateUserSubscriptionPayload.status = EXPIRED_PURCHASE_STATUS;
             }
