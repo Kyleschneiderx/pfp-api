@@ -26,13 +26,7 @@ export default (sequelize, DataTypes) => {
             sequelize,
             timestamps: false,
             tableName: 'notification_descriptions',
-            indexes: [
-                {
-                    name: 'notification_descriptions_type_id',
-                    using: 'BTREE',
-                    fields: [{ name: 'user_id' }],
-                },
-            ],
+            indexes: [],
         },
     );
     model.associate = () => {

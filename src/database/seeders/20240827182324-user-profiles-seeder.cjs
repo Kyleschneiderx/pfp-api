@@ -37,5 +37,9 @@ module.exports = {
             },
         ]),
 
-    down: (queryInterface, Sequelize) => queryInterface.bulkDelete('user_profiles', null, {}),
+    down: async (queryInterface, Sequelize) => {
+        await queryInterface.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+        await queryInterface.bulkDelete('user_profiles', null, {});
+        await queryInterface.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+    },
 };

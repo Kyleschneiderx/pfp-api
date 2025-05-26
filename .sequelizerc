@@ -1,10 +1,10 @@
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, `./.env${process.env.APP_ENV ? `.${process.env.APP_ENV}` : ''}`), override: true });
 
 module.exports = {
-  env: 'settings',
-  config: path.resolve('src', 'configs/sequelize.js'),
-  'models-path': path.resolve('src', 'database/models'),
-  'seeders-path': path.resolve('src', 'database/seeders'),
-  'migrations-path': path.resolve('src', 'database/migrations')
+    env: 'settings',
+    config: path.resolve('src', 'configs/sequelize.js'),
+    'models-path': path.resolve('src', 'database/models'),
+    'seeders-path': path.resolve('src', 'database/seeders'),
+    'migrations-path': path.resolve('src', 'database/migrations'),
 };
-
