@@ -1354,7 +1354,7 @@ export default class PfPlanService {
                 attributes: {
                     exclude: [
                         ...['deleted_at', 'status_id'],
-                        ...(options?.authenticatedUser?.account_type_id !== ADMIN_ACCOUNT_TYPE_ID ? [] : ['content']),
+                        ...(options?.authenticatedUser?.account_type_id === ADMIN_ACCOUNT_TYPE_ID ? [] : ['content']),
                     ],
                 },
                 include: [
