@@ -85,6 +85,8 @@ export default ({
         userController.handleUploadUserPhotoRoute.bind(userController),
     );
 
+    router.get('/:user_id/pf-plan-recommended', userController.handleGetPfPlanRecommended.bind(userController));
+
     router.get(
         '/:user_id/pf-plan-progress',
         [validateInput(validations.getUserPfPlanProgressValidation({ userService, pfPlanService }))],

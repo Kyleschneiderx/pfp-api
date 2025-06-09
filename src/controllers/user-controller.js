@@ -351,4 +351,14 @@ export default class UserController {
 
         return res.json(pfPlan);
     }
+
+    async handleGetPfPlanRecommended(req, res) {
+        const recommendedPfPlan = await this.userService.getUserRecommendedPfPlan(req.params.user_id);
+
+        const pfPlan = await this.pfPlanService.getPfPlanDetails(recommendedPfPlan.pf_plan_id, {
+            authenticatedUser: req.auth,
+        });
+
+        return res.json(pfPlan);
+    }
 }
