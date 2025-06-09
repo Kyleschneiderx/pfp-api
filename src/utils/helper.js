@@ -22,6 +22,8 @@ export default class Helper {
     }
 
     static generateAssetUrl(path) {
+        if (!path) return path;
+
         try {
             const urlObject = new URL(path);
         } catch (error) {
