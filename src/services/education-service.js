@@ -346,6 +346,8 @@ export default class EducationService {
         rows = rows.map((row) => {
             row.photo = this.helper.generateAssetUrl(row.photo);
 
+            row.dataValues.media_url = row.media_url || null;
+
             row.media_upload = this.helper.generateAssetUrl(row.media_upload);
 
             return row;
@@ -405,6 +407,8 @@ export default class EducationService {
             });
 
             education.photo = this.helper.generateAssetUrl(education.photo);
+
+            education.dataValues.media_url = education.media_url || null;
 
             education.media_upload = this.helper.generateAssetUrl(education.media_upload);
 
