@@ -3,7 +3,7 @@ import 'dotenv/config';
 import 'express-async-errors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import serviceContainer from './configs/service-container.js';
+import serviceContainer from './core/service-container.js';
 import tasks from './tasks/index.js';
 import app from './core/app.js';
 

@@ -9,7 +9,7 @@ import facebookPixel from '../common/facebook-business/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
 import * as utils from '../utils/index.js';
-import configSmtp from './smtp.js';
+import configSmtp from '../configs/smtp.js';
 
 const logger = createLogger();
 
