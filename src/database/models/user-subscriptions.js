@@ -29,7 +29,6 @@ export default (sequelize, DataTypes) => {
             },
             currency: {
                 type: DataTypes.STRING(10),
-                after: 'price',
             },
             status: {
                 type: DataTypes.STRING(20),

@@ -23,3 +23,4 @@ export { default as workoutExercisesValidation } from './workout-exercises.js';
 export { default as pfPlanDailyContentsValidation } from './pf-plan-daily-contents.js';
 export { default as inAppPurchaseReceiptValidation } from './in-app-purchase-receipt.js';
 export { default as purchaseSubscription } from './purchase-subscription.js';
+export { default as createGuestValidation } from './create-guest.js';

@@ -10,3 +10,4 @@ export { default as sendInviteValidation } from './send-invite.js';
 export { default as setupPasswordValidation } from './setup-password.js';
 export { default as createPersonalizedPfPlanValidation } from './create-personalized-pf-plan.js';
 export { default as updatePersonalizedPfPlanValidation } from './update-personalized-pf-plan.js';
+export { default as signupGuestValidation } from './signup-guest.js';

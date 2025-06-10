@@ -6,13 +6,11 @@ import {
     USER_ACCOUNT_TYPE_ID,
     ACTIVE_STATUS_ID,
     INACTIVE_STATUS_ID,
-    ADMIN_ACCOUNT_TYPE_ID,
     USER_PHOTO_PATH,
     USER_PHOTO_HEIGHT,
     USER_PHOTO_WIDTH,
     ASSET_URL,
     S3_OBJECT_URL,
-    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
     FREE_USER_TYPE_ID,
     PREMIUM_USER_TYPE_ID,
     NOTIFICATIONS,
@@ -349,7 +347,7 @@ export default class UserService {
                     {
                         email: data.email,
                         password: data.password ? this.password.generate(data.password) : null,
-                        type_id: data.typeId ?? ADMIN_ACCOUNT_TYPE_ID,
+                        type_id: data.typeId ?? FREE_USER_TYPE_ID,
                         google_id: data.googleId ?? null,
                         apple_id: data.appleId ?? null,
                         account_type_id: USER_ACCOUNT_TYPE_ID,
@@ -408,6 +406,83 @@ export default class UserService {
             this.logger.error(error.message, error);
 
             throw new exceptions.InternalServerError('Failed to create user account', error);
+        }
+    }
+
+    /**
+     * Create user guest account
+     * @returns {Promise<Users>} Users model instance
+     * @param {object} data
+     * @param {string} data.name User account full name
+     * @param {string=} data.birthdate User account birthdate
+     * @param {string=} data.contactNumber User account contact number
+     * @param {string=} data.description User account description
+     * @param {object=} data.photo User account photo
+     * @throws {InternalServerError} If failed to create user account
+     */
+    async createGuestAccount(data) {
+        let storeResponse;
+        try {
+            if (data.photo) {
+                data.photo.data = await this.file.resizeImage(data.photo?.data, USER_PHOTO_WIDTH, USER_PHOTO_HEIGHT);
+            }
+
+            storeResponse = await this.storage.store(data.photo, USER_PHOTO_PATH, {
+                convertTo: 'webp',
+                s3: { bucket: process.env.S3_BUCKET_NAME },
+            });
+
+            const userInfo = await this.database.transaction(async (transaction) => {
+                const user = await this.database.models.Users.create(
+                    {
+                        email: null,
+                        guest_id: data.deviceId,
+                        type_id: FREE_USER_TYPE_ID,
+                        account_type_id: USER_ACCOUNT_TYPE_ID,
+                        status_id: INACTIVE_STATUS_ID,
+                        verified_at: null,
+                    },
+                    {
+                        transaction: transaction,
+                    },
+                );
+
+                const profile = await this.database.models.UserProfiles.create(
+                    {
+                        user_id: user.id,
+                        name: data.name,
+                        contact_number: null,
+                        birthdate: null,
+                        description: null,
+                        photo: null,
+                    },
+                    { transaction: transaction },
+                );
+
+                profile.photo = this.helper.generateAssetUrl(profile.photo);
+
+                delete user.dataValues.password;
+                delete profile.dataValues.id;
+                delete profile.dataValues.user_id;
+                delete profile.dataValues.created_at;
+                delete profile.dataValues.updated_at;
+
+                user.dataValues.user_profile = profile;
+
+                return user;
+            });
+
+            await this.notificationService.removeUserNotifications(userInfo.id);
+
+            this.notificationService.createNotification({ userId: userInfo.id, descriptionId: NOTIFICATIONS.WELCOME });
+
+            return userInfo;
+        } catch (error) {
+            await this.storage.delete(storeResponse?.path, { s3: { bucket: process.env.S3_BUCKET_NAME } });
+
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to create guest user account', error);
         }
     }
 

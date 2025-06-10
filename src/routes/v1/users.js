@@ -27,6 +27,8 @@ export default ({
         userController.handleUserSignupRoute.bind(userController),
     );
 
+    router.post('/guest', validateInput(validations.signupGuestValidation({ file })), userController.handleCreateGuestRoute.bind(userController));
+
     router.get('/summary', [verifyAdmin], userController.handleGetUserSummaryRoute.bind(userController));
 
     router.put(

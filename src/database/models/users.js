@@ -13,6 +13,9 @@ export default (sequelize, DataTypes) => {
             password: {
                 type: DataTypes.STRING(150),
             },
+            guest_id: {
+                type: DataTypes.STRING(150),
+            },
             type_id: {
                 type: DataTypes.INTEGER,
                 comment: 'see users_types table',

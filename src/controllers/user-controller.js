@@ -69,6 +69,31 @@ export default class UserController {
         });
     }
 
+    async handleCreateGuestRoute(req, res) {
+        const user = await this.userService.createGuestAccount({
+            name: req.body.name,
+            deviceId: req.body.device_id,
+            contactNumber: req.body.contact_number,
+            birthdate: req.body.birthdate,
+            photo: req.files?.photo,
+        });
+
+        if (req.body.device_token !== undefined) {
+            await this.notificationService.addUserDeviceToken(user.id, req.body.device_token);
+        }
+
+        const token = this.authService.generateSession(user);
+
+        await this.userService.updateUserLastLogin(user.id);
+
+        this.loggerService.logSystemAudit(user.id, SYSTEM_AUDITS.REGISTER);
+
+        return res.status(201).json({
+            user: user,
+            token: token,
+        });
+    }
+
     async handleCreateUserRoute(req, res) {
         const user = await this.userService.createUserAccount({
             email: req.body.email,
