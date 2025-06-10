@@ -45,13 +45,12 @@ export default ({
     notificationController,
     revenuecat,
     database,
-    storage,
 }) => {
     const router = express.Router();
 
     const verifyAuth = middlewares.verifyAuth({
         jwt: jwt,
-        exceptions: ['/api/v1/users/signup'],
+        exceptions: ['/api/v1/users/signup', '/api/v1/users/guest'],
         userService: userService,
     });
 
