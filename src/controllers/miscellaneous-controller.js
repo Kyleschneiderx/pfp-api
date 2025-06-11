@@ -40,7 +40,7 @@ export default class MiscellaneousController {
                 address: CONTACT_SUPPORT_EMAIL,
             },
             name: user.user_profile.name,
-            email: user.email,
+            email: req.body.email ?? user.email,
             message: req.body.message ?? '',
         });
 
