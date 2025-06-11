@@ -14,6 +14,7 @@ export default class VerificationController {
     }
 
     async handleVerifyOtp(req, res) {
+        await this.verificationService.verifyAccount(req.auth.user_id, req.body.email);
         return res.status(204).json();
     }
 
