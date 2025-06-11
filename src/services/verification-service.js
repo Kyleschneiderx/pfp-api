@@ -123,4 +123,21 @@ export default class VerificationService {
             throw new exceptions.InternalServerError('Failed to check OTP code', error);
         }
     }
+
+    /**
+     * Link or verify account with email
+     * @param {number} userId User account user id
+     * @param {string} email User account email address
+     * @returns {Promise<void>}
+     * @throws {InternalServerError} If failed to verify account
+     */
+    async verifyAccount(userId, email) {
+        try {
+            return this.database.models.Users.update({ email: email, verified_at: new Date() }, { where: { id: userId } });
+        } catch (error) {
+            this.logger.error('Failed to verify account', error);
+
+            throw new exceptions.InternalServerError('Failed to verify account', error);
+        }
+    }
 }

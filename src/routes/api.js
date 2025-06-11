@@ -130,6 +130,7 @@ export default ({
             authService: authService,
             userController: userController,
             userService: userService,
+            verifyAuth: verifyAuth,
         }),
     );
 

@@ -320,7 +320,7 @@ export default class UserController {
     }
 
     async handleVerifyOtp(req, res) {
-        await this.userService.updateUserVerifiedTime(req.auth.user_id);
+        await this.verificationService.verifyAccount(req.auth.user_id, req.body.email);
 
         const user = await this.userService.getUserDetails(req.auth.user_id);
 
