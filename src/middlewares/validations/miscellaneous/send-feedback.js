@@ -1,6 +1,8 @@
 import { body, oneOf } from 'express-validator';
+import * as commonValidation from '../common/index.js';
 
 export default () => [
+    commonValidation.emailValidation().exists({ values: 'falsy' }).withMessage('Email is required'),
     oneOf([
         body('rating').exists({ value: 'falsy' }).withMessage('Rating is required.'),
         body('rating_reason').exists({ value: 'falsy' }).withMessage('Rating reason is required.'),

@@ -22,7 +22,11 @@ export default ({ miscellaneousController, miscellaneousService, revenuecat, ver
         miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController),
     );
 
-    router.post('/contact-support', miscellaneousController.handleSendContactSupportRoute.bind(miscellaneousController));
+    router.post(
+        '/contact-support',
+        validateInput(validations.sendContactSupport()),
+        miscellaneousController.handleSendContactSupportRoute.bind(miscellaneousController),
+    );
 
     router.get('/page-tracking/stats', miscellaneousController.handlePageTrackingStatsRoute.bind(miscellaneousController));
 
