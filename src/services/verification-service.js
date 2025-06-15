@@ -133,7 +133,7 @@ export default class VerificationService {
      */
     async verifyAccount(userId, email) {
         try {
-            return this.database.models.Users.update({ email: email }, { where: { id: userId } });
+            return this.database.models.Users.update({ email: email, verified_at: new Date() }, { where: { id: userId } });
         } catch (error) {
             this.logger.error('Failed to verify account', error);
 
