@@ -311,7 +311,7 @@ export default class UserController {
             userId: req.auth.user_id,
         });
 
-        const verificationCode = await this.verificationService.sendOtp(user.email);
+        const verificationCode = await this.verificationService.sendOtp(req.body.email ?? user.email);
 
         return res.status(200).json({
             msg: 'Successfully sent OTP to your email. Check your OTP to proceed with your action.',

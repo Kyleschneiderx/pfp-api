@@ -126,11 +126,9 @@ export default ({
         '/v1/verifications',
         routeV1Verifications({
             verificationController: verificationController,
-            verificationService: verificationService,
             authService: authService,
             userController: userController,
             userService: userService,
-            verifyAuth: verifyAuth,
         }),
     );
 

@@ -11,3 +11,5 @@ export { default as setupPasswordValidation } from './setup-password.js';
 export { default as createPersonalizedPfPlanValidation } from './create-personalized-pf-plan.js';
 export { default as updatePersonalizedPfPlanValidation } from './update-personalized-pf-plan.js';
 export { default as signupGuestValidation } from './signup-guest.js';
+export { default as otpSendValidation } from './otp-send.js';
+export { default as otpVerifyValidation } from './otp-verify.js';
