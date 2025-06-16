@@ -47,13 +47,13 @@ export default ({
 
     router.post(
         '/:user_id/otp/verify',
-        [validateInput([commonValidations.oneTimePinValidation({ verificationService, userService })]), verifyUser],
+        [validateInput(validations.otpVerifyValidation({ userService, verificationService })), verifyUser],
         userController.handleVerifyOtp.bind(userController),
     );
 
     router.post(
         '/:user_id/otp',
-        [validateInput([commonValidations.userAccessUserIdValidation({ userService })]), verifyUser],
+        [validateInput(validations.otpSendValidation({ userService })), verifyUser],
         userController.handleSendOtpRoute.bind(userController),
     );
 
