@@ -889,6 +889,8 @@ export default class MiscellaneousService {
 
             const appUserId = this.revenuecat.parseCustomerId(event.app_user_id);
 
+            console.log(appUserId);
+
             const userSubscription = await this.database.models.UserSubscriptions.findOne({
                 where: { user_id: appUserId, original_reference: event.original_transaction_id, status: ACTIVE_PURCHASE_STATUS },
                 order: [['id', 'DESC']],
@@ -916,6 +918,10 @@ export default class MiscellaneousService {
                 updateUserSubscriptionPayload.response = JSON.stringify(event);
             }
 
+            if (event.period_type?.toLowerCase() === 'trial') {
+                updateUserSubscriptionPayload.trial_started_at = new dateFnsUtc.UTCDate(Number(event.purchased_at_ms));
+            }
+
             if (
                 ![REVENUECAT_WEBHOOK_EVENTS.RENEWAL, REVENUECAT_WEBHOOK_EVENTS.INITIAL_PURCHASE, REVENUECAT_WEBHOOK_EVENTS.CANCELLATION].includes(
                     event.type,
@@ -935,6 +941,7 @@ export default class MiscellaneousService {
                 }
             }
 
+            console.log(updateUserSubscriptionPayload);
             this.database.models.UserSubscriptions.update(updateUserSubscriptionPayload, { where: { id: userSubscription.id } });
 
             if ([EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS].includes(updateUserSubscriptionPayload.status)) {
@@ -955,6 +962,22 @@ export default class MiscellaneousService {
                             transaction_id: event.transaction_id,
                         },
                     });
+
+                    if (conversionApiEvent === 'Purchase' && event.period_type?.toLowerCase() === 'trial') {
+                        this.facebookPixel.createEvent(CONVERSION_API_EVENTS.TRIAL, {
+                            event_id: crypto
+                                .SHA256(`${userSubscription.user_id}|${conversionApiEvent ?? 'Unknown'}|${event.transaction_id}`)
+                                .toString(),
+                            user_data: {
+                                em: crypto.SHA256(user.email).toString(),
+                            },
+                            custom_data: {
+                                currency: event.currency,
+                                value: event.price_in_purchased_currency,
+                                transaction_id: event.transaction_id,
+                            },
+                        });
+                    }
                 } catch (error) {
                     this.logger.error('Failed to send event to conversion api.', error);
                 }

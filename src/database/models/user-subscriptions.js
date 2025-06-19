@@ -46,6 +46,9 @@ export default (sequelize, DataTypes) => {
             cancel_at: {
                 type: DataTypes.DATE,
             },
+            trial_started_at: {
+                type: DataTypes.DATE,
+            },
             created_at: {
                 type: DataTypes.DATE,
             },

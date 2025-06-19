@@ -222,6 +222,7 @@ export const CONVERSION_API_EVENTS = {
     SIGNUP: 'CompleteRegistration',
     CONTACT: 'Contact',
     FEEDBACK: 'Feedback',
+    TRIAL: 'TrialStart',
 };
 
 export const CONTENT_CATEGORIES_TYPE = {
