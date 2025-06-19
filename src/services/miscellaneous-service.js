@@ -889,8 +889,6 @@ export default class MiscellaneousService {
 
             const appUserId = this.revenuecat.parseCustomerId(event.app_user_id);
 
-            console.log(appUserId);
-
             const userSubscription = await this.database.models.UserSubscriptions.findOne({
                 where: { user_id: appUserId, original_reference: event.original_transaction_id, status: ACTIVE_PURCHASE_STATUS },
                 order: [['id', 'DESC']],
@@ -941,7 +939,6 @@ export default class MiscellaneousService {
                 }
             }
 
-            console.log(updateUserSubscriptionPayload);
             this.database.models.UserSubscriptions.update(updateUserSubscriptionPayload, { where: { id: userSubscription.id } });
 
             if ([EXPIRED_PURCHASE_STATUS, CANCELLED_PURCHASE_STATUS].includes(updateUserSubscriptionPayload.status)) {
