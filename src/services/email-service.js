@@ -237,4 +237,38 @@ export default class EmailService {
             throw new exceptions.InternalServerError('Failed to send feedback email.', error);
         }
     }
+
+    /**
+     * Send welcome email to user
+     * @param {object} data Email data
+     * @param {object} data.receiver Email receiver
+     * @param {string} data.receiver.address Email receiver address
+     * @param {string} data.receiver.name Email receiver name
+     * @returns {Promise<object>} Nodemailer send object
+     * @throws {InternalServerError} If failed to send welcome email
+     */
+    async sendWelcomeEmail(data) {
+        let template = this.file.readFile(`${__dirname}/templates/welcome.html`, {
+            encoding: 'utf8',
+        });
+        if (template) {
+            template = this.helper.replacer(template, {
+                name: data.receiver.name ?? '',
+                logo: `${EMAIL_ASSETS_URL}/logo.png`,
+            });
+        }
+
+        try {
+            return await this.smtp.send({
+                from: `${process.env.SMTP_SENDER_NAME} <${process.env.SMTP_SENDER_EMAIL}>`,
+                to: data.receiver,
+                subject: `Welcome to ${process.env.APP_NAME}! Let’s Get Started!`,
+                html: template,
+            });
+        } catch (error) {
+            this.logger.error('Failed to send welcome email.', error);
+
+            throw new exceptions.InternalServerError('Failed to send welcome email.', error);
+        }
+    }
 }
