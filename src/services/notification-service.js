@@ -30,7 +30,9 @@ export default class NotificationService {
                                 as: 'user',
                                 attributes: [],
                                 where: {
-                                    type_id: PREMIUM_USER_TYPE_ID,
+                                    ...(!notification.user_id && {
+                                        type_id: PREMIUM_USER_TYPE_ID,
+                                    }),
                                 },
                             },
                         ],
@@ -42,12 +44,9 @@ export default class NotificationService {
                     });
 
                     if (notification.reference) {
-                        notification.dataValues.reference = JSON.parse(notification.dataValues.reference);
+                        notification.reference = JSON.parse(notification.reference);
 
-                        notificationDescription.dataValues.description = this.helper.replacer(
-                            notificationDescription.dataValues.description,
-                            notification.dataValues.reference,
-                        );
+                        notificationDescription.description = this.helper.replacer(notificationDescription.description, notification.reference);
                     }
 
                     if (userDeviceTokens.length) {
