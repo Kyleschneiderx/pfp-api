@@ -63,6 +63,13 @@ export default class UserController {
 
         this.loggerService.logSystemAudit(user.id, SYSTEM_AUDITS.REGISTER);
 
+        this.emailService.sendWelcomeEmail({
+            receiver: {
+                address: user.email,
+                name: user.dataValues.user_profile.name,
+            },
+        });
+
         return res.status(201).json({
             user: user,
             token: token,
