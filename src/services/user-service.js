@@ -12,7 +12,6 @@ import {
     USER_PHOTO_WIDTH,
     ASSET_URL,
     S3_OBJECT_URL,
-    ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES,
     FREE_USER_TYPE_ID,
     PREMIUM_USER_TYPE_ID,
     NOTIFICATIONS,
@@ -954,6 +953,62 @@ export default class UserService {
             this.logger.error('Failed to get user personalize pf plan', error);
 
             throw new exceptions.InternalServerError('Failed to get user personalize pf plan', error);
+        }
+    }
+
+    /**
+     * Retrieve new non subscriber users
+     *
+     * @returns {Promise<Users[]>} Users model and pagination details
+     * @throws {InternalServerError} If failed to get user
+     * @throws {NotFoundError} If no records found
+     */
+    async getDailyReminderNonSubscribedUsers() {
+        try {
+            return await this.database.models.Users.findAll({
+                where: {
+                    created_at: {
+                        [Sequelize.Op.gte]: dateFns.sub(dateFns.format(new dateFnsUtc.UTCDate(), DATE_FORMAT), { days: 7 }),
+                    },
+                    id: {
+                        [Sequelize.Op.notIn]: Sequelize.literal(
+                            `(${this.database.dialect.queryGenerator
+                                .selectQuery('user_subscriptions', {
+                                    attributes: ['user_id'],
+                                    group: ['user_id'],
+                                })
+                                .slice(0, -1)})`,
+                        ),
+                    },
+                },
+            });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get daily reminder non subscribed users', error);
+        }
+    }
+
+    /**
+     * Retrieve new subscriber users
+     *
+     * @returns {Promise<UserSubscriptions[]>} Users model and pagination details
+     * @throws {InternalServerError} If failed to get user
+     * @throws {NotFoundError} If no records found
+     */
+    async getDailyReminderNewlySubscribedUsers() {
+        try {
+            return await this.database.models.UserSubscriptions.findAll({
+                where: {},
+                having: Sequelize.literal(
+                    `MIN(\`UserSubscriptions\`.\`created_at\`) >= '${dateFns.format(dateFns.sub(new dateFnsUtc.UTCDate(), { days: 7 }), DATE_FORMAT)}'`,
+                ),
+                group: ['user_id'],
+            });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get daily reminder free users', error);
         }
     }
 }
