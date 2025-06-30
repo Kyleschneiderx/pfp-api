@@ -7,6 +7,7 @@ import {
     APP_SETUP_ACCOUNT_URL,
     SYSTEM_AUDITS,
     ADMIN_ACCOUNT_TYPE_ID,
+    FIRESTORE_COLLECTIONS,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -20,6 +21,7 @@ export default class UserController {
         notificationService,
         emailService,
         loggerService,
+        fireStore,
     }) {
         this.userService = userService;
         this.verificationService = verificationService;
@@ -29,6 +31,7 @@ export default class UserController {
         this.notificationService = notificationService;
         this.emailService = emailService;
         this.loggerService = loggerService;
+        this.fireStore = fireStore;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -50,6 +53,48 @@ export default class UserController {
         }
 
         const user = await this.userService.createUserAccount(createUserPayload);
+
+        const initiateUserRoom = async () => {
+            const timestamp = Date.now();
+
+            const message = "Hi there! If you ever need help or have a question, just send us a message — we're here for you!";
+
+            this.fireStore
+                .collection(FIRESTORE_COLLECTIONS.USERS)
+                .doc(String(user.id))
+                .set({
+                    name: user.dataValues.user_profile.name,
+                    email: user.email,
+                    avatar: user.dataValues.user_profile.photo,
+                    isAdmin: user.dataValues.account_type_id === ADMIN_ACCOUNT_TYPE_ID,
+                    online: true,
+                });
+
+            const room = await this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                isGroup: false,
+                name: null,
+                participants: [String(user.id)],
+                lastMessage: {
+                    senderId: null,
+                    message: message,
+                    name: 'System',
+                },
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
+
+            this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                name: 'System',
+                message: message,
+                senderId: null,
+                avatar: null,
+                files: [],
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
+        };
+
+        initiateUserRoom();
 
         if (req.body.device_token !== undefined) {
             await this.notificationService.addUserDeviceToken(user.id, req.body.device_token);
