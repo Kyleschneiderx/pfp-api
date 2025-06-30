@@ -2,6 +2,7 @@
 import 'express-async-errors';
 import cors from 'cors';
 import helmet from 'helmet';
+import * as fs from 'fs';
 import fileUpload from 'express-fileupload';
 import express from 'express';
 import compression from 'compression';
@@ -100,6 +101,12 @@ export default ({ serviceContainer }) => {
     );
 
     app.use(errorHandler({ logger: serviceContainer.logger }));
+
+    app.get('/chat-demo', (req, res) => {
+        const contents = fs.readFileSync('./src/templates/chat-demo.html', { encoding: 'utf8' });
+
+        res.send(contents);
+    });
 
     app.get('/', (req, res) => {
         res.send('Hello');
