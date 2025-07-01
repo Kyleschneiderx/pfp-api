@@ -58,6 +58,41 @@ export default ({
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
 
+    router.get('/chatbot/backup', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        let conversation;
+
+        try {
+            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        try {
+            conversation = JSON.parse(conversation);
+        } catch (error) {
+            /** empty */
+        }
+
+        return res.json({ settings: prompt, conversations: conversation });
+    });
+
+    router.put('/chatbot/backup', async (req, res) => {
+        if (req.body.settings) {
+            fs.writeFileSync('chatbot-settings.log', req.body.settings);
+        }
+
+        fs.writeFileSync('chatbot.log', JSON.stringify(req.body.conversations, null, 2));
+
+        return res.json({ message: 'done' });
+    });
     router.get('/chatbot', async (req, res) => {
         let prompt;
 
