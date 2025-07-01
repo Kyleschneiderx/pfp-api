@@ -59,25 +59,6 @@ export default ({
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
 
-    router.use(
-        fileUpload({
-            limits: { fieldSize: 1100 * 1024 * 1024 },
-        }),
-    );
-
-    router.use(
-        express.json({
-            limit: '100mb',
-        }),
-    );
-
-    router.use(
-        express.urlencoded({
-            extended: true,
-            limit: '100mb',
-        }),
-    );
-
     router.get('/chatbot', async (req, res) => {
         let prompt;
 
