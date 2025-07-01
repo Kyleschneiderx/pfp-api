@@ -149,6 +149,8 @@ export default ({
             },
         );
 
+        console.log(response);
+
         fs.writeFileSync(
             'chatbot.log',
             JSON.stringify(
