@@ -181,6 +181,8 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
             users.map(async (user) => {
                 const timestamp = Date.now();
 
+                const isAdmin = user.account_type_id === ADMIN_ACCOUNT_TYPE_ID;
+
                 fireStore
                     .collection(FIRESTORE_COLLECTIONS.USERS)
                     .doc(String(user.id))
@@ -188,32 +190,34 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
                         name: user.user_profile?.name ?? 'Guest',
                         email: user?.email,
                         avatar: helper.generatePublicAssetUrl(user.user_profile?.photo) ?? null,
-                        isAdmin: user.account_type_id === ADMIN_ACCOUNT_TYPE_ID,
+                        isAdmin: isAdmin,
                         online: true,
                     });
 
-                const room = await fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
-                    isGroup: false,
-                    name: null,
-                    participants: [String(user.id)],
-                    lastMessage: {
-                        senderId: null,
-                        message: FIRESTORE_ROOM_MESSAGES.WELCOME,
-                        name: 'System',
-                    },
-                    createdAt: timestamp,
-                    updatedAt: timestamp,
-                });
+                if (!isAdmin) {
+                    const room = await fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                        isGroup: false,
+                        name: null,
+                        participants: [String(user.id)],
+                        lastMessage: {
+                            senderId: null,
+                            message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                            name: 'System',
+                        },
+                        createdAt: timestamp,
+                        updatedAt: timestamp,
+                    });
 
-                fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
-                    name: 'System',
-                    message: FIRESTORE_ROOM_MESSAGES.WELCOME,
-                    senderId: null,
-                    avatar: null,
-                    files: [],
-                    createdAt: timestamp,
-                    updatedAt: timestamp,
-                });
+                    fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                        name: 'System',
+                        message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                        senderId: null,
+                        avatar: null,
+                        files: [],
+                        createdAt: timestamp,
+                        updatedAt: timestamp,
+                    });
+                }
             }),
         );
 
