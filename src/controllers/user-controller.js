@@ -8,6 +8,7 @@ import {
     SYSTEM_AUDITS,
     ADMIN_ACCOUNT_TYPE_ID,
     FIRESTORE_COLLECTIONS,
+    FIRESTORE_ROOM_MESSAGES,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -57,8 +58,6 @@ export default class UserController {
         const initiateUserRoom = async () => {
             const timestamp = Date.now();
 
-            const message = "Hi there! If you ever need help or have a question, just send us a message — we're here for you!";
-
             this.fireStore
                 .collection(FIRESTORE_COLLECTIONS.USERS)
                 .doc(String(user.id))
@@ -76,7 +75,7 @@ export default class UserController {
                 participants: [String(user.id)],
                 lastMessage: {
                     senderId: null,
-                    message: message,
+                    message: FIRESTORE_ROOM_MESSAGES.WELCOME,
                     name: 'System',
                 },
                 createdAt: timestamp,
@@ -85,7 +84,7 @@ export default class UserController {
 
             this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
                 name: 'System',
-                message: message,
+                message: FIRESTORE_ROOM_MESSAGES.WELCOME,
                 senderId: null,
                 avatar: null,
                 files: [],
