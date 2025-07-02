@@ -105,7 +105,6 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
 
     router.post('/users-migrate-firestore', async (req, res) => {
         const users = await database.models.Users.findAll({
-            raw: true,
             include: [
                 {
                     model: database.models.UserProfiles,
@@ -124,7 +123,7 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
                     .set({
                         name: user.user_profile?.name ?? 'Guest',
                         email: user?.email,
-                        avatar: helper.generatePublicAssetUrl(user.user_profile?.photo),
+                        avatar: helper.generatePublicAssetUrl(user.user_profile?.photo) ?? null,
                         isAdmin: user.account_type_id === ADMIN_ACCOUNT_TYPE_ID,
                         online: true,
                     });
