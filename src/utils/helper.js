@@ -21,6 +21,19 @@ export default class Helper {
             });
     }
 
+    static generatePublicAssetUrl(path) {
+        if (!path) return path;
+
+        try {
+            const urlObject = new URL(path);
+
+            return path;
+        } catch (error) {
+            /** empty */
+            return `${ASSET_URL}/${path}`;
+        }
+    }
+
     static generateAssetUrl(path) {
         if (!path) return path;
 

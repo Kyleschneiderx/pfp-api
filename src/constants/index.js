@@ -233,3 +233,15 @@ export const CONTENT_CATEGORIES_TYPE = {
 export const CONTENT_PHOTO_HEIGHT = 1024;
 
 export const CONTENT_PHOTO_WIDTH = 1024;
+
+export const FIRESTORE_COLLECTIONS = {
+    ROOMS: 'rooms',
+    USERS: 'users',
+    MESSAGES: 'messages',
+};
+
+export const FIRESTORE_ROOM_MESSAGES = {
+    WELCOME: "Hi there! If you ever need help or have a question, just send us a message — we're here for you!",
+};
+
+export const S3_PUBLIC_PATHS = ['user-photo'];

@@ -98,6 +98,8 @@ export default ({ serviceContainer }) => {
             storage: serviceContainer.storage,
             revenuecat: serviceContainer.revenuecat,
             openAiChat: serviceContainer.openAiChat,
+            fireStore: serviceContainer.fireStore,
+            database: serviceContainer.database,
         }),
     );
 

@@ -23,6 +23,7 @@ const serviceContainer = {
     file: utils.File,
     ssoAuthentication: firebase.auth(),
     pushNotification: firebase.messaging(),
+    fireStore: firebase.firestore(),
     inAppPurchase: new utils.InAppPurchase({
         logger: logger,
         apple: {
@@ -160,6 +161,7 @@ Object.assign(serviceContainer, {
         emailService: serviceContainer.emailService,
         loggerService: serviceContainer.loggerService,
         streakService: serviceContainer.streakService,
+        fireStore: serviceContainer.fireStore,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,
