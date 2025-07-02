@@ -237,7 +237,6 @@ export const CONTENT_PHOTO_WIDTH = 1024;
 export const FIRESTORE_COLLECTIONS = {
     ROOMS: 'rooms',
     USERS: 'users',
-    USER_ROOMS: 'user-rooms',
     MESSAGES: 'messages',
 };
 

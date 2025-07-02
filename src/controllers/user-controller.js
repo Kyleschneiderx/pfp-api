@@ -207,6 +207,10 @@ export default class UserController {
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_ACCOUNT);
 
+        this.fireStore.collection(FIRESTORE_COLLECTIONS.USERS).doc(String(user.id)).update({
+            avatar: user.user_profile.photo,
+        });
+
         return res.json({ photo: user.user_profile.photo });
     }
 
