@@ -45,7 +45,7 @@ export default ({
     notificationController,
     revenuecat,
     database,
-    storage,
+    fireStore,
 }) => {
     const router = express.Router();
 
@@ -157,7 +157,7 @@ export default ({
 
     router.use(verifyAuth);
 
-    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper }));
+    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper, fireStore }));
 
     router.use(
         '/v1/selections',

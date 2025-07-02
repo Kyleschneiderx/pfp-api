@@ -96,6 +96,7 @@ export default ({ serviceContainer }) => {
             inAppPurchase: serviceContainer.inAppPurchase,
             storage: serviceContainer.storage,
             revenuecat: serviceContainer.revenuecat,
+            fireStore: serviceContainer.fireStore,
             database: serviceContainer.database,
         }),
     );

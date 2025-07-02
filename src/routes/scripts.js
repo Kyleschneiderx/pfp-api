@@ -1,13 +1,14 @@
 import express from 'express';
+import { ADMIN_ACCOUNT_TYPE_ID, FIRESTORE_COLLECTIONS, FIRESTORE_ROOM_MESSAGES } from '../constants/index.js';
 import * as dateFnsUtc from '@date-fns/utc';
 import { PUBLISHED_PF_PLAN_STATUS_ID, USER_ACCOUNT_TYPE_ID } from '../constants/index.js';
 
-export default ({ verifyAdmin, database, helper }) => {
+export default ({ verifyAdmin, database, helper, fireStore }) => {
     const router = express.Router();
 
     router.use(verifyAdmin);
 
-    router.get('/recompute-score', async (req, res) => {
+    router.post('/recompute-score', async (req, res) => {
         const [usersWithSurveys, surveyQuestionGroups, surveyQuestions, surveyQuestionAnswerScores] = await Promise.all([
             database.models.UserSurveyQuestionAnswers.findAll({ group: ['user_id'] }),
             database.models.SurveyQuestionGroups.findAll({
@@ -160,6 +161,60 @@ export default ({ verifyAdmin, database, helper }) => {
                         });
                     }
                 }
+            }),
+        );
+
+        return res.json({ msg: 'Done' });
+    });
+
+    router.post('/users-migrate-firestore', async (req, res) => {
+        const users = await database.models.Users.findAll({
+            raw: true,
+            include: [
+                {
+                    model: database.models.UserProfiles,
+                    as: 'user_profile',
+                },
+            ],
+        });
+
+        await Promise.all(
+            users.map(async (user) => {
+                const timestamp = Date.now();
+
+                fireStore
+                    .collection(FIRESTORE_COLLECTIONS.USERS)
+                    .doc(String(user.id))
+                    .set({
+                        name: user.user_profile.name,
+                        email: user.email,
+                        avatar: helper.generatePublicAssetUrl(user.user_profile.photo),
+                        isAdmin: user.account_type_id === ADMIN_ACCOUNT_TYPE_ID,
+                        online: true,
+                    });
+
+                const room = await fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                    isGroup: false,
+                    name: null,
+                    participants: [String(user.id)],
+                    lastMessage: {
+                        senderId: null,
+                        message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                        name: 'System',
+                    },
+                    createdAt: timestamp,
+                    updatedAt: timestamp,
+                });
+
+                fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                    name: 'System',
+                    message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                    senderId: null,
+                    avatar: null,
+                    files: [],
+                    createdAt: timestamp,
+                    updatedAt: timestamp,
+                });
             }),
         );
 
