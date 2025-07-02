@@ -122,9 +122,9 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
                     .collection(FIRESTORE_COLLECTIONS.USERS)
                     .doc(String(user.id))
                     .set({
-                        name: user.user_profile.name,
-                        email: user.email,
-                        avatar: helper.generatePublicAssetUrl(user.user_profile.photo),
+                        name: user.user_profile?.name ?? 'Guest',
+                        email: user?.email,
+                        avatar: helper.generatePublicAssetUrl(user.user_profile?.photo),
                         isAdmin: user.account_type_id === ADMIN_ACCOUNT_TYPE_ID,
                         online: true,
                     });
