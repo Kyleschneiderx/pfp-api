@@ -12,7 +12,7 @@ export default ({ miscellaneousService }) =>
                     throw new Error('Transaction already exist.');
                 }
             } catch (error) {
-                throw new Error('Failed to verify subscription.', { cause: error });
+                throw new Error(error.message, { cause: error });
             }
 
             return true;

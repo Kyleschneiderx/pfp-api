@@ -1,4 +1,5 @@
 import * as dateFnsUtc from '@date-fns/utc';
+import * as dateFns from 'date-fns';
 import { Sequelize } from 'sequelize';
 import crypto from 'crypto-js';
 import {
@@ -15,6 +16,7 @@ import {
     ACTIVE_PURCHASE_STATUS,
     CONVERSION_API_EVENTS,
     PUBLISHED_PF_PLAN_STATUS_ID,
+    DATETIME_FORMAT,
 } from '../constants/index.js';
 import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REVENUECAT_CANCELLATION_REASON } from '../common/revenuecat/index.js';
 import * as exceptions from '../exceptions/index.js';
@@ -108,18 +110,25 @@ export default class MiscellaneousService {
     async updateUserSurveyAnswer(userId, answers) {
         const dbTransaction = await this.database.transaction();
         try {
-            const [surveyQuestionGroups, surveyQuestions, surveyQuestionAnswerScores, userSurveyQuestionAnswers, userSurveyQuestionAnswerScores] =
-                await Promise.all([
-                    this.database.models.SurveyQuestionGroups.findAll({
-                        include: { model: this.database.models.SurveyQuestionGroupIds, as: 'question_ids', separate: true },
-                    }),
-                    this.database.models.SurveyQuestions.findAll({
-                        include: [{ model: this.database.models.SurveyQuestionGroupIds, as: 'group_ids' }],
-                    }),
-                    this.database.models.SurveyQuestionAnswerScores.findAll({}),
-                    this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
-                    this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId }, order: [['score', 'DESC']] }),
-                ]);
+            const [
+                surveyQuestionGroups,
+                surveyQuestions,
+                surveyQuestionAnswerScores,
+                userSurveyQuestionAnswers,
+                userSurveyQuestionAnswerScores,
+                userPfPlan,
+            ] = await Promise.all([
+                this.database.models.SurveyQuestionGroups.findAll({
+                    include: { model: this.database.models.SurveyQuestionGroupIds, as: 'question_ids', separate: true },
+                }),
+                this.database.models.SurveyQuestions.findAll({
+                    include: [{ model: this.database.models.SurveyQuestionGroupIds, as: 'group_ids' }],
+                }),
+                this.database.models.SurveyQuestionAnswerScores.findAll({}),
+                this.database.models.UserSurveyQuestionAnswers.findAll({ where: { user_id: userId } }),
+                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: userId }, order: [['score', 'DESC']] }),
+                this.database.models.UserPfPlans.findOne({ where: { user_id: userId } }),
+            ]);
 
             const surveyQuestionGroupMap = {};
 
@@ -212,6 +221,45 @@ export default class MiscellaneousService {
                     }),
                 ),
             );
+
+            const highestScore = Math.max(...Object.keys(userAnswerByGroupScores).map((groupId) => userAnswerByGroupScores[groupId].avg_score));
+
+            if (!userPfPlan) {
+                const recommendPfPlan = await this.database.models.PfPlans.scope([
+                    {
+                        method: [
+                            'withCategories',
+                            {
+                                where: {
+                                    id:
+                                        highestScore === 0
+                                            ? surveyQuestionGroups.filter((group) => group.question_ids.length === 0).map((group) => group.id)
+                                            : Object.keys(userAnswerByGroupScores).filter(
+                                                  (groupId) => userAnswerByGroupScores[groupId].avg_score === highestScore,
+                                              ),
+                                },
+                                required: true,
+                            },
+                        ],
+                    },
+                    { method: ['defaultOrder', this.database.literal(`RAND()`)] },
+                ]).findOne({
+                    nest: true,
+                    subQuery: false,
+                    where: { status_id: PUBLISHED_PF_PLAN_STATUS_ID, is_custom: true, user_id: null },
+                });
+
+                if (recommendPfPlan) {
+                    await this.database.models.UserRecommendedPfPlans.destroy({ where: { user_id: userId } });
+                    await this.database.models.UserRecommendedPfPlans.create(
+                        {
+                            user_id: userId,
+                            pf_plan_id: recommendPfPlan.id,
+                        },
+                        { transaction: dbTransaction },
+                    );
+                }
+            }
 
             await dbTransaction.commit();
 
@@ -344,26 +392,28 @@ export default class MiscellaneousService {
      */
     async createPayment(data) {
         try {
-            let payment = await this.database.models.UserSubscriptions.findOne({
-                where: {
-                    user_id: data.userId,
-                    reference: data?.reference,
-                    status: {
-                        [Sequelize.Op.notIn]: [
-                            EXPIRED_PURCHASE_STATUS,
-                            BILLING_RETRY_PURCHASE_STATUS,
-                            INCOMPLETE_PURCHASE_STATUS,
-                            CANCELLED_PURCHASE_STATUS,
-                        ],
+            const groupQueries = await Promise.all([
+                this.database.models.UserSubscriptions.findOne({
+                    where: {
+                        user_id: data.userId,
+                        reference: data?.reference,
+                        status: {
+                            [Sequelize.Op.notIn]: [
+                                EXPIRED_PURCHASE_STATUS,
+                                BILLING_RETRY_PURCHASE_STATUS,
+                                INCOMPLETE_PURCHASE_STATUS,
+                                CANCELLED_PURCHASE_STATUS,
+                            ],
+                        },
                     },
-                },
-                order: [['id', 'DESC']],
-            });
-
-            const [userPfPlan, userSurveyScoresSummary] = await Promise.all([
-                this.database.models.UserPfPlans.findOne({ where: { user_id: data.userId } }),
-                this.database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: data.userId }, order: [['final_score', 'DESC']] }),
+                    order: [['id', 'DESC']],
+                }),
+                this.database.models.UserRecommendedPfPlans.findOne({ where: { user_id: data.userId } }),
             ]);
+
+            let payment = groupQueries[0];
+
+            const recommendedPfPlan = groupQueries[1];
 
             return await this.database.transaction(async (transaction) => {
                 await this.database.models.UserSubscriptions.update(
@@ -395,65 +445,27 @@ export default class MiscellaneousService {
                     },
                 );
 
-                const groupScoreMap = {};
+                if (recommendedPfPlan) {
+                    const dateToday = new dateFnsUtc.UTCDate();
 
-                userSurveyScoresSummary.forEach((item) => {
-                    groupScoreMap[item.question_group_id] = item.avg_score;
-                });
+                    let startAt = dateToday;
 
-                const highestScore = Math.max(...Object.values(groupScoreMap));
-
-                if (!userPfPlan) {
-                    const surveyQuestionGroups = await this.database.models.SurveyQuestionGroups.findAll({
-                        include: { model: this.database.models.SurveyQuestionGroupIds, as: 'question_ids', separate: true },
+                    const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
+                        where: { user_id: data.userId, pf_plan_id: recommendedPfPlan.pf_plan_id },
+                        order: [['id', 'DESC']],
+                        paranoid: false,
                     });
 
-                    const recommendPfPlan = await this.database.models.PfPlans.scope([
+                    startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
+
+                    await this.database.models.UserPfPlans.create(
                         {
-                            method: [
-                                'withCategories',
-                                {
-                                    where: {
-                                        id:
-                                            highestScore === 0
-                                                ? surveyQuestionGroups.filter((group) => group.question_ids.length === 0).map((group) => group.id)
-                                                : Object.entries(groupScoreMap)
-                                                      .filter(([, score]) => score === highestScore)
-                                                      .map(([key]) => key),
-                                    },
-                                    required: true,
-                                },
-                            ],
+                            user_id: data.userId,
+                            pf_plan_id: recommendedPfPlan.pf_plan_id,
+                            start_at: startAt,
                         },
-                        { method: ['defaultOrder', this.database.literal(`RAND()`)] },
-                    ]).findOne({
-                        nest: true,
-                        subQuery: false,
-                        where: { status_id: PUBLISHED_PF_PLAN_STATUS_ID, is_custom: true, user_id: null },
-                    });
-
-                    if (recommendPfPlan) {
-                        const dateToday = new dateFnsUtc.UTCDate();
-
-                        let startAt = dateToday;
-
-                        const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
-                            where: { user_id: data.userId, pf_plan_id: recommendPfPlan.id },
-                            order: [['id', 'DESC']],
-                            paranoid: false,
-                        });
-
-                        startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
-
-                        await this.database.models.UserPfPlans.create(
-                            {
-                                user_id: data.userId,
-                                pf_plan_id: recommendPfPlan.id,
-                                start_at: startAt,
-                            },
-                            { transaction: transaction },
-                        );
-                    }
+                        { transaction: transaction },
+                    );
                 }
 
                 return payment;
@@ -792,6 +804,9 @@ export default class MiscellaneousService {
     /**
      * Get page visits statistics
      *
+     * @param {object} filter
+     * @param {string=} filter.dateFrom Start date
+     * @param {string=} filter.dateTo End date
      * @returns {<Promise<{
      *  total: number,
      *  pages: {
@@ -804,30 +819,20 @@ export default class MiscellaneousService {
      * @throws {InternalServerError} Failed to get page visit stats
      *
      */
-    async getPageVisitStats() {
+    async getPageVisitStats(filter) {
         try {
             const stats = await this.database.models.PageVisits.findAll({
-                attributes: {
-                    exclude: [],
-                },
+                attributes: ['page', [Sequelize.fn('COUNT', '1'), 'total']],
                 where: {
-                    id: {
-                        [Sequelize.Op.in]: Sequelize.literal(
-                            `(${this.database.dialect.queryGenerator
-                                .selectQuery('page_visits', {
-                                    attributes: [[Sequelize.fn('Max', Sequelize.col('id')), 'id']],
-                                    group: ['page'],
-                                })
-                                .slice(0, -1)})`,
-                        ),
+                    created_at: {
+                        [Sequelize.Op.gte]: dateFns.format(new Date(`${filter.dateFrom}T00:00:00.000Z`), DATETIME_FORMAT),
+                        [Sequelize.Op.lte]: dateFns.format(new Date(`${filter.dateTo}T23:59:59.000Z`), DATETIME_FORMAT),
                     },
                 },
+                group: ['page'],
             });
 
-            const totalDevice = await this.database.models.PageVisits.count({
-                distinct: true,
-                col: 'device_id',
-            });
+            const totalDevice = stats.find((stat) => stat.page === PAGES_TO_TRACK.WELCOME)?.total;
 
             const pagesToTrack = {};
 

@@ -45,3 +45,4 @@ export { default as UserStreakLogs } from './user-streak-logs.js';
 export { default as ContentCategories } from './content-categories.js';
 export { default as SurveyQuestionGroupIds } from './survey-question-group-ids.js';
 export { default as ImageOptimizationLogs } from './image-optimization-logs.js';
+export { default as UserRecommendedPfPlans } from './user-recommended-pf-plans.js';

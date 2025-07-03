@@ -1087,4 +1087,20 @@ export default class UserService {
             throw new exceptions.InternalServerError('Failed to get daily reminder free users', error);
         }
     }
+
+    /**
+     * Get user recommended pf plan
+     *
+     * @returns {Promise<UserRecommendedPfPlans>} UserRecommendedPfPlans model
+     * @throws {InternalServerError} If ailed to get user recommended pf plan
+     */
+    async getUserRecommendedPfPlan(userId) {
+        try {
+            return await this.database.models.UserRecommendedPfPlans.findOne({ where: { user_id: userId }, order: [['id', 'DESC']] });
+        } catch (error) {
+            this.logger.error(error.message, error);
+
+            throw new exceptions.InternalServerError('Failed to get user recommended pf plan', error);
+        }
+    }
 }

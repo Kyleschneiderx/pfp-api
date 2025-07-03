@@ -1,4 +1,6 @@
 import express from 'express';
+import * as dateFnsUtc from '@date-fns/utc';
+import { PUBLISHED_PF_PLAN_STATUS_ID, USER_ACCOUNT_TYPE_ID } from '../constants/index.js';
 import { ADMIN_ACCOUNT_TYPE_ID, FIRESTORE_COLLECTIONS, FIRESTORE_ROOM_MESSAGES } from '../constants/index.js';
 
 export default ({ verifyAdmin, database, helper, fireStore }) => {
@@ -97,6 +99,68 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
                 );
 
                 return true;
+            }),
+        );
+
+        return res.json({ msg: 'Done' });
+    });
+
+    router.post('/user-recommended-pf-plan', async (req, res) => {
+        const users = await database.models.Users.findAll({ where: { account_type_id: USER_ACCOUNT_TYPE_ID } });
+
+        await Promise.all(
+            users.map(async (user) => {
+                const [userPfPlan, userSurveyScoresSummary] = await Promise.all([
+                    database.models.UserPfPlans.findOne({ where: { user_id: user.id } }),
+                    database.models.UserSurveyQuestionAnswerScores.findAll({ where: { user_id: user.id }, order: [['final_score', 'DESC']] }),
+                ]);
+
+                if (!userSurveyScoresSummary) return;
+
+                const groupScoreMap = {};
+
+                userSurveyScoresSummary.forEach((item) => {
+                    groupScoreMap[item.question_group_id] = item.avg_score;
+                });
+
+                const highestScore = Math.max(...Object.values(groupScoreMap));
+
+                if (!userPfPlan) {
+                    const surveyQuestionGroups = await database.models.SurveyQuestionGroups.findAll({
+                        include: { model: database.models.SurveyQuestionGroupIds, as: 'question_ids', separate: true },
+                    });
+
+                    const recommendPfPlan = await database.models.PfPlans.scope([
+                        {
+                            method: [
+                                'withCategories',
+                                {
+                                    where: {
+                                        id:
+                                            highestScore === 0
+                                                ? surveyQuestionGroups.filter((group) => group.question_ids.length === 0).map((group) => group.id)
+                                                : Object.entries(groupScoreMap)
+                                                      .filter(([, score]) => score === highestScore)
+                                                      .map(([key]) => key),
+                                    },
+                                    required: true,
+                                },
+                            ],
+                        },
+                        { method: ['defaultOrder', database.literal(`RAND()`)] },
+                    ]).findOne({
+                        nest: true,
+                        subQuery: false,
+                        where: { status_id: PUBLISHED_PF_PLAN_STATUS_ID, is_custom: true, user_id: null },
+                    });
+
+                    if (recommendPfPlan) {
+                        await database.models.UserRecommendedPfPlans.create({
+                            user_id: user.id,
+                            pf_plan_id: recommendPfPlan.id,
+                        });
+                    }
+                }
             }),
         );
 
