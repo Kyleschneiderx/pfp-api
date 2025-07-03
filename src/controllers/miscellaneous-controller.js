@@ -61,7 +61,10 @@ export default class MiscellaneousController {
     }
 
     async handlePageTrackingStatsRoute(req, res) {
-        const stats = await this.miscellaneousService.getPageVisitStats();
+        const stats = await this.miscellaneousService.getPageVisitStats({
+            dateFrom: req.query.date_from,
+            dateTo: req.query.date_to,
+        });
 
         return res.json(stats);
     }

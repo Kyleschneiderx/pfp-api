@@ -1,4 +1,5 @@
 import * as dateFnsUtc from '@date-fns/utc';
+import * as dateFns from 'date-fns';
 import { Sequelize } from 'sequelize';
 import crypto from 'crypto-js';
 import {
@@ -15,6 +16,7 @@ import {
     ACTIVE_PURCHASE_STATUS,
     CONVERSION_API_EVENTS,
     PUBLISHED_PF_PLAN_STATUS_ID,
+    DATETIME_FORMAT,
 } from '../constants/index.js';
 import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REVENUECAT_CANCELLATION_REASON } from '../common/revenuecat/index.js';
 import * as exceptions from '../exceptions/index.js';
@@ -802,6 +804,9 @@ export default class MiscellaneousService {
     /**
      * Get page visits statistics
      *
+     * @param {object} filter
+     * @param {string=} filter.dateFrom Start date
+     * @param {string=} filter.dateTo End date
      * @returns {<Promise<{
      *  total: number,
      *  pages: {
@@ -814,30 +819,20 @@ export default class MiscellaneousService {
      * @throws {InternalServerError} Failed to get page visit stats
      *
      */
-    async getPageVisitStats() {
+    async getPageVisitStats(filter) {
         try {
             const stats = await this.database.models.PageVisits.findAll({
-                attributes: {
-                    exclude: [],
-                },
+                attributes: ['page', [Sequelize.fn('COUNT', '1'), 'total']],
                 where: {
-                    id: {
-                        [Sequelize.Op.in]: Sequelize.literal(
-                            `(${this.database.dialect.queryGenerator
-                                .selectQuery('page_visits', {
-                                    attributes: [[Sequelize.fn('Max', Sequelize.col('id')), 'id']],
-                                    group: ['page'],
-                                })
-                                .slice(0, -1)})`,
-                        ),
+                    created_at: {
+                        [Sequelize.Op.gte]: dateFns.format(new Date(`${filter.dateFrom}T00:00:00.000Z`), DATETIME_FORMAT),
+                        [Sequelize.Op.lte]: dateFns.format(new Date(`${filter.dateTo}T23:59:59.000Z`), DATETIME_FORMAT),
                     },
                 },
+                group: ['page'],
             });
 
-            const totalDevice = await this.database.models.PageVisits.count({
-                distinct: true,
-                col: 'device_id',
-            });
+            const totalDevice = stats.find((stat) => stat.page === PAGES_TO_TRACK.WELCOME)?.total;
 
             const pagesToTrack = {};
 
