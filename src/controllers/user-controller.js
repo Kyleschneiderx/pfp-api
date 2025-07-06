@@ -354,8 +354,11 @@ export default class UserController {
 
     async handleGetPfPlanRecommended(req, res) {
         const recommendedPfPlan = await this.userService.getUserRecommendedPfPlan(req.params.user_id);
+        if (!recommendedPfPlan) {
+            throw new exceptions.NotFound('No Recommended PF plan found.');
+        }
 
-        const pfPlan = await this.pfPlanService.getPfPlanDetails(recommendedPfPlan.pf_plan_id, {
+        const pfPlan = await this.pfPlanService.getPfPlanDetails(recommendedPfPlan?.pf_plan_id, {
             authenticatedUser: req.auth,
         });
 
