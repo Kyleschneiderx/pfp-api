@@ -249,16 +249,14 @@ export default class MiscellaneousService {
                     where: { status_id: PUBLISHED_PF_PLAN_STATUS_ID, is_custom: true, user_id: null },
                 });
 
-                if (recommendPfPlan) {
-                    await this.database.models.UserRecommendedPfPlans.destroy({ where: { user_id: userId } });
-                    await this.database.models.UserRecommendedPfPlans.create(
-                        {
-                            user_id: userId,
-                            pf_plan_id: recommendPfPlan.id,
-                        },
-                        { transaction: dbTransaction },
-                    );
-                }
+                await this.database.models.UserRecommendedPfPlans.destroy({ where: { user_id: userId } });
+                await this.database.models.UserRecommendedPfPlans.create(
+                    {
+                        user_id: userId,
+                        pf_plan_id: recommendPfPlan ? recommendPfPlan.id : 3,
+                    },
+                    { transaction: dbTransaction },
+                );
             }
 
             await dbTransaction.commit();
