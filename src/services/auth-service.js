@@ -193,4 +193,20 @@ export default class AuthService {
             throw new exceptions.InternalServerError('Failed to verify id token.', error);
         }
     }
+
+    /**
+     * Generate Firebase custom token for Firestore implementation
+     *
+     * @param {number} userId
+     * @returns {string}
+     */
+    async generateFirebaseCustomAuthToken(userId) {
+        try {
+            return await this.ssoAuthentication.createCustomToken(String(userId));
+        } catch (error) {
+            this.logger.error('Failed to generate firebase custom token.', error);
+
+            throw new exceptions.InternalServerError('Failed to generate firebase custom token.', error);
+        }
+    }
 }

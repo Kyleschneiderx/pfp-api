@@ -101,6 +101,10 @@ export default class UserController {
 
         const token = this.authService.generateSession(user);
 
+        const firebaseToken = await this.authService.generateFirebaseCustomAuthToken(user.id);
+
+        token.firestore = firebaseToken;
+
         await this.userService.updateUserLastLogin(user.id);
 
         this.loggerService.logSystemAudit(user.id, SYSTEM_AUDITS.REGISTER);
