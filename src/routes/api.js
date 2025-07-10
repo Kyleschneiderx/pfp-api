@@ -1,6 +1,7 @@
 import express from 'express';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs';
 import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
@@ -46,6 +47,7 @@ export default ({
     revenuecat,
     database,
     fireStore,
+    openAiChat,
 }) => {
     const router = express.Router();
 
@@ -56,6 +58,188 @@ export default ({
     });
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
+
+    router.get('/chatbot/backup', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        let conversation;
+
+        try {
+            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        try {
+            conversation = JSON.parse(conversation);
+        } catch (error) {
+            /** empty */
+        }
+
+        return res.json({ settings: prompt, conversations: conversation });
+    });
+
+    router.put('/chatbot/backup', async (req, res) => {
+        if (req.body.settings) {
+            fs.writeFileSync('chatbot-settings.log', req.body.settings);
+        }
+
+        fs.writeFileSync('chatbot.log', JSON.stringify(req.body.conversations, null, 2));
+
+        return res.json({ message: 'done' });
+    });
+
+    router.get('/chatbot', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        let conversation;
+
+        try {
+            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        try {
+            conversation = JSON.parse(conversation);
+        } catch (error) {
+            /** empty */
+        }
+
+        if (conversation === undefined || conversation.length === 0) {
+            conversation = [
+                {
+                    role: 'developer',
+                    content:
+                        prompt ??
+                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+                },
+                {
+                    role: 'assistant',
+                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
+                },
+            ];
+        }
+
+        return res.json({ messages: conversation });
+    });
+
+    router.post('/chatbot', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        let conversation;
+
+        try {
+            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        try {
+            conversation = JSON.parse(conversation);
+        } catch (error) {
+            /** empty */
+        }
+
+        if (conversation === undefined || conversation.length === 0) {
+            conversation = [
+                {
+                    role: 'developer',
+                    content:
+                        prompt ??
+                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+                },
+                {
+                    role: 'assistant',
+                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
+                },
+            ];
+        }
+        const response = await openAiChat(
+            [
+                ...conversation,
+                {
+                    role: 'user',
+                    content: req.body.message,
+                },
+            ],
+            {
+                user: '4',
+            },
+        );
+
+        fs.writeFileSync(
+            'chatbot.log',
+            JSON.stringify(
+                [
+                    ...conversation,
+                    {
+                        role: 'user',
+                        content: req.body.message,
+                    },
+                    { role: 'assistant', content: response.choices[0]?.message?.content },
+                ],
+                null,
+                2,
+            ),
+        );
+
+        return res.json({ message: response.choices[0]?.message?.content });
+    });
+
+    router.delete('/chatbot', async (req, res) => {
+        fs.writeFileSync('chatbot.log', '');
+
+        return res.status(204).send();
+    });
+
+    router.get('/chatbot/settings', async (req, res) => {
+        let prompt;
+
+        try {
+            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
+        } catch (error) {
+            /** empty */
+        }
+
+        return res.json({
+            prompt:
+                prompt ??
+                'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+        });
+    });
+
+    router.put('/chatbot/settings', async (req, res) => {
+        fs.writeFileSync('chatbot-settings.log', req.body.prompt);
+
+        return res.json({ message: 'Settings updated.' });
+    });
+
+    router.post('/v1/custom/upload', async (req, res) => {
+        const { files } = req;
+
+        res.json({
+            body: req.body,
+        });
+    });
 
     router.use('/assets', routeAsset({ helper: helper }));
 
