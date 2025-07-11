@@ -12,12 +12,9 @@ export const openAiChat = async (messages, options) => {
     options = {
         ...(config.model.includes?.(',') ? { models: config.model.split(',') } : { model: config.model }),
         ...options,
-        temperature: 0.2,
-        // max_completion_tokens: 200,
-        top_p: 0.9,
+        temperature: 1,
+        max_completion_tokens: 20000,
     };
-
-    console.log(options);
 
     return openai.chat.completions.create({
         messages: messages,

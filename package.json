@@ -25,6 +25,7 @@
         "@aws-sdk/client-ses": "^3.645.0",
         "@aws-sdk/s3-request-presigner": "^3.666.0",
         "@date-fns/utc": "^2.1.0",
+        "@dqbd/tiktoken": "^1.0.21",
         "axios": "^1.8.1",
         "bcryptjs": "^2.4.3",
         "compression": "^1.7.4",

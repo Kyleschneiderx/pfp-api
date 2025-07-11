@@ -134,6 +134,12 @@ Object.assign(serviceContainer, {
         facebookPixel: serviceContainer.facebookPixel,
         helper: serviceContainer.helper,
     }),
+    chatAiService: new services.ChatAiService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        fireStore: serviceContainer.fireStore,
+        openAiChat: serviceContainer.openAiChat,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -206,6 +212,10 @@ Object.assign(serviceContainer, {
     notificationController: new controllers.NotificationController({
         logger: serviceContainer.logger,
         notificationService: serviceContainer.notificationService,
+    }),
+    chatAiController: new controllers.ChatAiController({
+        logger: serviceContainer.logger,
+        chatAiService: serviceContainer.chatAiService,
     }),
 });
 
