@@ -11,3 +11,4 @@ export { default as EducationService } from './education-service.js';
 export { default as MiscellaneousService } from './miscellaneous-service.js';
 export { default as NotificationService } from './notification-service.js';
 export { default as StreakService } from './streak-service.js';
+export { default as ChatAiService } from './chat-ai-service.js';

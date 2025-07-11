@@ -1,8 +1,8 @@
 /* eslint-disable no-use-before-define */
 import 'express-async-errors';
 import cors from 'cors';
-import helmet from 'helmet';
 import * as fs from 'fs';
+import helmet from 'helmet';
 import fileUpload from 'express-fileupload';
 import express from 'express';
 import compression from 'compression';
@@ -100,8 +100,16 @@ export default ({ serviceContainer }) => {
             openAiChat: serviceContainer.openAiChat,
             fireStore: serviceContainer.fireStore,
             database: serviceContainer.database,
+            chatAiController: serviceContainer.chatAiController,
+            chatAiService: serviceContainer.chatAiService,
         }),
     );
+
+    app.get('/chat-demo', (req, res) => {
+        const contents = fs.readFileSync('./src/templates/chat-demo.html', { encoding: 'utf8' });
+
+        res.send(contents);
+    });
 
     app.use(errorHandler({ logger: serviceContainer.logger }));
 

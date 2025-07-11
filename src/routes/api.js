@@ -1,7 +1,6 @@
 import express from 'express';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import * as fs from 'fs';
 import routeV1Auth from './v1/auth.js';
 import routeV1Users from './v1/users.js';
 import routeV1Selections from './v1/selections.js';
@@ -13,6 +12,7 @@ import routeV1PfPlans from './v1/pf-plans.js';
 import routeV1Educations from './v1/educations.js';
 import routeV1Miscellaneous from './v1/miscellaneous.js';
 import routeV1Notifications from './v1/notifications.js';
+import routeV1ChatAi from './v1/chat-ai.js';
 import routeAsset from './assets.js';
 import routeScripts from './scripts.js';
 import * as middlewares from '../middlewares/index.js';
@@ -45,9 +45,10 @@ export default ({
     miscellaneousService,
     notificationController,
     revenuecat,
-    openAiChat,
     database,
     fireStore,
+    chatAiController,
+    chatAiService,
 }) => {
     const router = express.Router();
 
@@ -59,323 +60,37 @@ export default ({
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
 
-    router.get('/chatbot/backup', async (req, res) => {
-        let prompt;
-
-        try {
-            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        let conversation;
-
-        try {
-            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        try {
-            conversation = JSON.parse(conversation);
-        } catch (error) {
-            /** empty */
-        }
-
-        return res.json({ settings: prompt, conversations: conversation });
-    });
-
-    router.put('/chatbot/backup', async (req, res) => {
-        if (req.body.settings) {
-            fs.writeFileSync('chatbot-settings.log', req.body.settings);
-        }
-
-        fs.writeFileSync('chatbot.log', JSON.stringify(req.body.conversations, null, 2));
-
-        return res.json({ message: 'done' });
-    });
     router.get('/chatbot', async (req, res) => {
-        let prompt;
+        const messages = await chatAiService.getDemoConversation();
 
-        try {
-            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        let conversation;
-
-        try {
-            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        try {
-            conversation = JSON.parse(conversation);
-        } catch (error) {
-            /** empty */
-        }
-
-        if (conversation === undefined || conversation.length === 0) {
-            conversation = [
-                {
-                    role: 'developer',
-                    content:
-                        prompt ??
-                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
-                },
-                {
-                    role: 'assistant',
-                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
-                },
-            ];
-        }
-
-        return res.json({ messages: conversation });
+        return res.json({ messages: messages });
     });
 
     router.post('/chatbot', async (req, res) => {
-        let prompt;
+        const response = await chatAiService.postMessageToAiCoach({
+            userId: 3,
+            message: req.body.message,
+        });
 
-        try {
-            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        let conversation;
-
-        try {
-            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        try {
-            conversation = JSON.parse(conversation);
-        } catch (error) {
-            /** empty */
-        }
-
-        if (conversation === undefined || conversation.length === 0) {
-            conversation = [
-                {
-                    role: 'developer',
-                    content:
-                        prompt ??
-                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
-                },
-                {
-                    role: 'assistant',
-                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
-                },
-            ];
-        }
-        const response = await openAiChat(
-            [
-                ...conversation,
-                {
-                    role: 'user',
-                    content: req.body.message,
-                },
-            ],
-            {
-                user: '4',
-            },
-        );
-
-        console.log(response);
-
-        fs.writeFileSync(
-            'chatbot.log',
-            JSON.stringify(
-                [
-                    ...conversation,
-                    {
-                        role: 'user',
-                        content: req.body.message,
-                    },
-                    { role: 'assistant', content: response.choices[0]?.message?.content },
-                ],
-                null,
-                2,
-            ),
-        );
-
-        return res.json({ message: response.choices[0]?.message?.content });
+        return res.json({ message: response.message });
     });
 
     router.delete('/chatbot', async (req, res) => {
-        fs.writeFileSync('chatbot.log', '');
+        await chatAiService.resetDemoConversation();
 
         return res.status(204).send();
     });
 
     router.get('/chatbot/settings', async (req, res) => {
-        let prompt;
-
-        try {
-            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
+        const prompt = await chatAiService.getAiCoachPrompt();
 
         return res.json({
-            prompt:
-                prompt ??
-                'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
+            prompt: prompt.value,
         });
     });
 
     router.put('/chatbot/settings', async (req, res) => {
-        fs.writeFileSync('chatbot-settings.log', req.body.prompt);
-
-        return res.json({ message: 'Settings updated.' });
-    });
-
-    router.post('/v1/custom/upload', async (req, res) => {
-        const { files } = req;
-
-        res.json({
-            body: req.body,
-        });
-    });
-
-    router.get('/chatbot', async (req, res) => {
-        let prompt;
-
-        try {
-            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        let conversation;
-
-        try {
-            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        try {
-            conversation = JSON.parse(conversation);
-        } catch (error) {
-            /** empty */
-        }
-
-        if (conversation === undefined || conversation.length === 0) {
-            conversation = [
-                {
-                    role: 'developer',
-                    content:
-                        prompt ??
-                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
-                },
-                {
-                    role: 'assistant',
-                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
-                },
-            ];
-        }
-
-        return res.json({ messages: conversation });
-    });
-
-    router.post('/chatbot', async (req, res) => {
-        let prompt;
-
-        try {
-            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        let conversation;
-
-        try {
-            conversation = fs.readFileSync('chatbot.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        try {
-            conversation = JSON.parse(conversation);
-        } catch (error) {
-            /** empty */
-        }
-
-        if (conversation === undefined || conversation.length === 0) {
-            conversation = [
-                {
-                    role: 'developer',
-                    content:
-                        prompt ??
-                        'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
-                },
-                {
-                    role: 'assistant',
-                    content: "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
-                },
-            ];
-        }
-        const response = await openAiChat(
-            [
-                ...conversation,
-                {
-                    role: 'user',
-                    content: req.body.message,
-                },
-            ],
-            {
-                user: '4',
-            },
-        );
-
-        fs.writeFileSync(
-            'chatbot.log',
-            JSON.stringify(
-                [
-                    ...conversation,
-                    {
-                        role: 'user',
-                        content: req.body.message,
-                    },
-                    { role: 'assistant', content: response.choices[0]?.message?.content },
-                ],
-                null,
-                2,
-            ),
-        );
-
-        return res.json({ message: response.choices[0]?.message?.content });
-    });
-
-    router.delete('/chatbot', async (req, res) => {
-        fs.writeFileSync('chatbot.log', '');
-
-        return res.status(204).send();
-    });
-
-    router.get('/chatbot/settings', async (req, res) => {
-        let prompt;
-
-        try {
-            prompt = fs.readFileSync('chatbot-settings.log', { encoding: 'utf-8' });
-        } catch (error) {
-            /** empty */
-        }
-
-        return res.json({
-            prompt:
-                prompt ??
-                'You are a concise, helpful, friendly and approachable assistant who enjoys casual conversation and provides short, to-the-point responses.',
-        });
-    });
-
-    router.put('/chatbot/settings', async (req, res) => {
-        fs.writeFileSync('chatbot-settings.log', req.body.prompt);
+        await chatAiService.updateAiCoachPrompt(req.body.prompt);
 
         return res.json({ message: 'Settings updated.' });
     });
@@ -480,6 +195,13 @@ export default ({
     router.use(verifyAuth);
 
     router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper, fireStore }));
+
+    router.use(
+        '/v1/chat/ai',
+        routeV1ChatAi({
+            chatAiController: chatAiController,
+        }),
+    );
 
     router.use(
         '/v1/selections',

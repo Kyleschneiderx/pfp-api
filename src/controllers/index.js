@@ -9,3 +9,4 @@ export { default as PfPlanController } from './pf-plan-controller.js';
 export { default as EducationController } from './education-controller.js';
 export { default as MiscellaneousController } from './miscellaneous-controller.js';
 export { default as NotificationController } from './notification-controller.js';
+export { default as ChatAiController } from './chat-ai-controller.js';
