@@ -249,11 +249,23 @@ export default class MiscellaneousService {
                     where: { status_id: PUBLISHED_PF_PLAN_STATUS_ID, is_custom: true, user_id: null },
                 });
 
-                await this.database.models.UserRecommendedPfPlans.destroy({ where: { user_id: userId } });
-                await this.database.models.UserRecommendedPfPlans.create(
+                const dateToday = new dateFnsUtc.UTCDate();
+
+                let startAt = dateToday;
+
+                const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
+                    where: { user_id: userId, pf_plan_id: recommendPfPlan ? recommendPfPlan.id : 3 },
+                    order: [['id', 'DESC']],
+                    paranoid: false,
+                });
+
+                startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
+
+                await this.database.models.UserPfPlans.create(
                     {
                         user_id: userId,
                         pf_plan_id: recommendPfPlan ? recommendPfPlan.id : 3,
+                        start_at: startAt,
                     },
                     { transaction: dbTransaction },
                 );
@@ -390,28 +402,21 @@ export default class MiscellaneousService {
      */
     async createPayment(data) {
         try {
-            const groupQueries = await Promise.all([
-                this.database.models.UserSubscriptions.findOne({
-                    where: {
-                        user_id: data.userId,
-                        reference: data?.reference,
-                        status: {
-                            [Sequelize.Op.notIn]: [
-                                EXPIRED_PURCHASE_STATUS,
-                                BILLING_RETRY_PURCHASE_STATUS,
-                                INCOMPLETE_PURCHASE_STATUS,
-                                CANCELLED_PURCHASE_STATUS,
-                            ],
-                        },
+            let payment = await this.database.models.UserSubscriptions.findOne({
+                where: {
+                    user_id: data.userId,
+                    reference: data?.reference,
+                    status: {
+                        [Sequelize.Op.notIn]: [
+                            EXPIRED_PURCHASE_STATUS,
+                            BILLING_RETRY_PURCHASE_STATUS,
+                            INCOMPLETE_PURCHASE_STATUS,
+                            CANCELLED_PURCHASE_STATUS,
+                        ],
                     },
-                    order: [['id', 'DESC']],
-                }),
-                this.database.models.UserRecommendedPfPlans.findOne({ where: { user_id: data.userId } }),
-            ]);
-
-            let payment = groupQueries[0];
-
-            const recommendedPfPlan = groupQueries[1];
+                },
+                order: [['id', 'DESC']],
+            });
 
             return await this.database.transaction(async (transaction) => {
                 await this.database.models.UserSubscriptions.update(
@@ -442,29 +447,6 @@ export default class MiscellaneousService {
                         transaction: transaction,
                     },
                 );
-
-                if (recommendedPfPlan) {
-                    const dateToday = new dateFnsUtc.UTCDate();
-
-                    let startAt = dateToday;
-
-                    const lastRecordOfNewPfPlan = await this.database.models.UserPfPlans.findOne({
-                        where: { user_id: data.userId, pf_plan_id: recommendedPfPlan.pf_plan_id },
-                        order: [['id', 'DESC']],
-                        paranoid: false,
-                    });
-
-                    startAt = lastRecordOfNewPfPlan ? lastRecordOfNewPfPlan.start_at : startAt;
-
-                    await this.database.models.UserPfPlans.create(
-                        {
-                            user_id: data.userId,
-                            pf_plan_id: recommendedPfPlan.pf_plan_id,
-                            start_at: startAt,
-                        },
-                        { transaction: transaction },
-                    );
-                }
 
                 return payment;
             });
