@@ -6,11 +6,7 @@ import * as commonValidations from '../../middlewares/validations/common/index.j
 export default ({ verifyAdmin, verifyUser, verifyPremiumUser, workoutController, workoutService, exerciseService, selectionService, file }) => {
     const router = express.Router();
 
-    router.get(
-        '/',
-        [validateInput(validations.getWorkoutsValidation()), verifyPremiumUser],
-        workoutController.handleGetWorkoutsRoute.bind(workoutController),
-    );
+    router.get('/', [validateInput(validations.getWorkoutsValidation())], workoutController.handleGetWorkoutsRoute.bind(workoutController));
 
     router.get(
         '/favorites',
@@ -20,7 +16,7 @@ export default ({ verifyAdmin, verifyUser, verifyPremiumUser, workoutController,
 
     router.get(
         '/:id',
-        [validateInput([commonValidations.workoutIdValidation({ workoutService })]), verifyPremiumUser],
+        [validateInput([commonValidations.workoutIdValidation({ workoutService })])],
         workoutController.handleGetWorkoutRoute.bind(workoutController),
     );
 
