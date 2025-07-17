@@ -18,11 +18,7 @@ export default ({
 
     router.get('/recommend', [validateInput(validations.getPfPlansValidation())], pfPlanController.handleGetPfPlansRoute.bind(pfPlanController));
 
-    router.get(
-        '/',
-        [validateInput(validations.getPfPlansValidation()), verifyPremiumUser],
-        pfPlanController.handleGetPfPlansRoute.bind(pfPlanController),
-    );
+    router.get('/', [validateInput(validations.getPfPlansValidation())], pfPlanController.handleGetPfPlansRoute.bind(pfPlanController));
 
     router.get(
         '/favorites',
@@ -66,7 +62,7 @@ export default ({
 
     router.get(
         '/:id',
-        [validateInput([commonValidations.pfPlanIdValidation({ pfPlanService })]), verifyPremiumUser],
+        [validateInput([commonValidations.pfPlanIdValidation({ pfPlanService })])],
         pfPlanController.handleGetPfPlanRoute.bind(pfPlanController),
     );
 

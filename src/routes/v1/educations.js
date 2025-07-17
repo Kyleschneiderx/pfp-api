@@ -6,11 +6,7 @@ import * as commonValidations from '../../middlewares/validations/common/index.j
 export default ({ verifyAdmin, verifyUser, verifyPremiumUser, educationController, educationService, selectionService, file, pfPlanService }) => {
     const router = express.Router();
 
-    router.get(
-        '/',
-        [validateInput(validations.getEducationsValidation()), verifyPremiumUser],
-        educationController.handleGetEducationsRoute.bind(educationController),
-    );
+    router.get('/', [validateInput(validations.getEducationsValidation())], educationController.handleGetEducationsRoute.bind(educationController));
 
     router.get(
         '/favorites',
@@ -32,7 +28,7 @@ export default ({ verifyAdmin, verifyUser, verifyPremiumUser, educationControlle
 
     router.get(
         '/:id',
-        [validateInput([commonValidations.educationIdValidation({ educationService })]), verifyPremiumUser],
+        [validateInput([commonValidations.educationIdValidation({ educationService })])],
         educationController.handleGetEducationRoute.bind(educationController),
     );
 
