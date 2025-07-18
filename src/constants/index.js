@@ -201,6 +201,7 @@ export const GOOGLE_PAY_FREE_TRIAL = 2;
 export const SUBSCRIPTION_PRODUCTS = {
     pelvic_floor_pro_weekly_subscription: 'Pelvic Floor Pro Weekly Subscription',
     pelvic_floor_pro_yearly_subscription: 'Pelvic Floor Pro Yearly Premium',
+    pelvic_floor_pro_monthly_subscription: 'Pelvic Floor Pro Monthly Subscription',
 };
 
 export const EMAIL_ASSETS_URL = `${process.env.APP_URL}/api/email-assets`;
