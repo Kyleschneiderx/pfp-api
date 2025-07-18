@@ -23,7 +23,6 @@ export default class MiscellaneousController {
     async handleCreatePaymentRoute(req, res) {
         const payment = await this.miscellaneousService.createPayment({
             userId: req.auth.user_id,
-            reference: req.body.reference,
         });
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_SUBSCRIPTION_PAYMENT);

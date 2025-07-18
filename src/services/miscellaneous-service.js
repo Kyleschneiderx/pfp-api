@@ -396,28 +396,11 @@ export default class MiscellaneousService {
      *
      * @param {object} data
      * @param {number} data.userId User account id
-     * @param {object} data.reference Purchase reference
      * @returns {Promise<UserSubscriptions>} UserSubscriptions instance
      * @throws {InternalServerError} If failed to create payment
      */
     async createPayment(data) {
         try {
-            let payment = await this.database.models.UserSubscriptions.findOne({
-                where: {
-                    user_id: data.userId,
-                    reference: data?.reference,
-                    status: {
-                        [Sequelize.Op.notIn]: [
-                            EXPIRED_PURCHASE_STATUS,
-                            BILLING_RETRY_PURCHASE_STATUS,
-                            INCOMPLETE_PURCHASE_STATUS,
-                            CANCELLED_PURCHASE_STATUS,
-                        ],
-                    },
-                },
-                order: [['id', 'DESC']],
-            });
-
             return await this.database.transaction(async (transaction) => {
                 await this.database.models.UserSubscriptions.update(
                     {
@@ -427,11 +410,9 @@ export default class MiscellaneousService {
                     { where: { user_id: data.userId }, transaction: transaction },
                 );
 
-                [payment] = await this.database.models.UserSubscriptions.upsert(
+                const [payment] = await this.database.models.UserSubscriptions.create(
                     {
-                        id: payment?.id,
                         user_id: data.userId,
-                        reference: data?.reference,
                         status: ACTIVE_PURCHASE_STATUS,
                         original_reference: data?.reference,
                     },
