@@ -410,7 +410,7 @@ export default class MiscellaneousService {
                     { where: { user_id: data.userId }, transaction: transaction },
                 );
 
-                const [payment] = await this.database.models.UserSubscriptions.create(
+                const [payment] = await this.database.models.UserSubscriptions.upsert(
                     {
                         user_id: data.userId,
                         status: ACTIVE_PURCHASE_STATUS,
