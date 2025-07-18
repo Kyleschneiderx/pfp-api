@@ -1,9 +1,8 @@
 import express from 'express';
 import validateInput from '../../middlewares/validate-input.js';
 import * as validations from '../../middlewares/validations/miscellaneous/index.js';
-import * as commonValidations from '../../middlewares/validations/common/index.js';
 
-export default ({ miscellaneousController, miscellaneousService, revenuecat, verifyAuth }) => {
+export default ({ miscellaneousController, verifyAuth }) => {
     const router = express.Router();
 
     router.post('/page-tracking', miscellaneousController.handlePageTrackingRoute.bind(miscellaneousController));
@@ -16,11 +15,7 @@ export default ({ miscellaneousController, miscellaneousService, revenuecat, ver
 
     router.get('/survey', miscellaneousController.handleGetSurveyQuestionsRoute.bind(miscellaneousController));
 
-    router.post(
-        '/payment',
-        validateInput([commonValidations.purchaseSubscription({ revenuecat, miscellaneousService })]),
-        miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController),
-    );
+    router.post('/payment', miscellaneousController.handleCreatePaymentRoute.bind(miscellaneousController));
 
     router.post(
         '/contact-support',
