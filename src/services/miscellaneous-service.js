@@ -836,6 +836,8 @@ export default class MiscellaneousService {
      */
     async processRevenuecatWebhook(data) {
         try {
+            if (process.env.APP_ENV === 'production' && data.event.app_user_id.includes('sndbx')) return;
+
             this.database.models.RevenuecatWebhooks.create({
                 data: JSON.stringify(data),
             });
