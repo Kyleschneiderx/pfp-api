@@ -414,7 +414,6 @@ export default class MiscellaneousService {
                     {
                         user_id: data.userId,
                         status: ACTIVE_PURCHASE_STATUS,
-                        original_reference: data?.reference,
                     },
                     { transaction: transaction },
                 );
@@ -856,17 +855,18 @@ export default class MiscellaneousService {
             const appUserId = this.revenuecat.parseCustomerId(event.app_user_id);
 
             const userSubscription = await this.database.models.UserSubscriptions.findOne({
-                where: { user_id: appUserId, original_reference: event.original_transaction_id, status: ACTIVE_PURCHASE_STATUS },
+                where: { user_id: appUserId, status: ACTIVE_PURCHASE_STATUS },
                 order: [['id', 'DESC']],
             });
 
             if (!userSubscription) {
-                throw new exceptions.InternalServerError('Reference does not exist.');
+                throw new exceptions.InternalServerError('Subscription does not exist.');
             }
 
             const user = await this.database.models.Users.findOne({ where: { id: appUserId } });
 
             const updateUserSubscriptionPayload = {
+                ...(event.original_transaction_id && { original_reference: event.original_transaction_id }),
                 reference: event.transaction_id,
                 package_id: event.product_id.includes(':') ? event.product_id.split(':')[0] : event.product_id,
                 platform: event?.store?.toLowerCase(),
