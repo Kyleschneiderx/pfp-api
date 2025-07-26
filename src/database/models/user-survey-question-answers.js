@@ -63,7 +63,26 @@ export default (sequelize, DataTypes) => {
                     fields: [{ name: 'user_id' }, { name: 'question_id' }],
                 },
             ],
+            scopes: {
+                withQuestion: () => ({
+                    include: [
+                        {
+                            model: sequelize.models.SurveyQuestions,
+                            as: 'question',
+                            attributes: {
+                                exclude: [],
+                            },
+                            where: {},
+                        },
+                    ],
+                }),
+            },
         },
     );
+    model.associate = () => {
+        const { UserSurveyQuestionAnswers, SurveyQuestions } = sequelize.models;
+
+        UserSurveyQuestionAnswers.belongsTo(SurveyQuestions, { as: 'question', foreignKey: 'question_id' });
+    };
     return model;
 };

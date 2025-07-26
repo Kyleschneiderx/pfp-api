@@ -70,6 +70,13 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         database: serviceContainer.database,
     }),
+    chatAiService: new services.ChatAiService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        fireStore: serviceContainer.fireStore,
+        openAiChat: serviceContainer.openAiChat,
+        helper: serviceContainer.helper,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -139,12 +146,7 @@ Object.assign(serviceContainer, {
         revenuecat: serviceContainer.revenuecat,
         facebookPixel: serviceContainer.facebookPixel,
         helper: serviceContainer.helper,
-    }),
-    chatAiService: new services.ChatAiService({
-        logger: serviceContainer.logger,
-        database: serviceContainer.database,
-        fireStore: serviceContainer.fireStore,
-        openAiChat: serviceContainer.openAiChat,
+        chatAiService: serviceContainer.chatAiService,
     }),
 });
 

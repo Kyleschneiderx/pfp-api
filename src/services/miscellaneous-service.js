@@ -22,13 +22,14 @@ import { WEBHOOK_EVENTS as REVENUECAT_WEBHOOK_EVENTS, CANCELLATION_REASON as REV
 import * as exceptions from '../exceptions/index.js';
 
 export default class MiscellaneousService {
-    constructor({ logger, database, inAppPurchase, revenuecat, facebookPixel, helper }) {
+    constructor({ logger, database, inAppPurchase, revenuecat, facebookPixel, helper, chatAiService }) {
         this.database = database;
         this.logger = logger;
         this.inAppPurchase = inAppPurchase;
         this.revenuecat = revenuecat;
         this.facebookPixel = facebookPixel;
         this.helper = helper;
+        this.chatAiService = chatAiService;
     }
 
     /**
@@ -270,6 +271,8 @@ export default class MiscellaneousService {
                     { transaction: dbTransaction },
                 );
             }
+
+            this.chatAiService.initiateAiCoach(userId);
 
             await dbTransaction.commit();
 

@@ -260,4 +260,6 @@ export const AI_ROLES = {
     TOOL: 'tool',
 };
 
+export const AI_CHAT_FREE_LIMIT = 20;
+
 export const S3_PUBLIC_PATHS = ['user-photo'];

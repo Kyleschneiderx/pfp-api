@@ -87,6 +87,20 @@ export default (sequelize, DataTypes) => {
                     fields: [{ name: 'status_id' }],
                 },
             ],
+            scopes: {
+                withProfile: () => ({
+                    include: [
+                        {
+                            model: sequelize.models.UserProfiles,
+                            as: 'user_profile',
+                            attributes: {
+                                exclude: [],
+                            },
+                            where: {},
+                        },
+                    ],
+                }),
+            },
         },
     );
     model.associate = () => {
