@@ -32,5 +32,7 @@ export default ({ miscellaneousController, miscellaneousService, revenuecat, ver
         miscellaneousController.handleSendFeedbackRoute.bind(miscellaneousController),
     );
 
+    router.post('/join-waitlist', miscellaneousController.handleJoinWaitlistRoute.bind(miscellaneousController));
+
     return router;
 };

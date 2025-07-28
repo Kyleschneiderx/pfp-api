@@ -241,6 +241,8 @@ export default class UserService {
 
             user.dataValues.has_answered_survey = await this.hasUserAnsweredSurvey(user.id);
 
+            user.dataValues.has_joined_waitlist = Boolean(await this.database.models.Waitlist.count({ where: { user_id: id } }));
+
             user.user_profile.photo = this.helper.generatePublicAssetUrl(user.user_profile.photo);
 
             user.dataValues.user_subscription = await this.database.models.UserSubscriptions.findOne({

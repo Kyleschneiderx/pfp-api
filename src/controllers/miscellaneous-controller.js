@@ -90,6 +90,19 @@ export default class MiscellaneousController {
         });
     }
 
+    async handleJoinWaitlistRoute(req, res) {
+        const waitlist = await this.miscellaneousService.joinWaitlist(req.auth.user_id);
+
+        await this.emailService.sendJoinWaitlist({
+            receiver: {
+                name: waitlist.name,
+                address: waitlist.email,
+            },
+        });
+
+        return res.status(204).send('');
+    }
+
     async handleRevenuecatWebhookRoute(req, res) {
         await this.miscellaneousService.processRevenuecatWebhook(req.body);
 

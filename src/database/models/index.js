@@ -45,3 +45,4 @@ export { default as SurveyQuestionGroupIds } from './survey-question-group-ids.j
 export { default as ImageOptimizationLogs } from './image-optimization-logs.js';
 export { default as UserRecommendedPfPlans } from './user-recommended-pf-plans.js';
 export { default as AiChatSettings } from './ai-chat-settings.js';
+export { default as Waitlist } from './waitlist.js';
