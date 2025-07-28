@@ -31,5 +31,7 @@ export default ({ miscellaneousController, verifyAuth }) => {
         miscellaneousController.handleSendFeedbackRoute.bind(miscellaneousController),
     );
 
+    router.post('/join-waitlist', miscellaneousController.handleJoinWaitlistRoute.bind(miscellaneousController));
+
     return router;
 };
