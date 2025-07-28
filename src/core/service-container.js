@@ -77,6 +77,11 @@ Object.assign(serviceContainer, {
         openAiChat: serviceContainer.openAiChat,
         helper: serviceContainer.helper,
     }),
+    settingsService: new services.SettingsService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        helper: serviceContainer.helper,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -225,6 +230,10 @@ Object.assign(serviceContainer, {
     chatAiController: new controllers.ChatAiController({
         logger: serviceContainer.logger,
         chatAiService: serviceContainer.chatAiService,
+    }),
+    settingsController: new controllers.SettingsController({
+        logger: serviceContainer.logger,
+        settingsService: serviceContainer.settingsService,
     }),
 });
 

@@ -13,6 +13,7 @@ import routeV1Educations from './v1/educations.js';
 import routeV1Miscellaneous from './v1/miscellaneous.js';
 import routeV1Notifications from './v1/notifications.js';
 import routeV1ChatAi from './v1/chat-ai.js';
+import routeV1Settings from './v1/settings.js';
 import routeAsset from './assets.js';
 import routeScripts from './scripts.js';
 import * as middlewares from '../middlewares/index.js';
@@ -49,6 +50,7 @@ export default ({
     fireStore,
     chatAiController,
     chatAiService,
+    settingsController,
 }) => {
     const router = express.Router();
 
@@ -200,6 +202,14 @@ export default ({
         '/v1/chat/ai',
         routeV1ChatAi({
             chatAiController: chatAiController,
+        }),
+    );
+
+    router.use(
+        '/v1/settings',
+        routeV1Settings({
+            verifyAdmin: middlewares.verifyAdmin,
+            settingsController: settingsController,
         }),
     );
 

@@ -12,3 +12,4 @@ export { default as MiscellaneousService } from './miscellaneous-service.js';
 export { default as NotificationService } from './notification-service.js';
 export { default as StreakService } from './streak-service.js';
 export { default as ChatAiService } from './chat-ai-service.js';
+export { default as SettingsService } from './settings-service.js';
