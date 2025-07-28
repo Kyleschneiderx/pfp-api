@@ -101,6 +101,7 @@ export default ({ serviceContainer }) => {
             database: serviceContainer.database,
             chatAiController: serviceContainer.chatAiController,
             chatAiService: serviceContainer.chatAiService,
+            settingsController: serviceContainer.settingsController,
         }),
     );
 
