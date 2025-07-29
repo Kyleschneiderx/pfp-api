@@ -5,5 +5,9 @@ export default ({ chatAiController }) => {
 
     router.post('/', chatAiController.handlePostMessage.bind(chatAiController));
 
+    if (process.env.APP_ENV !== 'production') {
+        router.delete('/user/:id', chatAiController.handleDeleteConversation.bind(chatAiController));
+    }
+
     return router;
 };

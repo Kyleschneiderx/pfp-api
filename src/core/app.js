@@ -106,12 +106,6 @@ export default ({ serviceContainer }) => {
         }),
     );
 
-    app.get('/chat-demo', (req, res) => {
-        const contents = fs.readFileSync('./src/templates/chat-demo.html', { encoding: 'utf8' });
-
-        res.send(contents);
-    });
-
     app.use(errorHandler({ logger: serviceContainer.logger }));
 
     app.get('/chat-demo', (req, res) => {

@@ -334,40 +334,11 @@ export default class ChatAiService {
         }
     }
 
-    async getAiCoachPrompt() {
-        try {
-            return this.database.models.AiChatSettings.findOne({ where: { key: 'prompt' } });
-        } catch (error) {
-            this.logger.error('Failed to update prompt.', error);
-
-            throw new exceptions.InternalServerError('Failed to update prompt.', error);
-        }
-    }
-
-    async updateAiCoachPrompt(prompt) {
-        try {
-            return this.database.models.AiChatSettings.update(
-                {
-                    value: prompt,
-                },
-                {
-                    where: {
-                        key: 'prompt',
-                    },
-                },
-            );
-        } catch (error) {
-            this.logger.error('Failed to update prompt.', error);
-
-            throw new exceptions.InternalServerError('Failed to update prompt.', error);
-        }
-    }
-
-    async resetDemoConversation() {
+    async deleteAiCoachConversation(userId) {
         try {
             const messages = await this.fireStore
                 .collection(FIRESTORE_COLLECTIONS.ROOMS_AI)
-                .doc('3')
+                .doc(String(userId))
                 .collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES)
                 .get();
 
@@ -375,29 +346,11 @@ export default class ChatAiService {
                 message.ref.delete();
             });
 
-            return this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc('3').delete();
+            return this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc(String(userId)).delete();
         } catch (error) {
             this.logger.error('Failed to reset conversation.', error);
 
             throw new exceptions.InternalServerError('Failed to reset conversation.', error);
-        }
-    }
-
-    async getDemoConversation() {
-        try {
-            const messages = await this.fireStore
-                .collection(FIRESTORE_COLLECTIONS.ROOMS_AI)
-                .doc('3')
-                .collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES)
-                .orderBy('updatedAt', 'asc')
-                .orderBy('__name__', 'asc')
-                .get();
-
-            return messages.docs.map((message) => message.data());
-        } catch (error) {
-            this.logger.error('Failed to get conversation.', error);
-
-            throw new exceptions.InternalServerError('Failed to get conversation.', error);
         }
     }
 }
