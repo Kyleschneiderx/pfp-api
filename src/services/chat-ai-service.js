@@ -120,19 +120,6 @@ export default class ChatAiService {
                 updatedAt: timestamp,
             });
 
-            const coachWelcomeMessageToken = this._estimateToken({ role: AI_ROLES.ASSISTANT, content: AI_CHAT.WELCOME_COACH });
-
-            this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc(String(userId)).collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES).add({
-                name: AI_CHAT.COACH_NAME,
-                message: AI_CHAT.WELCOME_COACH,
-                senderId: null,
-                role: AI_ROLES.ASSISTANT,
-                tokenCount: coachWelcomeMessageToken,
-                files: [],
-                createdAt: timestamp,
-                updatedAt: timestamp,
-            });
-
             const promptMessage = {
                 role: AI_ROLES.SYSTEM,
                 content: aiSettingMap.prompt,
@@ -152,15 +139,7 @@ export default class ChatAiService {
                     ...conversation,
                     {
                         role: AI_ROLES.USER,
-                        content: `
-                            Based on the PFDI-20 result provided, list 5–10 natural questions a
-                            person might be curious about or want to ask next.
-
-                            Be human, empathetic, and avoid clinical language unless it’s explained in a friendly way.
-                            Think like a helpful assistant who understands both medical knowledge and real-life concerns.
-
-                            Also start the message something like 'These are the question you might want to ask or curious about:'
-                        `,
+                        content: aiSettingMap.initiate_prompt,
                     },
                 ],
                 {
@@ -346,7 +325,9 @@ export default class ChatAiService {
                 message.ref.delete();
             });
 
-            return this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc(String(userId)).delete();
+            await this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc(String(userId)).delete();
+
+            this.initiateAiCoach(userId);
         } catch (error) {
             this.logger.error('Failed to reset conversation.', error);
 
