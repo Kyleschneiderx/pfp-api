@@ -7,7 +7,7 @@ import {
     USER_ACCOUNT_TYPE_ID,
 } from '../constants/index.js';
 
-export default ({ verifyAdmin, database, helper, fireStore }) => {
+export default ({ verifyAdmin, database, helper, fireStore, chatAiService }) => {
     const router = express.Router();
 
     router.use(verifyAdmin);
@@ -222,6 +222,22 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
                         updatedAt: timestamp,
                     });
                 }
+            }),
+        );
+
+        return res.json({ msg: 'Done' });
+    });
+
+    router.post('/users-aichat-initiate', async (req, res) => {
+        const users = await database.models.UserSurveyQuestionAnswers.findAll({
+            group: ['user_id'],
+        });
+
+        console.log(users);
+
+        await Promise.all(
+            users.map(async (user) => {
+                chatAiService.initiateAiCoach(user.user_id);
             }),
         );
 

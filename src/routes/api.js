@@ -205,7 +205,7 @@ export default ({
 
     router.use(verifyAuth);
 
-    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper, fireStore }));
+    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper, fireStore, chatAiService }));
 
     router.use(
         '/v1/chat/ai',
