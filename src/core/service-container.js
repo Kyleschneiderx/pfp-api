@@ -147,6 +147,12 @@ Object.assign(serviceContainer, {
         helper: serviceContainer.helper,
         chatAiService: serviceContainer.chatAiService,
     }),
+    statsService: new services.StatsService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        helper: serviceContainer.helper,
+        fireStore: serviceContainer.fireStore,
+    }),
 });
 
 Object.assign(serviceContainer, {
@@ -168,6 +174,7 @@ Object.assign(serviceContainer, {
         emailService: serviceContainer.emailService,
         loggerService: serviceContainer.loggerService,
         fireStore: serviceContainer.fireStore,
+        chatAiService: serviceContainer.chatAiService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,
@@ -227,6 +234,10 @@ Object.assign(serviceContainer, {
     settingsController: new controllers.SettingsController({
         logger: serviceContainer.logger,
         settingsService: serviceContainer.settingsService,
+    }),
+    statsController: new controllers.StatsController({
+        logger: serviceContainer.logger,
+        statsService: serviceContainer.statsService,
     }),
 });
 

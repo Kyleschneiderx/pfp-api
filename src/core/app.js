@@ -63,47 +63,7 @@ export default ({ serviceContainer }) => {
         }),
     );
 
-    app.use(
-        '/api',
-        apiRoute({
-            logger: serviceContainer.logger,
-            apiLogger: serviceContainer.apiLogger,
-            jwt: serviceContainer.jwt,
-            file: serviceContainer.file,
-            smtp: serviceContainer.smtp,
-            password: serviceContainer.password,
-            authController: serviceContainer.authController,
-            userController: serviceContainer.userController,
-            userService: serviceContainer.userService,
-            selectionController: serviceContainer.selectionController,
-            selectionService: serviceContainer.selectionService,
-            loggerService: serviceContainer.loggerService,
-            authService: serviceContainer.authService,
-            verificationController: serviceContainer.verificationController,
-            verificationService: serviceContainer.verificationService,
-            forgotPasswordController: serviceContainer.forgotPasswordController,
-            exerciseController: serviceContainer.exerciseController,
-            exerciseService: serviceContainer.exerciseService,
-            helper: serviceContainer.helper,
-            workoutController: serviceContainer.workoutController,
-            workoutService: serviceContainer.workoutService,
-            pfPlanController: serviceContainer.pfPlanController,
-            pfPlanService: serviceContainer.pfPlanService,
-            educationController: serviceContainer.educationController,
-            educationService: serviceContainer.educationService,
-            miscellaneousController: serviceContainer.miscellaneousController,
-            miscellaneousService: serviceContainer.miscellaneousService,
-            notificationController: serviceContainer.notificationController,
-            inAppPurchase: serviceContainer.inAppPurchase,
-            storage: serviceContainer.storage,
-            revenuecat: serviceContainer.revenuecat,
-            fireStore: serviceContainer.fireStore,
-            database: serviceContainer.database,
-            chatAiController: serviceContainer.chatAiController,
-            chatAiService: serviceContainer.chatAiService,
-            settingsController: serviceContainer.settingsController,
-        }),
-    );
+    app.use('/api', apiRoute(serviceContainer));
 
     app.use(errorHandler({ logger: serviceContainer.logger }));
 

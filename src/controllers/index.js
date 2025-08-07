@@ -11,3 +11,4 @@ export { default as MiscellaneousController } from './miscellaneous-controller.j
 export { default as NotificationController } from './notification-controller.js';
 export { default as ChatAiController } from './chat-ai-controller.js';
 export { default as SettingsController } from './settings-controller.js';
+export { default as StatsController } from './stats-controller.js';
