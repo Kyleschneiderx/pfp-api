@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import * as dateFns from 'date-fns';
 import { ASSET_URL, ASSETS_ENDPOINT_EXPIRATION_IN_MINUTES } from '../constants/index.js';
 
 export default class Helper {
@@ -99,5 +100,28 @@ export default class Helper {
 
     static toPercent(number) {
         return number * 100;
+    }
+
+    static splitDateRangeIntoChunks(start, end, splitCount, format = 'yyyy-MM-dd') {
+        const totalDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const baseChunkSize = Math.floor(totalDays / splitCount);
+        const remainder = totalDays % splitCount;
+        const chunks = [];
+        let currentStart = start;
+
+        for (let i = 0; i < splitCount; i += 1) {
+            const extraDay = i < remainder ? 1 : 0;
+            const chunkSize = baseChunkSize + extraDay;
+            const currentEnd = dateFns.addDays(currentStart, chunkSize - 1);
+
+            chunks.push({
+                start: dateFns.format(currentStart, format),
+                end: dateFns.format(currentEnd > end ? end : currentEnd, format),
+            });
+
+            currentStart = dateFns.addDays(currentEnd, 1);
+        }
+
+        return chunks;
     }
 }

@@ -116,6 +116,8 @@ export default class ChatAiService {
             await Promise.all(messages.docs.map((message) => message.ref.delete()));
 
             await this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc(String(userId)).set({
+                collection: FIRESTORE_COLLECTIONS.ROOMS_AI,
+                parentCollection: null,
                 createdAt: timestamp,
                 updatedAt: timestamp,
             });
@@ -148,6 +150,8 @@ export default class ChatAiService {
             );
 
             const aiResponse = {
+                collection: FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES,
+                parentCollection: FIRESTORE_COLLECTIONS.ROOMS_AI,
                 name: AI_CHAT.COACH_NAME,
                 message: response.choices[0]?.message?.content,
                 senderId: null,
@@ -204,9 +208,11 @@ export default class ChatAiService {
                 aiSettingMap[setting.key] = setting.value;
             });
 
+            const roomId = String(data.userId);
+
             const messages = await this.fireStore
                 .collection(FIRESTORE_COLLECTIONS.ROOMS_AI)
-                .doc(String(data.userId))
+                .doc(roomId)
                 .collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES)
                 .orderBy('updatedAt', 'desc')
                 .orderBy('__name__', 'desc')
@@ -256,20 +262,18 @@ export default class ChatAiService {
                 throw new exceptions.BadRequest('You have reached the free limit of chat with AI coach. Please upgrade your account to continue.');
             }
 
-            this.fireStore
-                .collection(FIRESTORE_COLLECTIONS.ROOMS_AI)
-                .doc(String(data.userId))
-                .collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES)
-                .add({
-                    name: user.user_profile.name,
-                    message: data.message,
-                    senderId: data.userId,
-                    role: AI_ROLES.USER,
-                    tokenCount: newMessageToken,
-                    files: [],
-                    createdAt: timestamp,
-                    updatedAt: timestamp,
-                });
+            this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc(roomId).collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES).add({
+                collection: FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES,
+                parentCollection: FIRESTORE_COLLECTIONS.ROOMS_AI,
+                name: user.user_profile.name,
+                message: data.message,
+                senderId: data.userId,
+                role: AI_ROLES.USER,
+                tokenCount: newMessageToken,
+                files: [],
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
 
             const conversation = [promptMessage, pfdiPromptMessage, ...(messages.docs ? history.reverse() : [])];
 
@@ -287,6 +291,8 @@ export default class ChatAiService {
             );
 
             const aiResponse = {
+                collection: FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES,
+                parentCollection: FIRESTORE_COLLECTIONS.ROOMS_AI,
                 name: AI_CHAT.COACH_NAME,
                 message: response.choices[0]?.message?.content,
                 senderId: null,
@@ -297,11 +303,7 @@ export default class ChatAiService {
                 updatedAt: Date.now(),
             };
 
-            this.fireStore
-                .collection(FIRESTORE_COLLECTIONS.ROOMS_AI)
-                .doc(String(data.userId))
-                .collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES)
-                .add(aiResponse);
+            this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS_AI).doc(roomId).collection(FIRESTORE_COLLECTIONS.ROOMS_AI_MESSAGES).add(aiResponse);
 
             return aiResponse;
         } catch (error) {

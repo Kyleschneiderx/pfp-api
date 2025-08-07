@@ -7,7 +7,7 @@ import {
     USER_ACCOUNT_TYPE_ID,
 } from '../constants/index.js';
 
-export default ({ verifyAdmin, database, helper, fireStore }) => {
+export default ({ verifyAdmin, database, helper, fireStore, chatAiService }) => {
     const router = express.Router();
 
     router.use(verifyAdmin);
@@ -200,6 +200,8 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
 
                 if (!isAdmin) {
                     const room = await fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                        collection: FIRESTORE_COLLECTIONS.ROOMS,
+                        parentCollection: null,
                         isGroup: false,
                         name: null,
                         participants: [String(user.id)],
@@ -213,6 +215,8 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
                     });
 
                     fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                        collection: FIRESTORE_COLLECTIONS.MESSAGES,
+                        parentCollection: FIRESTORE_COLLECTIONS.ROOMS,
                         name: 'System',
                         message: FIRESTORE_ROOM_MESSAGES.WELCOME,
                         senderId: null,
@@ -222,6 +226,20 @@ export default ({ verifyAdmin, database, helper, fireStore }) => {
                         updatedAt: timestamp,
                     });
                 }
+            }),
+        );
+
+        return res.json({ msg: 'Done' });
+    });
+
+    router.post('/users-aichat-initiate', async (req, res) => {
+        const users = await database.models.UserSurveyQuestionAnswers.findAll({
+            group: ['user_id'],
+        });
+
+        await Promise.all(
+            users.map(async (user) => {
+                chatAiService.initiateAiCoach(user.user_id);
             }),
         );
 
