@@ -200,6 +200,8 @@ export default ({ verifyAdmin, database, helper, fireStore, chatAiService }) => 
 
                 if (!isAdmin) {
                     const room = await fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                        collection: FIRESTORE_COLLECTIONS.ROOMS,
+                        parentCollection: null,
                         isGroup: false,
                         name: null,
                         participants: [String(user.id)],
@@ -213,6 +215,8 @@ export default ({ verifyAdmin, database, helper, fireStore, chatAiService }) => 
                     });
 
                     fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                        collection: FIRESTORE_COLLECTIONS.MESSAGES,
+                        parentCollection: FIRESTORE_COLLECTIONS.ROOMS,
                         name: 'System',
                         message: FIRESTORE_ROOM_MESSAGES.WELCOME,
                         senderId: null,
@@ -232,8 +236,6 @@ export default ({ verifyAdmin, database, helper, fireStore, chatAiService }) => 
         const users = await database.models.UserSurveyQuestionAnswers.findAll({
             group: ['user_id'],
         });
-
-        console.log(users);
 
         await Promise.all(
             users.map(async (user) => {
