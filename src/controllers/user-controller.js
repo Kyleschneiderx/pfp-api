@@ -7,6 +7,8 @@ import {
     APP_SETUP_ACCOUNT_URL,
     SYSTEM_AUDITS,
     ADMIN_ACCOUNT_TYPE_ID,
+    FIRESTORE_COLLECTIONS,
+    FIRESTORE_ROOM_MESSAGES,
 } from '../constants/index.js';
 import * as exceptions from '../exceptions/index.js';
 
@@ -20,6 +22,8 @@ export default class UserController {
         notificationService,
         emailService,
         loggerService,
+        fireStore,
+        chatAiService,
     }) {
         this.userService = userService;
         this.verificationService = verificationService;
@@ -29,6 +33,8 @@ export default class UserController {
         this.notificationService = notificationService;
         this.emailService = emailService;
         this.loggerService = loggerService;
+        this.fireStore = fireStore;
+        this.chatAiService = chatAiService;
     }
 
     async handleUserSignupRoute(req, res) {
@@ -51,11 +57,60 @@ export default class UserController {
 
         const user = await this.userService.createUserAccount(createUserPayload);
 
+        const initiateUserRoom = async () => {
+            const timestamp = Date.now();
+
+            this.fireStore
+                .collection(FIRESTORE_COLLECTIONS.USERS)
+                .doc(String(user.id))
+                .set({
+                    name: user.dataValues.user_profile.name,
+                    email: user.email,
+                    avatar: user.dataValues.user_profile.photo,
+                    isAdmin: user.dataValues.account_type_id === ADMIN_ACCOUNT_TYPE_ID,
+                    online: true,
+                });
+
+            const room = await this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                collection: FIRESTORE_COLLECTIONS.ROOMS,
+                parentCollection: null,
+                isGroup: false,
+                name: null,
+                participants: [String(user.id)],
+                lastMessage: {
+                    senderId: null,
+                    message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                    name: 'System',
+                },
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
+
+            this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                collection: FIRESTORE_COLLECTIONS.MESSAGES,
+                parentCollection: FIRESTORE_COLLECTIONS.ROOMS,
+                roomId: room.id,
+                name: 'System',
+                message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                senderId: null,
+                avatar: null,
+                files: [],
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
+        };
+
+        initiateUserRoom();
+
         if (req.body.device_token !== undefined) {
             await this.notificationService.addUserDeviceToken(user.id, req.body.device_token);
         }
 
         const token = this.authService.generateSession(user);
+
+        const firebaseToken = await this.authService.generateFirebaseCustomAuthToken(user.id);
+
+        token.firestore = firebaseToken;
 
         await this.userService.updateUserLastLogin(user.id);
 
@@ -85,6 +140,50 @@ export default class UserController {
             statusId: INACTIVE_STATUS_ID,
             photo: req.files?.photo,
         });
+
+        const initiateUserRoom = async () => {
+            const timestamp = Date.now();
+
+            this.fireStore
+                .collection(FIRESTORE_COLLECTIONS.USERS)
+                .doc(String(user.id))
+                .set({
+                    name: user.dataValues.user_profile.name,
+                    email: user.email,
+                    avatar: user.dataValues.user_profile.photo,
+                    isAdmin: user.dataValues.account_type_id === ADMIN_ACCOUNT_TYPE_ID,
+                    online: true,
+                });
+
+            const room = await this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                collection: FIRESTORE_COLLECTIONS.ROOMS,
+                parentCollection: null,
+                isGroup: false,
+                name: null,
+                participants: [String(user.id)],
+                lastMessage: {
+                    senderId: null,
+                    message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                    name: 'System',
+                },
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
+
+            this.fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                collection: FIRESTORE_COLLECTIONS.MESSAGES,
+                parentCollection: FIRESTORE_COLLECTIONS.ROOMS,
+                name: 'System',
+                message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                senderId: null,
+                avatar: null,
+                files: [],
+                createdAt: timestamp,
+                updatedAt: timestamp,
+            });
+        };
+
+        initiateUserRoom();
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.CREATE_ACCOUNT);
 
@@ -162,6 +261,10 @@ export default class UserController {
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.UPDATE_ACCOUNT);
 
+        this.fireStore.collection(FIRESTORE_COLLECTIONS.USERS).doc(String(user.id)).update({
+            avatar: user.user_profile.photo,
+        });
+
         return res.json({ photo: user.user_profile.photo });
     }
 
@@ -187,6 +290,8 @@ export default class UserController {
 
     async handleUpdateUserSurveyRoute(req, res) {
         await this.miscellaneousService.updateUserSurveyAnswer(req.params.user_id, req.body.answers);
+
+        this.chatAiService.initiateAiCoach(req.params.user_id);
 
         this.loggerService.logSystemAudit(req.auth.user_id, SYSTEM_AUDITS.SUBMIT_SURVEY);
 

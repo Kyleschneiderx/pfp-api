@@ -953,4 +953,38 @@ export default class MiscellaneousService {
             throw new exceptions.InternalServerError('Failed to process RevenueCat webhook.', error);
         }
     }
+
+    /**
+     * Join user to waitlist
+     * @param {number} userId
+     * @returns
+     */
+    async joinWaitlist(userId) {
+        try {
+            const [user, userWaitlist] = await Promise.all([
+                this.database.models.Users.scope(['withProfile']).findOne({
+                    where: {
+                        id: userId,
+                    },
+                }),
+                this.database.models.Waitlist.findOne({
+                    where: {
+                        user_id: userId,
+                    },
+                }),
+            ]);
+
+            if (userWaitlist) return userWaitlist;
+
+            return this.database.models.Waitlist.create({
+                user_id: userId,
+                email: user.email,
+                name: user.user_profile.name,
+            });
+        } catch (error) {
+            this.logger.error('Failed to join waitlist.', error);
+
+            throw new exceptions.InternalServerError('Failed to join waitlist.', error);
+        }
+    }
 }

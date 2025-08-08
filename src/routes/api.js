@@ -12,6 +12,9 @@ import routeV1PfPlans from './v1/pf-plans.js';
 import routeV1Educations from './v1/educations.js';
 import routeV1Miscellaneous from './v1/miscellaneous.js';
 import routeV1Notifications from './v1/notifications.js';
+import routeV1ChatAi from './v1/chat-ai.js';
+import routeV1Settings from './v1/settings.js';
+import routeV1Stats from './v1/stats.js';
 import routeAsset from './assets.js';
 import routeScripts from './scripts.js';
 import * as middlewares from '../middlewares/index.js';
@@ -45,7 +48,11 @@ export default ({
     notificationController,
     revenuecat,
     database,
-    storage,
+    fireStore,
+    chatAiController,
+    chatAiService,
+    settingsController,
+    statsController,
 }) => {
     const router = express.Router();
 
@@ -56,6 +63,49 @@ export default ({
     });
 
     const verifyPremiumUser = middlewares.verifyPremiumUser({ userService });
+
+    router.get('/chatbot', async (req, res) => {
+        const messages = await chatAiService.getDemoConversation();
+
+        return res.json({ messages: messages });
+    });
+
+    router.post('/chatbot', async (req, res) => {
+        const response = await chatAiService.postMessageToAiCoach({
+            userId: 3,
+            message: req.body.message,
+        });
+
+        return res.json({ message: response.message });
+    });
+
+    router.delete('/chatbot', async (req, res) => {
+        await chatAiService.resetDemoConversation();
+
+        return res.status(204).send();
+    });
+
+    router.get('/chatbot/settings', async (req, res) => {
+        const prompt = await chatAiService.getAiCoachPrompt();
+
+        return res.json({
+            prompt: prompt.value,
+        });
+    });
+
+    router.put('/chatbot/settings', async (req, res) => {
+        await chatAiService.updateAiCoachPrompt(req.body.prompt);
+
+        return res.json({ message: 'Settings updated.' });
+    });
+
+    router.post('/v1/custom/upload', async (req, res) => {
+        const { files } = req;
+
+        res.json({
+            body: req.body,
+        });
+    });
 
     router.use('/assets', routeAsset({ helper: helper }));
 
@@ -157,7 +207,30 @@ export default ({
 
     router.use(verifyAuth);
 
-    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper }));
+    router.use('/scripts', routeScripts({ verifyAdmin: middlewares.verifyAdmin, database, helper, fireStore, chatAiService }));
+
+    router.use(
+        '/v1/chat/ai',
+        routeV1ChatAi({
+            chatAiController: chatAiController,
+        }),
+    );
+
+    router.use(
+        '/v1/stats',
+        routeV1Stats({
+            verifyAdmin: middlewares.verifyAdmin,
+            statsController: statsController,
+        }),
+    );
+
+    router.use(
+        '/v1/settings',
+        routeV1Settings({
+            verifyAdmin: middlewares.verifyAdmin,
+            settingsController: settingsController,
+        }),
+    );
 
     router.use(
         '/v1/selections',

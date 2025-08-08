@@ -25,6 +25,10 @@ export default class AuthController {
 
         this.loggerService.logSystemAudit(req.user.id, SYSTEM_AUDITS.LOGIN);
 
+        const firebaseToken = await this.authService.generateFirebaseCustomAuthToken(req.user.id);
+
+        token.firestore = firebaseToken;
+
         return res.json({
             user: req.user,
             token: token,

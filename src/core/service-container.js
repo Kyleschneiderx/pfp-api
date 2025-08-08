@@ -6,6 +6,7 @@ import googleAuthClient, { googleApis } from '../common/googleapis/index.js';
 import s3Client, { s3, s3PreSigner } from '../common/aws-s3/index.js';
 import revenuecat from '../common/revenuecat/index.js';
 import facebookPixel from '../common/facebook-business/index.js';
+import { openAiChat } from '../common/open-router/index.js';
 import * as controllers from '../controllers/index.js';
 import * as services from '../services/index.js';
 import * as utils from '../utils/index.js';
@@ -22,6 +23,7 @@ const serviceContainer = {
     file: utils.File,
     ssoAuthentication: firebase.auth(),
     pushNotification: firebase.messaging(),
+    fireStore: firebase.firestore(),
     inAppPurchase: new utils.InAppPurchase({
         logger: logger,
         apple: {
@@ -44,6 +46,7 @@ const serviceContainer = {
     scheduler: new utils.Scheduler({ logger: logger }),
     revenuecat: revenuecat,
     facebookPixel: facebookPixel,
+    openAiChat: openAiChat,
 };
 
 Object.assign(serviceContainer, {
@@ -61,6 +64,18 @@ Object.assign(serviceContainer, {
         database: serviceContainer.database,
         helper: serviceContainer.helper,
         pushNotification: serviceContainer.pushNotification,
+    }),
+    chatAiService: new services.ChatAiService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        fireStore: serviceContainer.fireStore,
+        openAiChat: serviceContainer.openAiChat,
+        helper: serviceContainer.helper,
+    }),
+    settingsService: new services.SettingsService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        helper: serviceContainer.helper,
     }),
 });
 
@@ -130,6 +145,13 @@ Object.assign(serviceContainer, {
         revenuecat: serviceContainer.revenuecat,
         facebookPixel: serviceContainer.facebookPixel,
         helper: serviceContainer.helper,
+        chatAiService: serviceContainer.chatAiService,
+    }),
+    statsService: new services.StatsService({
+        logger: serviceContainer.logger,
+        database: serviceContainer.database,
+        helper: serviceContainer.helper,
+        fireStore: serviceContainer.fireStore,
     }),
 });
 
@@ -151,6 +173,8 @@ Object.assign(serviceContainer, {
         notificationService: serviceContainer.notificationService,
         emailService: serviceContainer.emailService,
         loggerService: serviceContainer.loggerService,
+        fireStore: serviceContainer.fireStore,
+        chatAiService: serviceContainer.chatAiService,
     }),
     selectionController: new controllers.SelectionController({
         logger: serviceContainer.logger,
@@ -202,6 +226,18 @@ Object.assign(serviceContainer, {
     notificationController: new controllers.NotificationController({
         logger: serviceContainer.logger,
         notificationService: serviceContainer.notificationService,
+    }),
+    chatAiController: new controllers.ChatAiController({
+        logger: serviceContainer.logger,
+        chatAiService: serviceContainer.chatAiService,
+    }),
+    settingsController: new controllers.SettingsController({
+        logger: serviceContainer.logger,
+        settingsService: serviceContainer.settingsService,
+    }),
+    statsController: new controllers.StatsController({
+        logger: serviceContainer.logger,
+        statsService: serviceContainer.statsService,
     }),
 });
 

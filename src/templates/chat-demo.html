@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Simple Chat Interface</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                font-weight: 500;
+                background-color: #f4f4f9;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .container {
+                display: flex;
+                justify-content: center;
+            }
+
+            .chat-container {
+                width: 600px;
+                height: 600px;
+                background-color: white;
+                border-radius: 10px;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                padding: 15px;
+            }
+
+            .chat-box {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid #ddd;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .chat-box .message {
+                margin-bottom: 10px;
+                padding: 0 12px;
+                background-color: #e0e0e0;
+                border-radius: 5px;
+                max-width: 70%;
+                overflow-wrap: break-word;
+            }
+
+            .chat-box .message.user {
+                background-color: #0084ff;
+                color: white;
+                align-self: self-end;
+            }
+
+            .chat-box .message.bot {
+                background-color: #f1f1f1;
+                color: #333;
+                align-self: self-start;
+            }
+
+            .input-box {
+                display: flex;
+                padding: 10px 0;
+                border-top: 1px solid #ddd;
+            }
+
+            .input-box input {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                outline: none;
+            }
+
+            .input-box button {
+                padding: 10px 15px;
+                background-color: #0084ff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-left: 5px;
+            }
+
+            .input-box button:disabled {
+                background-color: #ccc;
+            }
+
+            .settings-container {
+                width: 500px;
+                height: 500px;
+                background-color: white;
+                border-radius: 10px;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                padding: 15px;
+                margin-left: 20px;
+                overflow: hidden;
+            }
+
+            .settings-container .container-title {
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 5px;
+            }
+
+            .settings-box {
+                display: flex;
+                flex-direction: column;
+                padding: 10px 0;
+                overflow: hidden;
+            }
+
+            .settings-box textarea {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                outline: none;
+                resize: none;
+            }
+
+            .settings-box button {
+                padding: 10px 15px;
+                background-color: #0084ff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 10px;
+            }
+
+            .settings-box button:disabled {
+                background-color: #ccc;
+            }
+
+            .reset-button {
+                background-color: #ff4e4e;
+                padding: 10px 20px;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                margin-top: 10px;
+                cursor: pointer;
+                align-self: center;
+            }
+
+            .reset-button:hover {
+                background-color: #e04d4d;
+            }
+
+            .settings-container .alert {
+                margin: 5px 0;
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .loading-dots {
+                margin: 15px 0;
+                display: flex;
+                justify-content: space-between;
+                width: 30px;
+            }
+
+            .loading-dots span {
+                background-color: #333;
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                animation: bounce 1.2s infinite ease-in-out;
+            }
+
+            .loading-dots span:nth-child(1) {
+                animation-delay: 0s;
+            }
+
+            .loading-dots span:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .loading-dots span:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+
+            @keyframes bounce {
+                0%,
+                100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-10px);
+                }
+            }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="chat-container">
+                <div class="chat-box" id="chatBox">
+                    <!-- Messages will appear here -->
+                    <!-- <div class="message user">User test</div>
+                 <div class="message bot">bot test</div>
+                 <div class="message">system test</div> -->
+                    <!-- <div class="loading-dots">
+                    <span></span><span></span><span></span>
+                  </div> -->
+                </div>
+                <div class="input-box">
+                    <input type="text" id="userInput" placeholder="Type a message..." />
+                    <button id="sendButton">Send</button>
+                </div>
+                <button class="reset-button" id="resetButton">Reset Chat</button>
+            </div>
+            <div class="settings-container">
+                <span class="container-title">Settings</span>
+
+                <div class="settings-box">
+                    <textarea type="text" rows="20" id="prompt" placeholder="Type a prompt..."></textarea>
+                    <button id="updateButton">Update</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const chatBox = document.getElementById('chatBox');
+            const resetButton = document.getElementById('resetButton');
+            const promptInput = document.getElementById('prompt');
+            const updateButton = document.getElementById('updateButton');
+            const alert = document.createElement('div');
+            alert.classList.add('alert');
+
+            getMessages();
+
+            getPrompt();
+
+            sendButton.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            resetButton.addEventListener('click', resetChat);
+
+            updateButton.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+                if (prompt === '') return;
+
+                try {
+                    const response = await fetch('../api/chatbot/settings', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ prompt }),
+                    });
+                    const data = await response.json();
+
+                    alert.style = 'background-color: #4bb543; color: white';
+                    alert.innerHTML = `<span>${data.message}</span>`;
+
+                    getPrompt();
+                } catch (error) {
+                    alert.style = 'background-color: #ff4e4e; color: white';
+                    alert.innerHTML = '<span>Error updating prompt</span>';
+
+                    console.error(error);
+                } finally {
+                    document.querySelector('.settings-container .container-title').insertAdjacentElement('afterend', alert);
+                }
+            });
+
+            function convertMarkdownToHtml(markdown) {
+                const converter = new showdown.Converter();
+                return converter.makeHtml(markdown);
+            }
+
+            async function getMessages() {
+                try {
+                    const response = await fetch('../api/chatbot');
+                    const data = await response.json();
+
+                    const messages = data.messages;
+
+                    if (messages.length) {
+                        messages.forEach((message) => {
+                            addMessage(convertMarkdownToHtml(message.message), message.senderId !== null ? 'user' : 'bot');
+                        });
+                    } else {
+                        addMessage(convertMarkdownToHtml('Hey, I’m Amy 😊. What’s on your mind today?'), 'bot');
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function getPrompt() {
+                try {
+                    const response = await fetch('../api/chatbot/settings');
+                    const data = await response.json();
+
+                    const prompt = data.prompt;
+
+                    promptInput.value = prompt;
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function removeConversation() {
+                try {
+                    const response = await fetch('../api/chatbot', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function sendMessageToBot(message) {
+                try {
+                    const response = await fetch('../api/chatbot', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message }),
+                    });
+                    const data = await response.json();
+
+                    return data.message;
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            function sendInitialMessage() {
+                addMessage(
+                    "Hi I'm Alice!, I'm going be your AI friend. I'm here to help you with your fitness journey. How can I help you today?",
+                    'bot',
+                );
+            }
+
+            function addLoading() {
+                const loadingDiv = document.createElement('div');
+                loadingDiv.classList.add('loading-dots');
+                loadingDiv.innerHTML = '<span></span><span></span><span></span>';
+                chatBox.appendChild(loadingDiv);
+                chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to bottom
+            }
+
+            function removeLoading() {
+                const loadingDiv = document.querySelector('.loading-dots');
+                if (loadingDiv) {
+                    chatBox.removeChild(loadingDiv);
+                }
+            }
+
+            async function sendMessage() {
+                const message = userInput.value.trim();
+                if (message === '') return;
+
+                // Display user message
+                addMessage(`<p>${message}</p>`, 'user');
+
+                addLoading();
+
+                userInput.value = '';
+
+                const response = await sendMessageToBot(message);
+
+                removeLoading();
+
+                addMessage(convertMarkdownToHtml(response), 'bot');
+            }
+
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', sender);
+                // messageDiv.innerHtml = text;
+                chatBox.appendChild(messageDiv);
+                messageDiv.innerHTML = text;
+                chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to bottom
+            }
+
+            async function resetChat() {
+                chatBox.innerHTML = ''; // Clear chat history
+                userInput.value = ''; // Clear input field
+
+                await removeConversation();
+
+                await getMessages();
+            }
+        </script>
+    </body>
+</html>

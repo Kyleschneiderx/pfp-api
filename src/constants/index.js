@@ -234,3 +234,32 @@ export const CONTENT_CATEGORIES_TYPE = {
 export const CONTENT_PHOTO_HEIGHT = 1024;
 
 export const CONTENT_PHOTO_WIDTH = 1024;
+
+export const FIRESTORE_COLLECTIONS = {
+    ROOMS: 'rooms',
+    USERS: 'users',
+    MESSAGES: 'messages',
+    ROOMS_AI: 'rooms-ai',
+    ROOMS_AI_MESSAGES: 'messages',
+};
+
+export const FIRESTORE_ROOM_MESSAGES = {
+    WELCOME: "Hi there! If you ever need help or have a question, just send us a message — we're here for you!",
+};
+
+export const AI_CHAT = {
+    COACH_NAME: 'Amy',
+    WELCOME_COACH: 'Hey, I’m Amy 😊. What’s on your mind today?',
+};
+
+export const AI_ROLES = {
+    USER: 'user',
+    DEVELOPER: 'developer',
+    SYSTEM: 'system',
+    ASSISTANT: 'assistant',
+    TOOL: 'tool',
+};
+
+export const AI_CHAT_FREE_LIMIT = 20;
+
+export const S3_PUBLIC_PATHS = ['user-photo'];

@@ -10,3 +10,6 @@ export { default as PfPlanService } from './pf-plan-service.js';
 export { default as EducationService } from './education-service.js';
 export { default as MiscellaneousService } from './miscellaneous-service.js';
 export { default as NotificationService } from './notification-service.js';
+export { default as ChatAiService } from './chat-ai-service.js';
+export { default as SettingsService } from './settings-service.js';
+export { default as StatsService } from './stats-service.js';

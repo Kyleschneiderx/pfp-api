@@ -1,13 +1,18 @@
 import express from 'express';
-import * as dateFnsUtc from '@date-fns/utc';
-import { PUBLISHED_PF_PLAN_STATUS_ID, USER_ACCOUNT_TYPE_ID } from '../constants/index.js';
+import {
+    ADMIN_ACCOUNT_TYPE_ID,
+    FIRESTORE_COLLECTIONS,
+    FIRESTORE_ROOM_MESSAGES,
+    PUBLISHED_PF_PLAN_STATUS_ID,
+    USER_ACCOUNT_TYPE_ID,
+} from '../constants/index.js';
 
-export default ({ verifyAdmin, database, helper }) => {
+export default ({ verifyAdmin, database, helper, fireStore, chatAiService }) => {
     const router = express.Router();
 
     router.use(verifyAdmin);
 
-    router.get('/recompute-score', async (req, res) => {
+    router.post('/recompute-score', async (req, res) => {
         const [usersWithSurveys, surveyQuestionGroups, surveyQuestions, surveyQuestionAnswerScores] = await Promise.all([
             database.models.UserSurveyQuestionAnswers.findAll({ group: ['user_id'] }),
             database.models.SurveyQuestionGroups.findAll({
@@ -160,6 +165,81 @@ export default ({ verifyAdmin, database, helper }) => {
                         });
                     }
                 }
+            }),
+        );
+
+        return res.json({ msg: 'Done' });
+    });
+
+    router.post('/users-migrate-firestore', async (req, res) => {
+        const users = await database.models.Users.findAll({
+            include: [
+                {
+                    model: database.models.UserProfiles,
+                    as: 'user_profile',
+                },
+            ],
+        });
+
+        await Promise.all(
+            users.map(async (user) => {
+                const timestamp = Date.now();
+
+                const isAdmin = user.account_type_id === ADMIN_ACCOUNT_TYPE_ID;
+
+                fireStore
+                    .collection(FIRESTORE_COLLECTIONS.USERS)
+                    .doc(String(user.id))
+                    .set({
+                        name: user.user_profile?.name ?? 'Guest',
+                        email: user?.email,
+                        avatar: helper.generatePublicAssetUrl(user.user_profile?.photo) ?? null,
+                        isAdmin: isAdmin,
+                        online: true,
+                    });
+
+                if (!isAdmin) {
+                    const room = await fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).add({
+                        collection: FIRESTORE_COLLECTIONS.ROOMS,
+                        parentCollection: null,
+                        isGroup: false,
+                        name: null,
+                        participants: [String(user.id)],
+                        lastMessage: {
+                            senderId: null,
+                            message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                            name: 'System',
+                        },
+                        createdAt: timestamp,
+                        updatedAt: timestamp,
+                    });
+
+                    fireStore.collection(FIRESTORE_COLLECTIONS.ROOMS).doc(room.id).collection(FIRESTORE_COLLECTIONS.MESSAGES).add({
+                        collection: FIRESTORE_COLLECTIONS.MESSAGES,
+                        parentCollection: FIRESTORE_COLLECTIONS.ROOMS,
+                        name: 'System',
+                        message: FIRESTORE_ROOM_MESSAGES.WELCOME,
+                        senderId: null,
+                        avatar: null,
+                        files: [],
+                        createdAt: timestamp,
+                        updatedAt: timestamp,
+                    });
+                }
+            }),
+        );
+
+        return res.json({ msg: 'Done' });
+    });
+
+    router.post('/users-aichat-initiate', async (req, res) => {
+        const users = await database.models.UserSurveyQuestionAnswers.findAll({
+            group: ['user_id'],
+        });
+
+        await Promise.all(
+            users.map(async (user) => {
+                chatAiService.initiateAiCoach(user.user_id);
             }),
         );
 

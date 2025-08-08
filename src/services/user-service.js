@@ -113,7 +113,7 @@ export default class UserService {
             });
 
             if (user?.user_profile) {
-                user.user_profile.photo = this.helper.generateAssetUrl(user.user_profile.photo);
+                user.user_profile.photo = this.helper.generatePublicAssetUrl(user.user_profile.photo);
             }
 
             return user;
@@ -200,7 +200,7 @@ export default class UserService {
                 row.dataValues.can_invite = !row.dataValues.password;
             }
 
-            row.user_profile.photo = this.helper.generateAssetUrl(row.user_profile.photo);
+            row.user_profile.photo = this.helper.generatePublicAssetUrl(row.user_profile.photo);
 
             delete row.dataValues.password;
 
@@ -241,7 +241,9 @@ export default class UserService {
 
             user.dataValues.has_answered_survey = await this.hasUserAnsweredSurvey(user.id);
 
-            user.user_profile.photo = this.helper.generateAssetUrl(user.user_profile.photo);
+            user.dataValues.has_joined_waitlist = Boolean(await this.database.models.Waitlist.count({ where: { user_id: id } }));
+
+            user.user_profile.photo = this.helper.generatePublicAssetUrl(user.user_profile.photo);
 
             user.dataValues.user_subscription = await this.database.models.UserSubscriptions.findOne({
                 attributes: ['package_id', 'expires_at'],
@@ -372,7 +374,7 @@ export default class UserService {
                     { transaction: transaction },
                 );
 
-                profile.photo = this.helper.generateAssetUrl(profile.photo);
+                profile.photo = this.helper.generatePublicAssetUrl(profile.photo);
 
                 delete user.dataValues.password;
                 delete profile.dataValues.id;
@@ -564,7 +566,7 @@ export default class UserService {
             await user.reload();
             await user.user_profile.reload();
 
-            user.user_profile.photo = this.helper.generateAssetUrl(user.user_profile.photo);
+            user.user_profile.photo = this.helper.generatePublicAssetUrl(user.user_profile.photo);
 
             delete user.dataValues.password;
             delete user.dataValues.google_id;

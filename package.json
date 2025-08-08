@@ -25,6 +25,7 @@
         "@aws-sdk/client-ses": "^3.645.0",
         "@aws-sdk/s3-request-presigner": "^3.666.0",
         "@date-fns/utc": "^2.1.0",
+        "@dqbd/tiktoken": "^1.0.21",
         "axios": "^1.8.1",
         "bcryptjs": "^2.4.3",
         "compression": "^1.7.4",
@@ -47,6 +48,7 @@
         "node-cron": "^3.0.3",
         "node-fetch": "^3.3.2",
         "nodemailer": "^6.9.14",
+        "openai": "^4.83.0",
         "request-ip": "^3.3.0",
         "sequelize": "^6.37.3",
         "sequelize-cli": "^6.6.2",
@@ -56,7 +58,6 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.9.0",
-        "@faker-js/faker": "^9.8.0",
         "@jest/globals": "^29.7.0",
         "eslint": "^8.57.0",
         "eslint-config-airbnb-base": "^15.0.0",
@@ -70,6 +71,6 @@
         "nodemon": "^3.1.4",
         "prettier": "^3.3.3",
         "sequelize-mock": "^0.10.2",
-        "supertest": "^7.1.1"
+        "supertest": "^7.0.0"
     }
 }
