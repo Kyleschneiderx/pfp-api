@@ -1,4 +1,5 @@
 import express from 'express';
+import { Sequelize } from 'sequelize';
 import {
     ADMIN_ACCOUNT_TYPE_ID,
     FIRESTORE_COLLECTIONS,
@@ -233,15 +234,62 @@ export default ({ verifyAdmin, database, helper, fireStore, chatAiService }) => 
     });
 
     router.post('/users-aichat-initiate', async (req, res) => {
-        const users = await database.models.UserSurveyQuestionAnswers.findAll({
-            group: ['user_id'],
+        const itemsPerPage = 50;
+        let page = 1;
+        const list = [];
+        let { count, rows } = await database.models.Users.findAndCountAll({
+            raw: true,
+            limit: itemsPerPage,
+            offset: page * itemsPerPage - itemsPerPage,
+            where: {
+                id: {
+                    [Sequelize.Op.in]: Sequelize.literal(
+                        `(${database.dialect.queryGenerator
+                            .selectQuery('user_survey_question_answers', {
+                                attributes: ['user_id'],
+                                group: ['user_id'],
+                            })
+                            .slice(0, -1)})`,
+                    ),
+                },
+            },
         });
 
-        await Promise.all(
-            users.map(async (user) => {
-                chatAiService.initiateAiCoach(user.user_id);
-            }),
-        );
+        const maxPage = Math.ceil(count / itemsPerPage);
+
+        list.push(rows);
+
+        while (page < maxPage) {
+            page += 1;
+            // eslint-disable-next-line no-await-in-loop
+            ({ count, rows } = await database.models.Users.findAndCountAll({
+                raw: true,
+                limit: itemsPerPage,
+                offset: page * itemsPerPage - itemsPerPage,
+                where: {
+                    id: {
+                        [Sequelize.Op.in]: Sequelize.literal(
+                            `(${database.dialect.queryGenerator
+                                .selectQuery('user_survey_question_answers', {
+                                    attributes: ['user_id'],
+                                    group: ['user_id'],
+                                })
+                                .slice(0, -1)})`,
+                        ),
+                    },
+                },
+            }));
+
+            list.push(rows);
+        }
+
+        list.forEach(async (users) => {
+            await Promise.all(
+                users.map(async (user) => {
+                    await chatAiService.initiateAiCoach(user.id);
+                }),
+            );
+        });
 
         return res.json({ msg: 'Done' });
     });
