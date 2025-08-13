@@ -52,11 +52,7 @@ export default ({
 
     router.put(
         '/:id/progress',
-        [
-            validateInput(validations.updatePfPlanProgressValidation({ pfPlanService, educationService, exerciseService })),
-            verifyUser,
-            verifyPremiumUser,
-        ],
+        [validateInput(validations.updatePfPlanProgressValidation({ pfPlanService, educationService, exerciseService })), verifyUser],
         pfPlanController.handleUpdatePfPlanProgressRoute.bind(pfPlanController),
     );
 
