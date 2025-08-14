@@ -98,7 +98,7 @@ src/
 │  ├─ seeders/
 │  │  ├─ xxxxxxxxxxxxxx-data1-seeder.js
 │  │  ├─ xxxxxxxxxxxxxx-data2-seeder.js
-│  │  ├─ xxxxxxxxxxxxxx-data3-seeder.js
+│  │  ├─ xxxxxxxxxxxxxxx-data3-seeder.js
 ```
 
 ### Models
